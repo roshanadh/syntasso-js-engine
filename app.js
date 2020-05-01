@@ -36,6 +36,7 @@ startContainer = () => {
     });
 }
 
+// TODO: create an interactive shell environment
 attachContainer = () => {
     exec('docker container attach cont_node', (error, stdout, stderr) => {
         if (error) {
@@ -51,7 +52,6 @@ attachContainer = () => {
             console.log(`final stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
 
-            // setTimeout(attachContainer, 5000);
         });
     });
 }
