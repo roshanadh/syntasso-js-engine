@@ -5,6 +5,6 @@ RUN apt-get update \
 && curl -sL https://deb.nodesource.com/setup_4.x | bash \
 && apt-get install -y nodejs
 
-COPY sample.js /home
+COPY file/submission.js /home
 
 CMD ["bash"]
