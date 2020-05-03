@@ -15,7 +15,11 @@ app.get('/', (req, res) => {
 
 app.post('/execute', (req, res) => {
     console.log("POST request received at /execute");
-    res.send("Hello World!");
+    if(!req.body.code) {
+        res.status(400).send("Bad Request: No Code Provided!");
+        throw new Error("Bad Request Error at /execute POST. No Code Provided!");
+    }
+    res.status(200).send(`Code to be executed: ${req.body.code}`);
 });
 
 app.listen(8080, () => {
