@@ -11,7 +11,7 @@ class DockerApp {
                 }
                 if (stderr) {
                     console.error(`stderr during Node.js image build: ${stderr}`);
-                    resolve({ success: true, stderr});
+                    resolve({ success: true, stderr });
                 }
                 stdout ? console.error(`stdout during Node.js image build: ${stdout}`)
                     : console.log('Node.js image built.');
@@ -35,7 +35,7 @@ class DockerApp {
                     }
                     if (stderr) {
                         console.error(`stderr during Node.js container creation: ${stderr}`);
-                        resolve({ success: true, stderr});
+                        resolve({ success: true, stderr });
                     }
                     stdout ? console.error(`stdout during Node.js container creation: ${stdout}`)
                         : console.log('Node.js container created.');
@@ -57,7 +57,7 @@ class DockerApp {
                 }
                 if (stderr) {
                     console.error(`stderr during Node.js container start: ${stderr}`);
-                    resolve({ success: true, stderr});
+                    resolve({ success: true, stderr });
                 }
                 stdout ? console.error(`stdout during Node.js container start: ${stdout}`)
                     : console.log('Node.js container started.');
@@ -71,7 +71,7 @@ class DockerApp {
     execInNodeContainer = () => {
         try{
             const child = spawnSync('docker',
-                ['exec', '-it', 'cont_node', 'node', 'home/sample.js'], {
+                ['exec', '-it', 'cont_node', 'node', 'home/submission.js'], {
                     stdio: 'inherit'
             });
         } catch (err) {
