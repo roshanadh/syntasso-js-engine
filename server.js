@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const { dockerApp } = require('./docker/app.js')
+const DockerApp = require('./docker/app.js');
+const { updateCodeInFile } = require('./file/index.js');
 
 const app = express();
+const dockerApp = new DockerApp();
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -19,6 +21,7 @@ app.post('/execute', (req, res) => {
         res.status(400).send("Bad Request: No Code Provided!");
         throw new Error("Bad Request Error at /execute POST. No Code Provided!");
     }
+    updateCodeInFile(req.body.code);
     res.status(200).send(`Code to be executed: ${req.body.code}`);
 });
 
