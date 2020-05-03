@@ -1,6 +1,6 @@
 const { exec, spawnSync } = require('child_process');
 
-class dockerApp {
+class DockerApp {
     buildNodeImage = () => {
         console.log('Building a Node.js image ... ');
         exec('docker build -t img_node .', (error, stdout, stderr) => {
@@ -112,4 +112,4 @@ class dockerApp {
     }
 }
 
-module.exports = dockerApp;
+module.exports = DockerApp;
