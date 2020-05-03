@@ -22,6 +22,42 @@ app.post('/execute', (req, res) => {
         throw new Error("Bad Request Error at /execute POST. No Code Provided!");
     }
     updateCodeInFile(req.body.code);
+    // dockerApp.buildNodeImage()
+    //     .then(image => {
+    //         image.stderr ? console.error(`stderr in dockerApp.buildNodeImage(): ${image.stderr}`)
+    //             : console.log();
+    //         }, error => {
+    //             console.error(`Error in dockerApp.buildNodeImage(): ${error}`)
+    //     })
+    //     .then(() => {
+    //         dockerApp.createNodeContainer()
+    //             .then(container => {
+    //                 container.stderr ? console.error(`stderr in dockerApp.createNodeContainer(): ${container.stderr}`)
+    //                     : console.log();
+    //                 }, error => {
+    //                     console.error(`Error in dockerApp.createNodeContainer(): ${error}`)
+    //             })
+    //             .then(() => {
+    //                 dockerApp.startNodeContainer()
+    //                     .then(startStatus => {
+    //                         startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
+    //                             : console.log();
+    //                         }, error => {
+    //                         console.error(`Error in dockerApp.startNodeContainer(): ${error}`)
+    //                     })
+    //             })
+
+                dockerApp.buildNodeImage()
+                    .then(() => {
+                        dockerApp.createNodeContainer()
+                            .then(() => {
+                                dockerApp.startNodeContainer()
+                                    .then(() => {
+                                        dockerApp.execInNodeContainer();
+                                    })
+                            })
+                    })
+                    
     res.status(200).send(`Code to be executed: ${req.body.code}`);
 });
 
