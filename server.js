@@ -7,6 +7,8 @@ const { updateCodeInFile, readOuput } = require('./file/index.js');
 const app = express();
 const dockerApp = new DockerApp();
 
+app.set('json spaces', 2);
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -65,18 +67,18 @@ app.post('/execute', (req, res) => {
         //                 })
         //         })
 
-                dockerApp.buildNodeImage()
+    dockerApp.buildNodeImage()
+    .then(() => {
+        dockerApp.createNodeContainer()
+            .then(() => {
+                dockerApp.startNodeContainer()
                     .then(() => {
-                        dockerApp.createNodeContainer()
-                            .then(() => {
-                                dockerApp.startNodeContainer()
-                                    .then(() => {
-                                        dockerApp.execInNodeContainer();
-                                        console.log(`Output: ${readOuput()}`);
-                                        res.send(`Output: ${readOuput()}`);
-                                    })
-                            })
+                        dockerApp.execInNodeContainer();
+                        console.log(`Output: ${readOuput()}`);
+                        res.status(200).send(`Output: ${readOuput()}`);
                     })
+            })
+    });
                     
     // dockerApp.buildNodeImage().then(handleSuccessfulImageBuild(image), handleImageBuildError());
     // res.status(200).send(`Code to be executed: ${req.body.code}`);
