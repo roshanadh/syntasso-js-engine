@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const DockerApp = require('./docker/app.js');
-const { updateCodeInFile } = require('./file/index.js');
+const { updateCodeInFile, readOuput } = require('./file/index.js');
 
 const app = express();
 const dockerApp = new DockerApp();
@@ -26,26 +26,44 @@ app.post('/execute', (req, res) => {
     //     .then(image => {
     //         image.stderr ? console.error(`stderr in dockerApp.buildNodeImage(): ${image.stderr}`)
     //             : console.log();
-    //         }, error => {
-    //             console.error(`Error in dockerApp.buildNodeImage(): ${error}`)
-    //     })
-    //     .then(() => {
+
     //         dockerApp.createNodeContainer()
     //             .then(container => {
     //                 container.stderr ? console.error(`stderr in dockerApp.createNodeContainer(): ${container.stderr}`)
     //                     : console.log();
-    //                 }, error => {
-    //                     console.error(`Error in dockerApp.createNodeContainer(): ${error}`)
-    //             })
-    //             .then(() => {
+
     //                 dockerApp.startNodeContainer()
     //                     .then(startStatus => {
     //                         startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
     //                             : console.log();
+
+    //                         dockerApp.execInNodeContainer();
     //                         }, error => {
-    //                         console.error(`Error in dockerApp.startNodeContainer(): ${error}`)
+    //                             console.error(`Error in dockerApp.startNodeContainer(): ${error}`)
     //                     })
+    //                 }, error => {
+    //                     console.error(`Error in dockerApp.createNodeContainer(): ${error}`)
     //             })
+    //     }, error => {
+    //             console.error(`Error in dockerApp.buildNodeImage(): ${error}`)
+    //     })
+        // .then(() => {
+        //     dockerApp.createNodeContainer()
+        //         .then(container => {
+        //             container.stderr ? console.error(`stderr in dockerApp.createNodeContainer(): ${container.stderr}`)
+        //                 : console.log();
+        //             }, error => {
+        //                 console.error(`Error in dockerApp.createNodeContainer(): ${error}`)
+        //         })
+        //         .then(() => {
+        //             dockerApp.startNodeContainer()
+        //                 .then(startStatus => {
+        //                     startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
+        //                         : console.log();
+        //                     }, error => {
+        //                     console.error(`Error in dockerApp.startNodeContainer(): ${error}`)
+        //                 })
+        //         })
 
                 dockerApp.buildNodeImage()
                     .then(() => {
@@ -54,12 +72,31 @@ app.post('/execute', (req, res) => {
                                 dockerApp.startNodeContainer()
                                     .then(() => {
                                         dockerApp.execInNodeContainer();
+                                        console.log(`Output: ${readOuput()}`);
+                                        res.send(`Output: ${readOuput()}`);
                                     })
                             })
                     })
                     
-    res.status(200).send(`Code to be executed: ${req.body.code}`);
+    // dockerApp.buildNodeImage().then(handleSuccessfulImageBuild(image), handleImageBuildError());
+    // res.status(200).send(`Code to be executed: ${req.body.code}`);
 });
+
+// handleSuccessfulImageBuild(image) {
+//     image.stderr ? console.error(`stderr in dockerApp.buildNodeImage(): ${image.stderr}`)
+//     : console.log();
+
+//     dockerApp.createNodeContainer()
+//         .then(container => {
+
+//         }, error => {
+
+//         });
+// }
+
+// handleImageBuildError(error) {
+//     return console.error(`Error in dockerApp.buildNodeImage(): ${error}`)
+// }
 
 app.listen(8080, () => {
     console.log('Syntasso JS Engine server listening on port 8080 ...');
