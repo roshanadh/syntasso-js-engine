@@ -49,7 +49,7 @@ class DockerApp {
     
     startNodeContainer = () => {
         return new Promise((resolve, reject) => {
-            console.log('Building a Node.js image ... ');
+            console.log('Starting the Node.js container ... ');
             exec('docker container start cont_node', (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js container start: ${error}`);
@@ -71,8 +71,9 @@ class DockerApp {
     execInNodeContainer = () => {
         try{
             const child = spawnSync('docker',
-                ['exec', '-it', 'cont_node', 'node', 'home/submission.js'], {
-                    stdio: 'inherit'
+                ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
+                    shell: true,
+                    stdio: ['inherit', 'pipe', 'pipe'],
             });
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
