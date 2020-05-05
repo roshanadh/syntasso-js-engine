@@ -68,8 +68,35 @@ class DockerApp {
         });
     }
     
-    execInNodeContainer = () => {
-        try{
+    execInNodeContainer = (execConfig) => {
+        // if execConfig.isDirectExecution is true, directly execute the code
+        // else, write the code in execConfig.code to home/submission.js file ...
+        // ... inside the container
+        const { isDirectExecution, code } = execConfig;
+        if(!isDirectExecution) {
+            let containerID;
+            try {
+                // get container ID
+
+                let container = spawnSync('docker',
+                    ['ps', '-aqf', "\"name=cont_node\""], {
+                        shell: true,
+                        stdio: ['pipe', 'pipe', 'pipe'],
+                });
+                containerID = container.output.toString().split(',')[1].trim();
+                console.log('Container ID is: ' + containerID);
+                // copy submission.js from host to container's home/submission.js
+                container = spawnSync('docker',
+                    ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
+                        stdio: ['pipe', 'pipe', 'pipe'],
+                });
+
+                // Handle errors
+            } catch (err) {
+                throw new Error(err)
+            }
+        }
+        try {
             const child = spawnSync('docker',
                 ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
                     shell: true,
@@ -79,7 +106,7 @@ class DockerApp {
             const ioArray = child.output.toString().split(',');
             // ioArray = [0, 1, 2]
             // ioArray = [stdin, stdout, stderr]
-            
+
             const io = {
                 stdin: ioArray[0],
                 stdout: ioArray[1],
