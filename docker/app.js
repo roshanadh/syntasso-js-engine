@@ -75,8 +75,26 @@ class DockerApp {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
+            
+            const ioArray = child.output.toString().split(',');
+            // ioArray = [0, 1, 2]
+            // ioArray = [stdin, stdout, stderr]
+            
+            const io = {
+                stdin: ioArray[0],
+                stdout: ioArray[1],
+                stderr: ioArray[2]
+            };
+
+            if (!(io.stderr === '')) {
+                // stderr has piped the error
+                return { error: io.stderr };
+            }
+            console.log("\nSTDIO for 'docker exec' command: ");
+            console.table(io);
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
+            return { error: err };
         }
     }
     
