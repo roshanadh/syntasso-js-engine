@@ -111,7 +111,10 @@ app.post('/execute', (req, res) => {
                 res.status(503).send(`Service currently unavailable due to server conditions.`);
         });
     } else if (dockerConfig === 2) {
-        const executionStatus = dockerApp.execInNodeContainer();
+        // TODO:
+        //  Write the submitted code in 'home/submission.js' inside the container ...
+        // ... before execution
+        const executionStatus = dockerApp.execInNodeContainer({ isDirectExecution: false, code: "console.log('Hello World!')"});
         if (!(executionStatus === undefined)) {
             let { error } = executionStatus;
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
