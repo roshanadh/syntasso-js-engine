@@ -69,14 +69,54 @@ class DockerApp {
     }
     
     execInNodeContainer = () => {
-        try{
+        // --- Copy the code inside the container to execute --- 
+        let containerID;
+        try {
+            // get container ID from container name 'cont_node'
+            let container = spawnSync('docker',
+                ['ps', '-aqf', "\"name=cont_node\""], {
+                    shell: true,
+                    stdio: ['pipe', 'pipe', 'pipe'],
+            });
+            containerID = container.output.toString().split(',')[1].trim();
+            console.log('Container ID is: ' + containerID);
+
+            // copy submission.js from host to container's home/submission.js
+            container = spawnSync('docker',
+                ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
+                    stdio: ['pipe', 'pipe', 'pipe'],
+            });
+        } catch (err) {
+            console.error(`Error during copying submission.js into the container: ${err}`);
+            return { error: err };
+        }
+
+        try {
             const child = spawnSync('docker',
                 ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
+            
+            const ioArray = child.output.toString().split(',');
+            // ioArray = [0, 1, 2]
+            // ioArray = [stdin, stdout, stderr]
+
+            const io = {
+                stdin: ioArray[0],
+                stdout: ioArray[1],
+                stderr: ioArray[2]
+            };
+
+            if (!(io.stderr === '')) {
+                // stderr has piped the error
+                return { error: io.stderr };
+            }
+            console.log("\nSTDIO for 'docker exec' command: ");
+            console.table(io);
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
+            return { error: err };
         }
     }
     
