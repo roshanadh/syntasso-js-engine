@@ -25,7 +25,8 @@ app.post('/execute', (req, res) => {
     * 2. req.body.dockerConfig: Integer => 
     * ... a) if 0, docker environment (image build and container create) should be setup ...
     * ... ... before code execution
-    * ... b) if 1, docker container should be started before code execution
+    * ... b) if 1, docker container should be started before code execution, no need to ....
+    * ... ... build an image or to create a container
     * ... c) if 2, just execute the code, no need to create and/or start the container
     */
     if(!req.body.code) {
@@ -114,7 +115,7 @@ app.post('/execute', (req, res) => {
         // TODO:
         //  Write the submitted code in 'home/submission.js' inside the container ...
         // ... before execution
-        const executionStatus = dockerApp.execInNodeContainer({ isDirectExecution: false, code: "console.log('Hello World!')"});
+        const executionStatus = dockerApp.execInNodeContainer();
         if (!(executionStatus === undefined)) {
             let { error } = executionStatus;
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
