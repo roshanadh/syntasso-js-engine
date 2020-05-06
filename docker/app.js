@@ -68,34 +68,29 @@ class DockerApp {
         });
     }
     
-    execInNodeContainer = (execConfig) => {
-        // if execConfig.isDirectExecution is true, directly execute the code
-        // else, write the code in execConfig.code to home/submission.js file ...
-        // ... inside the container
-        const { isDirectExecution, code } = execConfig;
-        if(!isDirectExecution) {
-            let containerID;
-            try {
-                // get container ID
+    execInNodeContainer = () => {
+        // --- Copy the code inside the container to execute --- 
+        let containerID;
+        try {
+            // get container ID from container name 'cont_node'
+            let container = spawnSync('docker',
+                ['ps', '-aqf', "\"name=cont_node\""], {
+                    shell: true,
+                    stdio: ['pipe', 'pipe', 'pipe'],
+            });
+            containerID = container.output.toString().split(',')[1].trim();
+            console.log('Container ID is: ' + containerID);
 
-                let container = spawnSync('docker',
-                    ['ps', '-aqf', "\"name=cont_node\""], {
-                        shell: true,
-                        stdio: ['pipe', 'pipe', 'pipe'],
-                });
-                containerID = container.output.toString().split(',')[1].trim();
-                console.log('Container ID is: ' + containerID);
-                // copy submission.js from host to container's home/submission.js
-                container = spawnSync('docker',
-                    ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
-                        stdio: ['pipe', 'pipe', 'pipe'],
-                });
-
-                // Handle errors
-            } catch (err) {
-                throw new Error(err)
-            }
+            // copy submission.js from host to container's home/submission.js
+            container = spawnSync('docker',
+                ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
+                    stdio: ['pipe', 'pipe', 'pipe'],
+            });
+        } catch (err) {
+            console.error(`Error during copying submission.js into the container: ${err}`);
+            return { error: err };
         }
+
         try {
             const child = spawnSync('docker',
                 ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
