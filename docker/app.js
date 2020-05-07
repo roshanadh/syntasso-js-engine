@@ -92,6 +92,18 @@ class DockerApp {
                 ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
+            
+            const io = container.output.toString().split(',');
+            /*
+             * io = [0, 1, 2]
+             * io = [stdin, stdout, stderr]
+             * We need to catch any potential stderr
+            */
+            if (io[2] !== '') {
+                console.error(`Error during the execution of 'docker cp' command.`);
+                console.error(`Error during copying submission.js into the container: ${io[2]}`);
+                return { error: io[2] };    
+            }
         } catch (err) {
             console.error(`Error during copying submission.js into the container: ${err}`);
             return { error: err };
