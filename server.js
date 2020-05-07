@@ -81,19 +81,25 @@ app.post('/execute', (req, res) => {
                             startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
                                 : console.log('Node.js container started.');
 
-                            dockerApp.execInNodeContainer();
-                            console.log('\nResponse to the client:');
-                            console.table({ output: readOutput().toString() });
-                            res.status(200).json({ output: readOutput().toString() });
-            
-                            }, error => {
-                                console.error(`Error in dockerApp.startNodeContainer(): ${error}`);
+                            const executionStatus = dockerApp.execInNodeContainer();
+                            if (!(executionStatus === undefined)) {
+                                let { error } = executionStatus;
+                                console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
                                 res.status(503).send(`Service currently unavailable due to server conditions.`);
-                        })
+                            } else {
+                                console.log('\nResponse to the client:');
+                                console.table({ output: readOutput().toString() });
+                                res.status(200).json({ output: readOutput().toString() });
+                            }  
+
+                        }, error => {
+                            console.error(`Error in dockerApp.startNodeContainer(): ${error}`);
+                            res.status(503).send(`Service currently unavailable due to server conditions.`);
+                        });
                     }, error => {
                         console.error(`Error in dockerApp.createNodeContainer(): ${error}`);
                         res.status(503).send(`Service currently unavailable due to server conditions.`);
-                })
+                });
         }, error => {
                 console.error(`Error in dockerApp.buildNodeImage(): ${error}`);
                 res.status(503).send(`Service currently unavailable due to server conditions.`);
@@ -104,10 +110,17 @@ app.post('/execute', (req, res) => {
                 startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
                     : console.log('Node.js container started.');
 
-                dockerApp.execInNodeContainer();
-                console.log('\nResponse to the client:');
-                console.table({ output: readOutput().toString() });
-                res.status(200).json({ output: readOutput().toString() });
+                const executionStatus = dockerApp.execInNodeContainer();
+                if (!(executionStatus === undefined)) {
+                    let { error } = executionStatus;
+                    console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
+                    res.status(503).send(`Service currently unavailable due to server conditions.`);
+                } else {
+                    console.log('\nResponse to the client:');
+                    console.table({ output: readOutput().toString() });
+                    res.status(200).json({ output: readOutput().toString() });
+                }
+            
     
             }, error => {
                 console.error(`Error in dockerApp.startNodeContainer(): ${error}`);
