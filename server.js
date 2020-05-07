@@ -49,6 +49,12 @@ app.post('/execute', (req, res) => {
     }
 
     if (dockerConfig === 0) {
+        /*
+         * TODO: Reduce code redundancy
+         * Reuse:
+         * ... i) startNodeContainer()  => used for dockerConfig = 0 and 1
+         * ... ii) execInNodeContainer() => used for dockerConfig = 0, 1, and 2
+        */
         // build image and then create container
         // dockerApp.buildNodeImage()
         // .then(image => {
