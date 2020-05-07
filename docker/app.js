@@ -79,6 +79,12 @@ class DockerApp {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             containerID = container.output.toString().split(',')[1].trim();
+            /*
+             * When there are multiple containers with names containing "cont_node" substring, ...
+             * ... containerID string contains multiple container IDs separated by a newline
+             * We need to extract the first container ID that exactly matches the "cont_node" name
+            */
+            containerID = containerID.split('\n')[0];
             console.log('Container ID is: ' + containerID);
 
             // copy submission.js from host to container's home/submission.js
