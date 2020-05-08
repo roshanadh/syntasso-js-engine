@@ -4,7 +4,7 @@ class DockerApp {
     buildNodeImage = () => {
         return new Promise((resolve, reject) => {
             console.log('Building a Node.js image ... ');
-            exec('docker build -t img_node .', (error, stdout, stderr) => {
+            exec('docker build -t img_node .', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js image build: ${error}`);
                     reject(error);
@@ -26,7 +26,7 @@ class DockerApp {
         return new Promise((resolve, reject) => {
             console.log('Removing any prexisting Node.js container ... ');
             // remove any preexisting container
-            exec('docker container rm cont_node --force', (error, stdout, stderr) => {
+            exec('docker container rm cont_node --force', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 console.log('Creating a Node.js container ... ');
                 exec('docker container create -it --name cont_node img_node', (error, stdout, stderr) => {
                     if (error) {
@@ -50,7 +50,7 @@ class DockerApp {
     startNodeContainer = () => {
         return new Promise((resolve, reject) => {
             console.log('Starting the Node.js container ... ');
-            exec('docker container start cont_node', (error, stdout, stderr) => {
+            exec('docker container start cont_node', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js container start: ${error}`);
                     reject(error);
