@@ -79,6 +79,12 @@ class DockerApp {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             containerID = container.output.toString().split(',')[1].trim();
+            /*
+             * When there are multiple containers with names containing "cont_node" substring, ...
+             * ... containerID string contains multiple container IDs separated by a newline
+             * We need to extract the first container ID that exactly matches the "cont_node" name
+            */
+            containerID = containerID.split('\n')[0];
             console.log('Container ID is: ' + containerID);
 
             // copy submission.js from host to container's home/submission.js
@@ -86,6 +92,18 @@ class DockerApp {
                 ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
+            
+            const io = container.output.toString().split(',');
+            /*
+             * io = [0, 1, 2]
+             * io = [stdin, stdout, stderr]
+             * We need to catch any potential stderr
+            */
+            if (io[2] !== '') {
+                console.error(`Error during the execution of 'docker cp' command.`);
+                console.error(`Error during copying submission.js into the container: ${io[2]}`);
+                return { error: io[2] };    
+            }
         } catch (err) {
             console.error(`Error during copying submission.js into the container: ${err}`);
             return { error: err };
