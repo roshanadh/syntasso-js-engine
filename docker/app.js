@@ -1,4 +1,5 @@
 const { exec, spawnSync } = require('child_process');
+const { performance } = require('perf_hooks');
 
 class DockerApp {
     buildNodeImage = () => {
@@ -84,7 +85,6 @@ class DockerApp {
                         try {
                             this._times = stderr.split('\n');
                             this._totalTime = this._times[1].split('\t')[1];
-                            console.log(stderr);
                         } catch (err) {
                             // stderr contains an actual error and not execution times
                             console.error(`stderr during Node.js container creation: ${stderr}`);
@@ -159,7 +159,10 @@ class DockerApp {
         this._stderr = null;
         this._times = null;
         this._totalTime = null;
-        
+
+        // use performance.now() for timing synchronous methods
+        let startTime = performance.now();
+        let stepTime = 0.0;
         // --- Copy the code inside the container to execute --- 
         let containerID;
         try {
@@ -169,6 +172,7 @@ class DockerApp {
                     shell: true,
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
+            stepTime = performance.now() - startTime;
             containerID = container.output.toString().split(',')[1].trim();
             /*
              * When there are multiple containers with names containing "cont_node" substring, ...
@@ -178,12 +182,16 @@ class DockerApp {
             containerID = containerID.split('\n')[0];
             console.log('Container ID is: ' + containerID);
 
+            console.log('\nTime taken to fetch container ID: ' + stepTime + 'ms');
+
+            stepTime = performance.now();
             // copy submission.js from host to container's home/submission.js
             container = spawnSync('docker',
                 ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
-            
+            console.log('Time taken to copy submission.js into the container: ' + (performance.now() - stepTime) + 'ms');
+
             const io = container.output.toString().split(',');
             /*
              * io = [0, 1, 2]
@@ -201,12 +209,15 @@ class DockerApp {
         }
 
         try {
+            stepTime = performance.now();
             const child = spawnSync('docker',
                 ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
-            
+            console.log('Time taken to execute the code: ' + (performance.now() - stepTime) + 'ms');
+            console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (performance.now() - startTime) + 'ms');
+
             const ioArray = child.output.toString().split(',');
             // ioArray = [0, 1, 2]
             // ioArray = [stdin, stdout, stderr]
