@@ -233,7 +233,7 @@ class DockerApp {
                 return { error: io.stderr };
             }
             console.log("\nSTDIO for 'docker exec' command: ");
-            console.table(io);
+            console.dir(io);
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
             return { error: err };
