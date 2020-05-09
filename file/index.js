@@ -10,7 +10,7 @@ module.exports.updateCodeInFile = (code) => {
     }
 }
 
-module.exports.readOuput = () => {
+module.exports.readOutput = () => {
     let filePath = __dirname + '/.output';
     try {
         return fs.readFileSync(filePath);
