@@ -49,6 +49,12 @@ app.post('/execute', (req, res) => {
     }
 
     if (dockerConfig === 0) {
+        /*
+         * TODO: Reduce code redundancy
+         * Reuse:
+         * ... i) startNodeContainer()  => used for dockerConfig = 0 and 1
+         * ... ii) execInNodeContainer() => used for dockerConfig = 0, 1, and 2
+        */
         // build image and then create container
         // dockerApp.buildNodeImage()
         // .then(image => {
@@ -88,7 +94,7 @@ app.post('/execute', (req, res) => {
                                 res.status(503).send(`Service currently unavailable due to server conditions.`);
                             } else {
                                 console.log('\nResponse to the client:');
-                                console.table({ output: readOutput().toString() });
+                                console.dir({ output: readOutput().toString() });
                                 res.status(200).json({ output: readOutput().toString() });
                             }  
 
