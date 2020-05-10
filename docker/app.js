@@ -4,12 +4,15 @@ const { performance } = require('perf_hooks');
 execInNodeContainer = () => {
     try {
         let startTime = performance.now();
+        let totalTime = 0.0;
         const nodeExec = spawnSync('docker',
             ['run', '-it', '--rm', '-v', __dirname + '/../file:/usr/src/app', '-w', '/usr/src/app', 'node', 'submission.js'],
             {
                 stdio: ['inherit', 'pipe', 'pipe'],
         });
-        console.log(`\nTime taken for compiling and executing JavaScript code: ${performance.now() - startTime}ms\n`);
+        totalTime = performance.now() - startTime;
+        console.log(`\nTime taken for compiling and executing JavaScript code: ${totalTime}ms\n`);
+
         const io = nodeExec.output.toString().split(',');
         /*
          * io = [0, 1, 2]
@@ -23,7 +26,7 @@ execInNodeContainer = () => {
             console.error(`Error during the execution of 'docker run' command: ${io[2]}`);
             return { stderr: io[2] };    
         }
-        return { stdout: io[1] }
+        return { stdout: io[1], totalTime }
     } catch (err) {
         console.error(`Error during copying submission.js into the container: ${err}`);
         return { stderr: err };
