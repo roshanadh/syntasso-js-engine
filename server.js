@@ -29,14 +29,14 @@ app.post('/execute', (req, res) => {
     // write the user submitted code into a file
     updateCodeInFile(req.body.code);
     // compile and execute the code inside a Node.js container
-    let { stdout, stderr } = execInNodeContainer();
+    let { stdout, stderr, totalTime } = execInNodeContainer();
     if (stderr) {
         console.error(`stderr in dockerApp.execInNodeContainer(): ${stderr}`);
         res.status(503).send(`Service currently unavailable due to server conditions.`);
     } else {
         console.log('\nResponse to the client:');
-        console.dir({ output: stdout });
-        res.status(200).json({ output: stdout });
+        console.dir({ output: stdout, totalTime });
+        res.status(200).json({ output: stdout, totalTime });
     }
 });
 
