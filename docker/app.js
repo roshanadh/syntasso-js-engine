@@ -1,6 +1,20 @@
 const { exec, spawnSync } = require('child_process');
 const { performance } = require('perf_hooks');
 
+modifyTime = (time) => {
+    /*
+     * execTime is of type 'number' : It represents miliseconds
+     * Other performance times (imageBuildTime, containerCreateTime, and containerStartTime) ...
+     * ... are in the form '0m0.000s
+     * We need to return these times in a similar structure as execTime
+    */
+    let minutes = parseInt(time.split('m')[0]);
+    // remove trailing 's'
+    let seconds = parseFloat((time.split('m')[1]).replace('s', ''));
+    // return the time interms of milliseconds
+    return ((minutes * 60) + seconds) * 1000;
+}
+
 class DockerApp {
     buildNodeImage = () => {
         // set all instance variables null so that it does not retain value from any previous ...
@@ -45,8 +59,8 @@ class DockerApp {
                 console.log(`Time taken for image build: ${this._totalTime}`);
                 // if an stderr has occurred and this._stderr has been initialized, ...
                 // ... the resolved object should contain the stderr as well
-                this._stderr ? resolve({ success: true, stdout, stderr, totalTime: this._totalTime })
-                    : resolve({ success: true, stdout, totalTime: this._totalTime });
+                this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
+                    : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
             });
         });
     }
@@ -97,8 +111,8 @@ class DockerApp {
                     console.log(`Time taken for container creation: ${this._totalTime}`);
                     // if an stderr has occurred and this._stderr has been initialized, ...
                     // ... the resolved object should contain the stderr as well
-                    this._stderr ? resolve({ success: true, stdout, stderr, totalTime: this._totalTime })
-                        : resolve({ success: true, stdout, totalTime: this._totalTime });
+                    this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
+                        : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
                 });
             });	
         });
@@ -147,8 +161,8 @@ class DockerApp {
                 console.log(`Time taken for container start: ${this._totalTime}`);
                 // if an stderr has occurred and this._stderr has been initialized, ...
                 // ... the resolved object should contain the stderr as well
-                this._stderr ? resolve({ success: true, stdout, stderr, totalTime: this._totalTime })
-                    : resolve({ success: true, stdout, totalTime: this._totalTime });
+                this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
+                    : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
             });
         });
     }
@@ -215,7 +229,8 @@ class DockerApp {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
-            console.log('Time taken to execute the code: ' + (performance.now() - stepTime) + 'ms');
+            let execTime = performance.now() - stepTime;
+            console.log('Time taken to execute the code: ' + execTime + 'ms');
             console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (performance.now() - startTime) + 'ms');
 
             const ioArray = child.output.toString().split(',');
@@ -234,55 +249,13 @@ class DockerApp {
             }
             console.log("\nSTDIO for 'docker exec' command: ");
             console.dir(io);
+
+            return { execTime };
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
             return { error: err };
         }
     }
-    
-    // runContainer = () => {
-    //     // remove container if exists
-    //     exec('docker container rm cont_node', (error, stdout, stderr) => {
-    //         const child = spawnSync('docker',
-    //             ['container', 'run', '-it', '--name', 'cont_node', 'img_node'], {
-    //                 stdio: 'inherit'
-    //         });
-    //     });	
-    // }
-    
-    // attachContainer = () => {
-    //     const child_process = require('child_process');
-    //     child_process.spawnSync('docker', [ 'run', '--rm', '-ti', 'hello-world' ], {
-    //     stdio: 'inherit'
-    // });
-    //     const child = spawn('docker', ['container', 'run', 'cont_node']);
-    
-    //     child.stderr.on('data', (data) => {
-    //         console.error(`stderr: ${data}`);
-    //     });
-    
-    //     child.stdout.on('data', (data) => {
-    //         console.log('attached a container');
-    //         console.log(data.toString());
-            
-    //     exec('docker container attach cont_node', (error, stdout, stderr) => {
-    //         if (error) {
-    //             console.error(`exec error: ${error}`);
-    //             return;
-    //         }
-    //         console.log('attached a container');
-    //         exec(`console.log("Hello World!");`, (error, stdout, stderr) => {
-    //             if (error) {
-    //                 console.error(`exec error: ${error}`);
-    //                 return;
-    //             }
-    //             console.log(`final stdout: ${stdout}`);
-    //             console.error(`stderr: ${stderr}`);
-    
-    //         });
-    //     });
-    //     });
-    // }
 }
 
 module.exports = DockerApp;
