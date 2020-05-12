@@ -138,7 +138,6 @@ app.post('/execute', (req, res) => {
                     res.status(200).json(response);
                 }
             
-    
             }, error => {
                 console.error(`Error in dockerApp.startNodeContainer(): ${error}`);
                 res.status(503).send(`Service currently unavailable due to server conditions.`);
@@ -147,7 +146,19 @@ app.post('/execute', (req, res) => {
         const { error, execTime } = dockerApp.execInNodeContainer();
         if (error) {
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
-            res.status(503).send(`Service currently unavailable due to server conditions.`);
+            /*
+             * Check if the error message is for an idle container
+            */
+            try {
+                if (error.slice(-15).trim() === "is not running")
+                    res.status(503).json({
+                        error: "The container is not currently running on the server. Request again with dockerConfig 0 or 1."
+                    });
+                else res.status(503).send(`Service currently unavailable due to server conditions.`);
+            } catch (err) {
+                console.error(`Error during slicing the error message from dockerApp.execInNodeContainer(): ${err}`);
+                res.status(503).send(`Service currently unavailable due to server conditions.`);
+            }
         } else {
             console.log('\nResponse to the client:');
             const response = {
