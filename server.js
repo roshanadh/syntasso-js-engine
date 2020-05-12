@@ -87,9 +87,8 @@ app.post('/execute', (req, res) => {
                             startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
                                 : console.log('Node.js container started.');
 
-                            const { executionStatus, execTime } = dockerApp.execInNodeContainer();
-                            if (!(executionStatus === undefined)) {
-                                let { error } = executionStatus;
+                            const { error, execTime } = dockerApp.execInNodeContainer();
+                            if (error) {
                                 console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
                                 res.status(503).send(`Service currently unavailable due to server conditions.`);
                             } else {
@@ -123,9 +122,9 @@ app.post('/execute', (req, res) => {
                 startStatus.stderr ? console.error(`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`)
                     : console.log('Node.js container started.');
 
-                const { executionStatus, execTime } = dockerApp.execInNodeContainer();
-                if (!(executionStatus === undefined)) {
-                    let { error } = executionStatus;
+                const { error, execTime } = dockerApp.execInNodeContainer();
+                if (!(error === undefined)) {
+                    let { error } = error;
                     console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
                     res.status(503).send(`Service currently unavailable due to server conditions.`);
                 } else {
@@ -145,9 +144,8 @@ app.post('/execute', (req, res) => {
                 res.status(503).send(`Service currently unavailable due to server conditions.`);
         });
     } else if (dockerConfig === 2) {
-        const { executionStatus, execTime } = dockerApp.execInNodeContainer();
-        if (!(executionStatus === undefined)) {
-            let { error } = executionStatus;
+        const { error, execTime } = dockerApp.execInNodeContainer();
+        if (error) {
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
             res.status(503).send(`Service currently unavailable due to server conditions.`);
         } else {
