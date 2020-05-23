@@ -229,9 +229,7 @@ class DockerApp {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
-            let execTime = performance.now() - stepTime;
-            console.log('Time taken to execute the code: ' + execTime + 'ms');
-            console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (performance.now() - startTime) + 'ms');
+            let now = performance.now();
 
             const ioArray = child.output.toString().split(',');
             // ioArray = [0, 1, 2]
@@ -247,10 +245,13 @@ class DockerApp {
                 // stderr has piped the error
                 return { error: io.stderr };
             }
+            console.log('Time taken to execute the code: ' + now - stepTime + 'ms');
+            console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (now - startTime) + 'ms');
+
             console.log("\nSTDIO for 'docker exec' command: ");
             console.dir(io);
 
-            return { execTime };
+            return { execTime: now - stepTime };
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
             return { error: err };

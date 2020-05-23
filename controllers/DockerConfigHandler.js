@@ -47,17 +47,18 @@ class DockerConfigHandler {
         if (error) {
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
             res.status(503).send(`Service currently unavailable due to server conditions.`);   
+        } else {
+            console.log('\nResponse to the client:');
+            const response = {
+                output: readOutput().toString(),
+                imageBuildTime,
+                containerCreateTime,
+                containerStartTime,
+                execTime,
+            };
+            console.dir(response);
+            res.status(200).json(response);    
         }
-        console.log('\nResponse to the client:');
-        const response = {
-            output: readOutput().toString(),
-            imageBuildTime,
-            containerCreateTime,
-            containerStartTime,
-            execTime,
-        };
-        console.dir(response);
-        res.status(200).json(response);
     }
 
     handleConfigOne = async(res) => {
@@ -79,15 +80,16 @@ class DockerConfigHandler {
         if (error) {
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
             res.status(503).send(`Service currently unavailable due to server conditions.`);   
+        } else {
+            console.log('\nResponse to the client:');
+            const response = {
+                output: readOutput().toString(),
+                containerStartTime,
+                execTime,
+            };
+            console.dir(response);
+            res.status(200).json(response);    
         }
-        console.log('\nResponse to the client:');
-        const response = {
-            output: readOutput().toString(),
-            containerStartTime,
-            execTime,
-        };
-        console.dir(response);
-        res.status(200).json(response);
     }
 
     handleConfigTwo = (res) => {
