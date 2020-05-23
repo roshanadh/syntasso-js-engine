@@ -247,11 +247,11 @@ class DockerApp {
             }
             console.log('Time taken to execute the code: ' + now - stepTime + 'ms');
             console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (now - startTime) + 'ms');
-            
+
             console.log("\nSTDIO for 'docker exec' command: ");
             console.dir(io);
 
-            return { execTime };
+            return { execTime: now - stepTime };
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err}`);
             return { error: err };
