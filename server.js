@@ -6,6 +6,7 @@ const router = require('./routes/router.js');
 
 app.set('json spaces', 2);
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(router);
 
