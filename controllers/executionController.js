@@ -15,11 +15,11 @@ executionController = (req, res) => {
     * ... c) if 2, just execute the code, no need to create and/or start the container
     */
     if(!req.body.code) {
-        res.status(400).send("Bad Request: No Code Provided!");
+        res.status(400).json({ error: "Bad Request: No Code Provided!" });
         throw new Error("Bad Request Error at /execute POST. No Code Provided!");
     }
     if(!req.body.dockerConfig) {
-        res.status(400).send("Bad Request: No Docker Configuration Instruction Provided!");
+        res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
         throw new Error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
     }
     // write the provided code into a file
