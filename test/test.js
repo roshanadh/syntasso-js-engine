@@ -34,8 +34,8 @@ describe('Tests: ', () => {
     });
     
     describe('2. POST requests at /execute', () => {
-        describe('2a. POST without code and dockerConfig at /execute', () => {
-            it('should not POST without code and dockerConfig', done => {
+        describe('2a. POST without code at /execute', () => {
+            it('should not POST without code param', done => {
                 chai.request(server)
                     .post('/execute')
                     .end((err, res) => {
@@ -47,8 +47,8 @@ describe('Tests: ', () => {
             });
         });
     
-        describe('2b. POST with code but without dockerConfig at /execute', () => {
-            it('should not POST without dockerConfig', done => {
+        describe('2b. POST without dockerConfig at /execute', () => {
+            it('should not POST without dockerConfig param', done => {
                 let payload = {
                     code: "console.log('Hello World!)"
                 }
@@ -63,26 +63,9 @@ describe('Tests: ', () => {
                     });
             });
         });
-    
-        describe('2c. POST without code but with dockerConfig at /execute', () => {
-            it('should not POST without dockerConfig', done => {
-                let payload = {
-                    dockerConfig: 0
-                }
-                chai.request(server)
-                    .post('/execute')
-                    .send(payload)
-                    .end((err, res) => {
-                        res.body.should.be.a('object');
-                        res.body.should.have.property('error');
-                        res.body.error.should.equal('Bad Request: No Code Provided!');
-                        done();
-                    });
-            });
-        });
-    
-        describe('2d. POST with code and dockerConfig at /execute', () => {
-            it('should POST with both parameters provided', done => {
+        
+        describe('2c. POST with code and dockerConfig = 0 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 0', done => {
                 let payload = {
                     code: "console.log('Hello World!')",
                     dockerConfig: "0"
@@ -96,6 +79,45 @@ describe('Tests: ', () => {
                         res.body.should.have.property('imageBuildTime');
                         res.body.should.have.property('containerCreateTime');
                         res.body.should.have.property('containerStartTime');
+                        res.body.should.have.property('execTime');
+                        res.body.output.should.equal('Hello World!\r\n');
+                        done();
+                    });
+            });
+        });
+
+        describe('2d. POST with code and dockerConfig = 1 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 1', done => {
+                let payload = {
+                    code: "console.log('Hello World!')",
+                    dockerConfig: "1"
+                }
+                chai.request(server)
+                    .post('/execute')
+                    .send(payload)
+                    .end((err, res) => {
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('output');
+                        res.body.should.have.property('containerStartTime');
+                        res.body.should.have.property('execTime');
+                        res.body.output.should.equal('Hello World!\r\n');
+                        done();
+                    });
+            });
+        });
+
+        describe('2d. POST with code and dockerConfig = 2 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 2', done => {
+                let payload = {
+                    code: "console.log('Hello World!')",
+                    dockerConfig: "1"
+                }
+                chai.request(server)
+                    .post('/execute')
+                    .send(payload)
+                    .end((err, res) => {
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('output');
                         res.body.should.have.property('execTime');
                         res.body.output.should.equal('Hello World!\r\n');
                         done();
