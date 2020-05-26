@@ -1,5 +1,5 @@
 node_modules/
 file/submission.js
-.output
+file/output.txt
 .vscode
 .env
