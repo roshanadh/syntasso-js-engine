@@ -11,7 +11,7 @@ module.exports.updateCodeInFile = (code) => {
 }
 
 module.exports.readOutput = () => {
-    let filePath = __dirname + '/.output';
+    let filePath = __dirname + '/output.txt';
     try {
         return fs.readFileSync(filePath);
     } catch (err) {

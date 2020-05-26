@@ -225,27 +225,27 @@ class DockerApp {
         try {
             stepTime = performance.now();
             const child = spawnSync('docker',
-                ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/.output'], {
+                ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/output.txt'], {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
-            let now = performance.now();
+            let now = parseFloat(performance.now());
 
-            const ioArray = child.output.toString().split(',');
+            const ioArray = child.output;
             // ioArray = [0, 1, 2]
-            // ioArray = [stdin, stdout, stderr]
+            // ioArray = [stdin, stdout: Buffer, stderr: Buffer]
 
             const io = {
                 stdin: ioArray[0],
-                stdout: ioArray[1],
-                stderr: ioArray[2]
+                stdout: ioArray[1].toString('utf-8'),
+                stderr: ioArray[2].toString('utf-8')
             };
 
             if (!(io.stderr === '')) {
                 // stderr has piped the error
                 return { error: io.stderr };
             }
-            console.log('Time taken to execute the code: ' + now - stepTime + 'ms');
+            console.log('Time taken to execute the code: ' + (now - stepTime) + 'ms');
             console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (now - startTime) + 'ms');
 
             console.log("\nSTDIO for 'docker exec' command: ");
