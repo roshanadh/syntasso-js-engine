@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 app.use(router);
 
 const server = app.listen(PORT, () => {
-    console.log('Syntasso JS Engine server listening on port 8080 ...');
+    console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
 });
 
 module.exports = server;
