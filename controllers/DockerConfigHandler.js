@@ -50,7 +50,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().toString(),
+                output: readOutput().output,
+                error: readOutput().error,
                 imageBuildTime,
                 containerCreateTime,
                 containerStartTime,
@@ -83,7 +84,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().toString(),
+                output: readOutput().output,
+                error: readOutput().error,
                 containerStartTime,
                 execTime,
             };
@@ -112,7 +114,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().toString(),
+                output: readOutput().output,
+                error: readOutput().error,
                 execTime,
             };
             console.dir(response);
