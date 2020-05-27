@@ -1,12 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
+const { PORT } = require('./utils.js');
 
-dotenv.config();
-
-if (!process.env) throw new Error('Environment variable(s) not set.');
-
-const PORT = process.env.PORT;
 const app = express();
 const router = require('./routes/router.js');
 
