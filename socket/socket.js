@@ -1,14 +1,14 @@
 const socket = require('socket.io');
 
-const server = require('../server.js');
+module.exports = createSocket = server => {
+    const io = socket(server);
 
-const io = socket(server);
-
-io.on('connection', socket => {
-    console.log(`\nCONNECTION: New socket with id ${socket.id} has connected.\n`);
-
-    socket.on('disconnect', reason => {
-        console.log(`\nDISCONNECT: Socket with id ${socket.id} has disconnected.`);
-        console.log(`REASON: ${reason}\n`);
+    io.on('connection', socket => {
+        console.log(`\nCONNECTION: New socket connection with id ${socket.id}\n`);
+    
+        socket.on('disconnect', reason => {
+            console.log(`\nDISCONNECT: Socket disconnected with id ${socket.id}`);
+            console.log(`REASON: ${reason}\n`);
+        });
     });
-});
+}
