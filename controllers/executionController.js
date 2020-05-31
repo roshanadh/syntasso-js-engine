@@ -37,13 +37,13 @@ module.exports = executionController = (req, res) => {
 
     switch(dockerConfig) {
         case 0:
-            handler.handleConfigZero(res);
+            handler.handleConfigZero(req.session, res);
             break;
         case 1:
-            handler.handleConfigOne(res);
+            handler.handleConfigOne(req.session, res);
             break;
         case 2:
-            handler.handleConfigTwo(res);
+            handler.handleConfigTwo(req.session, res);
             break;
         default:
             res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
