@@ -8,11 +8,15 @@ modifyTime = (time) => {
      * ... are in the form '0m0.000s
      * We need to return these times in a similar structure as execTime
     */
-    let minutes = parseInt(time.split('m')[0]);
-    // remove trailing 's'
-    let seconds = parseFloat((time.split('m')[1]).replace('s', ''));
-    // return the time interms of milliseconds
-    return ((minutes * 60) + seconds) * 1000;
+    try {
+        let minutes = parseInt(time.split('m')[0]);
+        // remove trailing 's'
+        let seconds = parseFloat((time.split('m')[1]).replace('s', ''));
+        // return the time interms of milliseconds
+        return ((minutes * 60) + seconds) * 1000;
+    } catch (err) {
+        return err;
+    }
 }
 
 class DockerApp {
