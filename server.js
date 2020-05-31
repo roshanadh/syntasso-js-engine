@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-const createSocket = require('./socket/socket.js');
+const Socket = require('./socket/socket.js');
 const { PORT } = require('./utils.js');
 
 const app = express();
@@ -21,6 +21,6 @@ const server = app.listen(PORT, () => {
     console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
 });
 
-createSocket(server);
+socketInstance = new Socket(server);
 
-module.exports = server;
+module.exports = { server, socketInstance };
