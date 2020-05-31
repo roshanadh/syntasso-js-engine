@@ -4,10 +4,10 @@ const { readOutput } = require('../file/index.js');
 const dockerApp = new DockerApp();
 
 class DockerConfigHandler {
-    handleConfigZero = async(res) => {
+    handleConfigZero = async(session, res) => {
         let imageBuildTime, containerCreateTime, containerStartTime;
         try {
-            let { stderr, totalTime } = await dockerApp.buildNodeImage();
+            let { stderr, totalTime } = await dockerApp.buildNodeImage(session);
             imageBuildTime = totalTime;
 
             stderr ? console.error(`stderr in dockerApp.buildNodeImage(): ${image.stderr}`)
@@ -16,7 +16,7 @@ class DockerConfigHandler {
         } catch (err) {
             // handle promise rejection
             res.status(503).send(`Service currently unavailable due to server conditions.`);
-            throw new Error(`Error in dockerApp.buildNodeImage(): ${error}`);
+            throw new Error(`Error in dockerApp.buildNodeImage(): ${err}`);
         }    
         try {
             let { stderr, totalTime } = await dockerApp.createNodeContainer();
@@ -28,7 +28,7 @@ class DockerConfigHandler {
         } catch (err) {
             // handle promise rejection
             res.status(503).send(`Service currently unavailable due to server conditions.`);
-            throw new Error(`Error in dockerApp.createNodeContainer(): ${error}`);
+            throw new Error(`Error in dockerApp.createNodeContainer(): ${err}`);
         }
         try {
             let { stderr, totalTime } = await dockerApp.startNodeContainer();
@@ -40,7 +40,7 @@ class DockerConfigHandler {
         } catch (err) {
             // handle promise rejection
             res.status(503).send(`Service currently unavailable due to server conditions.`);
-            throw new Error(`Error in dockerApp.startNodeContainer(): ${error}`);
+            throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
         }
 
         let { error, execTime } = dockerApp.execInNodeContainer();
@@ -62,7 +62,7 @@ class DockerConfigHandler {
         }
     }
 
-    handleConfigOne = async(res) => {
+    handleConfigOne = async(session, res) => {
         let containerStartTime;
         try {
             let { stderr, totalTime } = await dockerApp.startNodeContainer();
@@ -94,7 +94,7 @@ class DockerConfigHandler {
         }
     }
 
-    handleConfigTwo = (res) => {
+    handleConfigTwo = (session, res) => {
         let { error, execTime } = dockerApp.execInNodeContainer();
         if (error) {
             console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
