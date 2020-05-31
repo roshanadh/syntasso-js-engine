@@ -116,7 +116,7 @@ describe('Tests: ', () => {
         });
 
         describe('2d. POST with incorrect socketId at /execute', () => {
-            it('should not POST without dockerConfig param', done => {
+            it('should not POST withou correct socketId param', done => {
                 let payload = {
                     socketId: "asbAh123",
                     code: "console.log('Hello World!)",
@@ -135,8 +135,8 @@ describe('Tests: ', () => {
             });
         });
 
-        describe('2e. POST with code and dockerConfig = 0 at /execute', () => {
-            it('should POST with both parameters provided and dockerConfig = 0', done => {
+        describe('2e. POST with socketId, code and dockerConfig = 0 at /execute', () => {
+            it('should POST with all parameters provided and dockerConfig = 0', done => {
                 let payload = {
                     socketId,
                     code: "console.log('Hello World!')",
@@ -160,8 +160,8 @@ describe('Tests: ', () => {
             });
         });
 
-        describe('2f. POST with code and dockerConfig = 1 at /execute', () => {
-            it('should POST with both parameters provided and dockerConfig = 1', done => {
+        describe('2f. POST with socketId, code and dockerConfig = 1 at /execute', () => {
+            it('should POST with all parameters provided and dockerConfig = 1', done => {
                 let payload = {
                     socketId,
                     code: "console.log('Hello World!')",
@@ -183,8 +183,8 @@ describe('Tests: ', () => {
             });
         });
 
-        describe('2g. POST with code and dockerConfig = 2 at /execute', () => {
-            it('should POST with both parameters provided and dockerConfig = 2', done => {
+        describe('2g. POST with socketId, code and dockerConfig = 2 at /execute', () => {
+            it('should POST with all parameters provided and dockerConfig = 2', done => {
                 let payload = {
                     socketId,
                     code: "console.log('Hello World!')",
