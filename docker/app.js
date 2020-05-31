@@ -16,7 +16,7 @@ modifyTime = (time) => {
 }
 
 class DockerApp {
-    buildNodeImage = () => {
+    buildNodeImage = (session) => {
         // set all instance variables null so that it does not retain value from any previous ...
         // ... method call
         this._stderr = null;
@@ -25,7 +25,7 @@ class DockerApp {
         
         return new Promise((resolve, reject) => {
             console.log('Building a Node.js image ... ');
-            exec('time docker build -t img_node .', { shell: '/bin/bash' }, (error, stdout, stderr) => {
+            const build = exec('time docker build -t img_node .', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js image build: ${error}`);
                     reject(error);
@@ -61,6 +61,13 @@ class DockerApp {
                 // ... the resolved object should contain the stderr as well
                 this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
                     : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
+            });
+
+            const { socketInstance } = require('../server.js');
+            build.stdout.on('data', stdout => {
+                socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+                    stdout
+                });
             });
         });
     }
