@@ -134,5 +134,102 @@ describe('Tests: ', () => {
                     });
             });
         });
+
+        describe('2e. POST with code and dockerConfig = 0 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 0', done => {
+                let payload = {
+                    socketId,
+                    code: "console.log('Hello World!')",
+                    dockerConfig: "0"
+                }
+                chai.request(server)
+                    .post('/execute')
+                    .send(payload)
+                    .end((err, res) => {
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('output');
+                        res.body.should.have.property('error');
+                        res.body.should.have.property('imageBuildTime');
+                        res.body.should.have.property('containerCreateTime');
+                        res.body.should.have.property('containerStartTime');
+                        res.body.should.have.property('execTime');
+                        res.body.output.should.equal('Hello World!\r\n');
+                        expect(res.body.error).to.be.null;
+                        done();
+                    });
+            });
+        });
+
+        describe('2f. POST with code and dockerConfig = 1 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 1', done => {
+                let payload = {
+                    socketId,
+                    code: "console.log('Hello World!')",
+                    dockerConfig: "1"
+                }
+                chai.request(server)
+                    .post('/execute')
+                    .send(payload)
+                    .end((err, res) => {
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('output');
+                        res.body.should.have.property('error');
+                        res.body.should.have.property('containerStartTime');
+                        res.body.should.have.property('execTime');
+                        res.body.output.should.equal('Hello World!\r\n');
+                        expect(res.body.error).to.be.null;
+                        done();
+                    });
+            });
+        });
+
+        describe('2g. POST with code and dockerConfig = 2 at /execute', () => {
+            it('should POST with both parameters provided and dockerConfig = 2', done => {
+                let payload = {
+                    socketId,
+                    code: "console.log('Hello World!')",
+                    dockerConfig: "1"
+                }
+                chai.request(server)
+                    .post('/execute')
+                    .send(payload)
+                    .end((err, res) => {
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('output');
+                        res.body.should.have.property('error');
+                        res.body.should.have.property('execTime');
+                        res.body.output.should.equal('Hello World!\r\n');
+                        expect(res.body.error).to.be.null;
+                        done();
+                    });
+            });
+        });
+    });
+
+    describe('3. POST with errorful code and dockerConfig = 2 at /execute', () => {
+        it('should respond with ReferenceError', done => {
+            let payload = {
+                socketId,
+                code: `while(i <= 10) {\nconsole.log(k);\ni++;\n}`,
+                dockerConfig: "2"
+            }
+            chai.request(server)
+                .post('/execute')
+                .send(payload)
+                .end((err, res) => {
+                    res.body.should.be.a('object');
+                    res.body.should.have.property('output');
+                    res.body.should.have.property('error');
+                    res.body.should.have.property('execTime');
+                    expect(res.body.output).to.be.empty;
+                    res.body.error.should.have.property('errorName');
+                    res.body.error.should.have.property('errorMessage');
+                    res.body.error.should.have.property('lineNumber');
+                    res.body.error.should.have.property('columnNumber');
+                    res.body.error.should.have.property('errorStack');
+                    res.body.error.errorName.should.equal('ReferenceError');
+                    done();
+                });
+        });
     });
 });
