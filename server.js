@@ -1,11 +1,17 @@
 const express = require('express');
+const session = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const Socket = require('./socket/socket.js');
-const { PORT } = require('./utils.js');
+const { PORT, SECRET_SESSION_KEY } = require('./utils.js');
 
 const app = express();
+app.use(session({
+    secret: SECRET_SESSION_KEY,
+    saveUninitialized: true,
+    resave: true,
+}));
 app.use(cors());
 
 const router = require('./routes/router.js');
