@@ -23,7 +23,7 @@ describe('Tests: ', () => {
 
     before(done => {
         // create socket connection as client
-        socket = io.connect('http://localhost:3000', {
+        socket = io.connect('http://localhost:8080', {
             forceNew: true,
         });
         socket.on('connect', () => {
