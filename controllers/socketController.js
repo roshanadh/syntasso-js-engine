@@ -25,6 +25,7 @@ module.exports = socketController = (req, res, next) => {
         res.status(401).json({ error: "Unauthorized Request: Socket ID Not Recognized!" });
         throw new Error("Unauthorized Request Error at /execute POST. Socket ID Not Recognized!");
     }
+
     req.session.socketId = req.body.socketId;
     next();
 }
