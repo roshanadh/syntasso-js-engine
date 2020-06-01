@@ -4,7 +4,7 @@
   "description": "JavaScript compilation engine for Syntasso",
   "main": "server.js",
   "scripts": {
-    "test": "mocha --timeout 100000",
+    "test": "mocha --timeout 100000 --exit",
     "start": "NODE_ENV=dev node server.js"
   },
   "repository": {
