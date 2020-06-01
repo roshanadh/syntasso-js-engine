@@ -11,7 +11,7 @@ module.exports.updateCodeInFile = (code) => {
     }`;
     try {
         fs.writeFileSync(filePath, finalCode);
-        console.log(`Submitted code written to file: ${finalCode} > ${filePath}`);
+        console.log(`Submitted code written to file: ${filePath}`);
     } catch (err) {
         return console.error(`Error during writing code to file: ${err}`);
     }
