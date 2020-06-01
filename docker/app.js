@@ -84,7 +84,7 @@ class DockerApp {
         this._totalTime = null;
         
         return new Promise((resolve, reject) => {
-            console.log(`Removing any prexisting Node.js container ${session.socketId}... `);
+            console.log(`Removing any prexisting Node.js container: ${session.socketId}... `);
             // remove any preexisting container
             exec(`docker container rm ${session.socketId} --force`, (error, stdout, stderr) => {
                 console.log('Creating a Node.js container ... ');
@@ -147,8 +147,23 @@ class DockerApp {
             console.log('Starting the Node.js container ... ');
             exec(`time docker container start ${containerId}`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error during Node.js container start: ${error}`);
-                    reject(error);
+                    /*
+                     *  A potential err may include 'No such container: ${containerId}' ...
+                     *  ... which indicates that the container has not been created yet.
+                     *  If so, the client should be sent back a response body ...
+                     *  ... that contains a message to use dockerConfig value 0 ...
+                     *  ... so as to create a container before starting it.
+                    */
+                    
+                    let errorString = `No such container: ${session.socketId}`;
+                    if (error.message.includes(errorString)) {
+                        return reject({
+                            errorType: 'container-not-created-beforehand',
+                            error,
+                        });
+                    }
+                    console.error(`Error during Node.js container start: ${error.message}`);
+                    return reject(error.message);
                 }
                 if (stderr) {
                     /*
@@ -213,6 +228,24 @@ class DockerApp {
              * We need to catch any potential stderr
             */
             if (io[2] !== '') {
+                /*
+                 *  A potential err may include: ...
+                 *  ... 'No such container:path: ${containerId}':/home' ...
+                 *  ... which indicates that the container has not been created ...
+                 *  ... and/or started yet.
+                 *  If so, the client should be sent back a response body ...
+                 *  ... that contains a message to use dockerConfig value 0 or 1 ...
+                 *  ... so as to create a container or start the container (if it exists) ...
+                 *  ... before copying files into it.
+                */
+
+                const errorString = `No such container:path: ${session.socketId}:/home`;
+                if (io[2].includes(errorString)) {
+                    return {
+                        errorType: 'container-not-started-beforehand',
+                        error: io[2],
+                    };
+                }
                 console.error(`Error during the execution of 'docker cp' command.`);
                 console.error(`Error during copying submission.js into the container: ${io[2]}`);
                 return { error: io[2] };    
@@ -241,8 +274,15 @@ class DockerApp {
                 stderr: ioArray[2].toString('utf-8')
             };
 
-            if (!(io.stderr === '')) {
+            if (io.stderr !== '') {
                 // stderr has piped the error
+                const errorString = 'is not running';
+                if (io.stderr.includes(errorString)) {
+                    return {
+                        errorType: 'container-not-started-beforehand',
+                        error: io.stderr,
+                    };
+                }                
                 return { error: io.stderr };
             }
             console.log('Time taken to execute the code: ' + (now - stepTime) + 'ms');
@@ -253,7 +293,7 @@ class DockerApp {
 
             return { execTime: now - stepTime };
         } catch (err) {
-            console.error(`Error during JavaScript code execution: ${err}`);
+            console.error(`Error during JavaScript code execution: ${err.stack}`);
             return { error: err };
         }
     }
