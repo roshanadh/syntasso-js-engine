@@ -1,18 +1,28 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const redis = require('redis');
+const RedisStore = require('connect-redis')(session);
 const cors = require('cors');
 
 const Socket = require('./socket/socket.js');
-const { PORT, SECRET_SESSION_KEY } = require('./utils.js');
+const { PORT, LIVE_SERVER_PORT, SECRET_SESSION_KEY } = require('./utils.js');
 
+const client = redis.createClient();
 const app = express();
 app.use(session({
     secret: SECRET_SESSION_KEY,
-    saveUninitialized: true,
-    resave: true,
+    store: new RedisStore({
+        host: 'localhost',
+        port: 6379,
+        client,
+    }),
+    saveUninitialized: false,
+    resave: false,
 }));
-app.use(cors());
+
+// change origin to Syntasso Client's protocol://address:port when NODE_ENV = prod
+app.use(cors({ credentials: true, origin: `http://127.0.0.1:${LIVE_SERVER_PORT}`}));
 
 const router = require('./routes/router.js');
 
@@ -29,4 +39,4 @@ const server = app.listen(PORT, () => {
 
 socketInstance = new Socket(server);
 
-module.exports = { server, socketInstance };
+module.exports = { server, socketInstance, client };

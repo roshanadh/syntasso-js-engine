@@ -76,7 +76,7 @@ class DockerApp {
         });
     }
     
-    createNodeContainer = () => {
+    createNodeContainer = (session) => {
         // set all instance variables null so that it does not retain value from any previous ...
         // ... method call
         this._stderr = null;
@@ -84,11 +84,11 @@ class DockerApp {
         this._totalTime = null;
         
         return new Promise((resolve, reject) => {
-            console.log('Removing any prexisting Node.js container ... ');
+            console.log(`Removing any prexisting Node.js container: ${session.socketId}... `);
             // remove any preexisting container
-            exec('docker container rm cont_node --force', (error, stdout, stderr) => {
+            exec(`docker container rm ${session.socketId} --force`, (error, stdout, stderr) => {
                 console.log('Creating a Node.js container ... ');
-                exec('time docker container create -it --name cont_node img_node', { shell: '/bin/bash' }, (error, stdout, stderr) => {
+                const container = exec(`time docker container create -it --name ${session.socketId} img_node`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Error during Node.js container creation: ${error}`);
                         reject(error);
@@ -125,23 +125,45 @@ class DockerApp {
                     this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
                         : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
                 });
+
+                // 
+                container.stdout.on('data', containerId => {
+                    socketInstance.instance.to(session.socketId).emit('container-id', { containerId });
+                });
             });	
         });
     }
     
-    startNodeContainer = () => {
+    startNodeContainer = (session) => {
         // set all instance variables null so that it does not retain value from any previous ...
         // ... method call
         this._stderr = null;
         this._times = null;
         this._totalTime = null;
-        
+
+        let containerId = session.socketId;
+
         return new Promise((resolve, reject) => {
             console.log('Starting the Node.js container ... ');
-            exec('time docker container start cont_node', { shell: '/bin/bash' }, (error, stdout, stderr) => {
+            exec(`time docker container start ${containerId}`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error during Node.js container start: ${error}`);
-                    reject(error);
+                    /*
+                     *  A potential err may include 'No such container: ${containerId}' ...
+                     *  ... which indicates that the container has not been created yet.
+                     *  If so, the client should be sent back a response body ...
+                     *  ... that contains a message to use dockerConfig value 0 ...
+                     *  ... so as to create a container before starting it.
+                    */
+                    
+                    let errorString = `No such container: ${session.socketId}`;
+                    if (error.message.includes(errorString)) {
+                        return reject({
+                            errorType: 'container-not-created-beforehand',
+                            error,
+                        });
+                    }
+                    console.error(`Error during Node.js container start: ${error.message}`);
+                    return reject(error.message);
                 }
                 if (stderr) {
                     /*
@@ -178,7 +200,7 @@ class DockerApp {
         });
     }
     
-    execInNodeContainer = () => {
+    execInNodeContainer = (session) => {
         // set all instance variables null so that it does not retain value from any previous ...
         // ... method call
         this._stderr = null;
@@ -189,30 +211,12 @@ class DockerApp {
         let startTime = performance.now();
         let stepTime = 0.0;
         // --- Copy the code inside the container to execute --- 
-        let containerID;
+        let containerId = session.socketId;
         try {
-            // get container ID from container name 'cont_node'
-            let container = spawnSync('docker',
-                ['ps', '-aqf', "\"name=cont_node\""], {
-                    shell: true,
-                    stdio: ['pipe', 'pipe', 'pipe'],
-            });
-            stepTime = performance.now() - startTime;
-            containerID = container.output.toString().split(',')[1].trim();
-            /*
-             * When there are multiple containers with names containing "cont_node" substring, ...
-             * ... containerID string contains multiple container IDs separated by a newline
-             * We need to extract the first container ID that exactly matches the "cont_node" name
-            */
-            containerID = containerID.split('\n')[0];
-            console.log('Container ID is: ' + containerID);
-
-            console.log('\nTime taken to fetch container ID: ' + stepTime + 'ms');
-
             stepTime = performance.now();
             // copy submission.js from host to container's home/submission.js
-            container = spawnSync('docker',
-                ['cp', 'file/submission.js', containerID + ':/home/submission.js'], {
+            const container = spawnSync('docker',
+                ['cp', 'file/submission.js', containerId + ':/home/submission.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             console.log('Time taken to copy submission.js into the container: ' + (performance.now() - stepTime) + 'ms');
@@ -224,6 +228,24 @@ class DockerApp {
              * We need to catch any potential stderr
             */
             if (io[2] !== '') {
+                /*
+                 *  A potential err may include: ...
+                 *  ... 'No such container:path: ${containerId}':/home' ...
+                 *  ... which indicates that the container has not been created ...
+                 *  ... and/or started yet.
+                 *  If so, the client should be sent back a response body ...
+                 *  ... that contains a message to use dockerConfig value 0 or 1 ...
+                 *  ... so as to create a container or start the container (if it exists) ...
+                 *  ... before copying files into it.
+                */
+
+                const errorString = `No such container:path: ${session.socketId}:/home`;
+                if (io[2].includes(errorString)) {
+                    return {
+                        errorType: 'container-not-started-beforehand',
+                        error: io[2],
+                    };
+                }
                 console.error(`Error during the execution of 'docker cp' command.`);
                 console.error(`Error during copying submission.js into the container: ${io[2]}`);
                 return { error: io[2] };    
@@ -236,7 +258,7 @@ class DockerApp {
         try {
             stepTime = performance.now();
             const child = spawnSync('docker',
-                ['exec', '-it', 'cont_node', 'node', 'home/submission.js', '|', 'tee', 'file/output.txt'], {
+                ['exec', '-it', containerId, 'node', 'home/submission.js', '|', 'tee', 'file/output.txt'], {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
@@ -252,8 +274,15 @@ class DockerApp {
                 stderr: ioArray[2].toString('utf-8')
             };
 
-            if (!(io.stderr === '')) {
+            if (io.stderr !== '') {
                 // stderr has piped the error
+                const errorString = 'is not running';
+                if (io.stderr.includes(errorString)) {
+                    return {
+                        errorType: 'container-not-started-beforehand',
+                        error: io.stderr,
+                    };
+                }                
                 return { error: io.stderr };
             }
             console.log('Time taken to execute the code: ' + (now - stepTime) + 'ms');
@@ -264,7 +293,58 @@ class DockerApp {
 
             return { execTime: now - stepTime };
         } catch (err) {
-            console.error(`Error during JavaScript code execution: ${err}`);
+            console.error(`Error during JavaScript code execution: ${err.stack}`);
+            return { error: err };
+        }
+    }
+
+    removeNodeContainer = (socketId) => {
+        // set all instance variables null so that it does not retain value from any previous ...
+        // ... method call
+        this._stderr = null;
+        this._times = null;
+        this._totalTime = null;
+
+        // use performance.now() for timing synchronous methods
+        let stepTime = 0.0;
+        try {
+            stepTime = performance.now();
+            // copy submission.js from host to container's home/submission.js
+            const container = spawnSync('docker',
+                ['container', 'rm', socketId, '--force'], {
+                    stdio: ['pipe', 'pipe', 'pipe'],
+            });
+            console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+
+            const io = container.output.toString().split(',');
+            /*
+             * io = [0, 1, 2]
+             * io = [stdin, stdout, stderr]
+             * We need to catch any potential stderr
+             * 
+             * Also, any potential stderr may be: ...
+             * ... 'Error: No such container: ${containerId}'
+             * In such cases, the connected client may not have created a container ...
+             * ... so there's no problem if a non-existent container couldn't be removed.
+             * 
+             * And so we don't need to log such an error.
+             * 
+             * We need to parse io[2] (i.e. the stderr) to see if it is the very same error ...
+             * ... as mentioned above.
+            */
+            if (io[2] !== '') {
+                const errorArr = io[2].split(':');
+                if (errorArr[1].trim() !== 'No such container') {
+                    console.error(`Error during the execution of 'docker container rm' command.`);
+                    console.error(`Error during removing the container: ${io[2]}`);
+                } else {
+                    console.log('No container was removed.')
+                }
+                return { error: io[2] };    
+            }
+            console.error(`Container named ${socketId} has been removed after the client's socket disconnection.`);
+        } catch (err) {
+            console.error(`Error in dockerApp.removeNodeContainer(): ${err}`);
             return { error: err };
         }
     }

@@ -4,7 +4,7 @@
   "description": "JavaScript compilation engine for Syntasso",
   "main": "server.js",
   "scripts": {
-    "test": "mocha --timeout 100000",
+    "test": "mocha --timeout 100000 --exit",
     "start": "NODE_ENV=dev node server.js"
   },
   "repository": {
@@ -24,9 +24,12 @@
   "homepage": "https://github.com/roshanadh/node-engine#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "connect-redis": "^4.0.4",
     "cors": "^2.8.5",
+    "crypto-random-string": "^3.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "redis": "^3.0.2",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
