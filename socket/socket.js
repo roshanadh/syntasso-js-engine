@@ -1,4 +1,7 @@
 const socket = require('socket.io');
+const DockerApp = require('../docker/app.js');
+
+const dockerApp = new DockerApp();
 
 class Socket {
     constructor(server) {
@@ -9,6 +12,8 @@ class Socket {
             socket.on('disconnect', reason => {
                 console.log(`\nDISCONNECT: Socket disconnected with id ${socket.id}`);
                 console.log(`REASON: ${reason}\n`);
+                
+                dockerApp.removeNodeContainer(socket.id);
             });
         });
     }
