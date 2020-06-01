@@ -23,7 +23,6 @@ class DockerConfigHandler {
             containerCreateTime = totalTime;
 
             const containerId = stdout;
-            req.session.containerId = containerId.trim();
 
             stderr ? console.error(`stderr in dockerApp.createNodeContainer(): ${container.stderr}`)
             : console.log('Node.js container created.');
