@@ -27,16 +27,22 @@ class DockerApp {
         this._times = null;
         this._totalTime = null;
         
+        const { socketInstance } = require('../server.js');
+
         return new Promise((resolve, reject) => {
-            const { socketInstance } = require('../server.js');
             // emit build message to the connected socket ID
-            socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
                 stdout: 'Building a Node.js image...'
             });
+
             console.log('Building a Node.js image... ');
             const build = exec('time docker build -t img_node .', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js image build: ${error}`);
+                    
+                    socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                        stdout: 'An error occurred while building the Node.js image.'
+                    });
                     reject(error);
                 }
                 if (stderr) {
@@ -66,8 +72,8 @@ class DockerApp {
                     : console.log('Node.js image built.');
                 
                 console.log(`Time taken for image build: ${this._totalTime}`);
-
-                socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+                
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
                     stdout: `A Node.js image has been built.\nTime taken for image build: ${this._totalTime}`
                 });
                 // if an stderr has occurred and this._stderr has been initialized, ...
@@ -75,10 +81,9 @@ class DockerApp {
                 this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
                     : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
             });
-
-            // const { socketInstance } = require('../server.js');
+            
             build.stdout.on('data', stdout => {
-                socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
                     stdout
                 });
             });
@@ -92,14 +97,25 @@ class DockerApp {
         this._times = null;
         this._totalTime = null;
         
+        const { socketInstance } = require('../server.js');
+        
         return new Promise((resolve, reject) => {
             console.log(`Removing any prexisting Node.js container: ${session.socketId}... `);
             // remove any preexisting container
             exec(`docker container rm ${session.socketId} --force`, (error, stdout, stderr) => {
+                // emit create message to the connected socket ID
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                    stdout: 'Creating a Node.js container...'
+                });
+                
                 console.log('Creating a Node.js container... ');
                 const container = exec(`time docker container create -it --name ${session.socketId} img_node`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Error during Node.js container creation: ${error}`);
+                        
+                        socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                            stdout: 'An error occurred while creating the Node.js container.'
+                        });
                         reject(error);
                     }
                     if (stderr) {
@@ -127,15 +143,18 @@ class DockerApp {
                     }
                     stdout ? console.error(`stdout during Node.js container creation: ${stdout}`)
                         : console.log('Node.js container created.');
-
+                    
                     console.log(`Time taken for container creation: ${this._totalTime}`);
+                    
+                    socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                        stdout: `A Node.js container has been created.\nTime taken for container creation: ${this._totalTime}`
+                    });
                     // if an stderr has occurred and this._stderr has been initialized, ...
                     // ... the resolved object should contain the stderr as well
                     this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
                         : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
                 });
-
-                // 
+                
                 container.stdout.on('data', containerId => {
                     socketInstance.instance.to(session.socketId).emit('container-id', { containerId });
                 });
@@ -149,10 +168,16 @@ class DockerApp {
         this._stderr = null;
         this._times = null;
         this._totalTime = null;
-
+        
+        const { socketInstance } = require('../server.js');
+        
         let containerId = session.socketId;
-
+        
         return new Promise((resolve, reject) => {
+            // emit start message to the connected socket ID
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: 'Starting the Node.js container...'
+            });
             console.log('Starting the Node.js container... ');
             exec(`time docker container start ${containerId}`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
@@ -163,6 +188,9 @@ class DockerApp {
                      *  ... that contains a message to use dockerConfig value 0 ...
                      *  ... so as to create a container before starting it.
                     */
+                    socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                        stdout: 'An error occurred while starting the Node.js container.'
+                    });
                     
                     let errorString = `No such container: ${session.socketId}`;
                     if (error.message.includes(errorString)) {
@@ -199,8 +227,12 @@ class DockerApp {
                 }
                 stdout ? console.error(`stdout during Node.js container start: ${stdout}`)
                     : console.log('Node.js container started.');
-
+                
                 console.log(`Time taken for container start: ${this._totalTime}`);
+                
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                    stdout: `The Node.js container has been started.\nTime taken for container start: ${this._totalTime}`
+                });
                 // if an stderr has occurred and this._stderr has been initialized, ...
                 // ... the resolved object should contain the stderr as well
                 this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
@@ -215,13 +247,20 @@ class DockerApp {
         this._stderr = null;
         this._times = null;
         this._totalTime = null;
-
+        
+        const { socketInstance } = require('../server.js');
+        
         // use performance.now() for timing synchronous methods
         let startTime = performance.now();
         let stepTime = 0.0;
         // --- Copy the code inside the container to execute --- 
         let containerId = session.socketId;
         try {
+            // emit exec message to the connected socket ID
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: 'Preparing to execute JavaScript code inside the container...'
+            });
+            
             stepTime = performance.now();
             // copy submission.js from host to container's home/submission.js
             const container = spawnSync('docker',
@@ -229,7 +268,7 @@ class DockerApp {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             console.log('Time taken to copy submission.js into the container: ' + (performance.now() - stepTime) + 'ms');
-
+            
             const io = container.output.toString().split(',');
             /*
              * io = [0, 1, 2]
@@ -247,7 +286,11 @@ class DockerApp {
                  *  ... so as to create a container or start the container (if it exists) ...
                  *  ... before copying files into it.
                 */
-
+                
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                    stdout: 'An error occurred while preparing to execute code inside the Node.js container.'
+                });
+                
                 const errorString = `No such container:path: ${session.socketId}:/home`;
                 if (io[2].includes(errorString)) {
                     return {
@@ -261,10 +304,20 @@ class DockerApp {
             }
         } catch (err) {
             console.error(`Error during copying submission.js into the container: ${err}`);
+            
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: 'An error occurred while executing code inside the Node.js container.'
+            });
+            
             return { error: err };
         }
-
+        
         try {
+            // emit exec message to the connected socket ID
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: 'Executing JavaScript code inside the container...'
+            });
+            
             stepTime = performance.now();
             const child = spawnSync('docker',
                 ['exec', '-it', containerId, 'node', 'home/submission.js', '|', 'tee', 'file/output.txt'], {
@@ -272,19 +325,23 @@ class DockerApp {
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
             let now = parseFloat(performance.now());
-
+            
             const ioArray = child.output;
             // ioArray = [0, 1, 2]
             // ioArray = [stdin, stdout: Buffer, stderr: Buffer]
-
+            
             const io = {
                 stdin: ioArray[0],
                 stdout: ioArray[1].toString('utf-8'),
                 stderr: ioArray[2].toString('utf-8')
             };
-
+            
             if (io.stderr !== '') {
                 // stderr has piped the error
+                socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                    stdout: 'An error occurred while executing code inside the Node.js container.'
+                });
+                
                 const errorString = 'is not running';
                 if (io.stderr.includes(errorString)) {
                     return {
@@ -295,14 +352,23 @@ class DockerApp {
                 return { error: io.stderr };
             }
             console.log('Time taken to execute the code: ' + (now - stepTime) + 'ms');
+            
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: `Time taken to execute the code: ${now - stepTime}`
+            });
+            
             console.log('Total time taken for all execution steps (Fetch ID, Copy, and Exec): ' + (now - startTime) + 'ms');
-
             console.log("\nSTDIO for 'docker exec' command: ");
             console.dir(io);
-
+            
             return { execTime: now - stepTime };
         } catch (err) {
             console.error(`Error during JavaScript code execution: ${err.stack}`);
+            
+            socketInstance.instance.to(session.socketId).emit('docker-app-stdout', {
+                stdout: 'An error occurred while executing code inside the Node.js container.'
+            });
+            
             return { error: err };
         }
     }
@@ -313,7 +379,7 @@ class DockerApp {
         this._stderr = null;
         this._times = null;
         this._totalTime = null;
-
+        
         // use performance.now() for timing synchronous methods
         let stepTime = 0.0;
         try {
@@ -324,7 +390,7 @@ class DockerApp {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
-
+            
             const io = container.output.toString().split(',');
             /*
              * io = [0, 1, 2]
