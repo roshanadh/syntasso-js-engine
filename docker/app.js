@@ -28,7 +28,12 @@ class DockerApp {
         this._totalTime = null;
         
         return new Promise((resolve, reject) => {
-            console.log('Building a Node.js image ... ');
+            const { socketInstance } = require('../server.js');
+            // emit build message to the connected socket ID
+            socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+                stdout: 'Building a Node.js image...'
+            });
+            console.log('Building a Node.js image... ');
             const build = exec('time docker build -t img_node .', { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error during Node.js image build: ${error}`);
@@ -61,13 +66,17 @@ class DockerApp {
                     : console.log('Node.js image built.');
                 
                 console.log(`Time taken for image build: ${this._totalTime}`);
+
+                socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
+                    stdout: `A Node.js image has been built.\nTime taken for image build: ${this._totalTime}`
+                });
                 // if an stderr has occurred and this._stderr has been initialized, ...
                 // ... the resolved object should contain the stderr as well
                 this._stderr ? resolve({ success: true, stdout, stderr, totalTime: modifyTime(this._totalTime) })
                     : resolve({ success: true, stdout, totalTime: modifyTime(this._totalTime) });
             });
 
-            const { socketInstance } = require('../server.js');
+            // const { socketInstance } = require('../server.js');
             build.stdout.on('data', stdout => {
                 socketInstance.instance.to(session.socketId).emit('build-img-stdout', {
                     stdout
@@ -87,7 +96,7 @@ class DockerApp {
             console.log(`Removing any prexisting Node.js container: ${session.socketId}... `);
             // remove any preexisting container
             exec(`docker container rm ${session.socketId} --force`, (error, stdout, stderr) => {
-                console.log('Creating a Node.js container ... ');
+                console.log('Creating a Node.js container... ');
                 const container = exec(`time docker container create -it --name ${session.socketId} img_node`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Error during Node.js container creation: ${error}`);
@@ -144,7 +153,7 @@ class DockerApp {
         let containerId = session.socketId;
 
         return new Promise((resolve, reject) => {
-            console.log('Starting the Node.js container ... ');
+            console.log('Starting the Node.js container... ');
             exec(`time docker container start ${containerId}`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
                 if (error) {
                     /*
