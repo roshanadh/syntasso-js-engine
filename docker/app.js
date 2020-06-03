@@ -264,7 +264,7 @@ class DockerApp {
             stepTime = performance.now();
             // copy submission.js from host to container's home/submission.js
             const container = spawnSync('docker',
-                ['cp', 'file/submission.js', containerId + ':/home/submission.js'], {
+                ['cp', `client-files/submissions/${session.socketId}.js`, containerId + ':/home/submission.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
             });
             console.log('Time taken to copy submission.js into the container: ' + (performance.now() - stepTime) + 'ms');
@@ -320,7 +320,7 @@ class DockerApp {
             
             stepTime = performance.now();
             const child = spawnSync('docker',
-                ['exec', '-it', containerId, 'node', 'home/submission.js', '|', 'tee', 'file/output.txt'], {
+                ['exec', '-it', containerId, 'node', 'home/submission.js', '|', 'tee', `client-files/outputs/${session.socketId}.txt`], {
                     shell: true,
                     stdio: ['inherit', 'pipe', 'pipe'],
             });
