@@ -1,14 +1,17 @@
 const fs = require('fs');
+const path = require('path');
+
 const { SECRET_DIVIDER_TOKEN } = require('../utils.js');
 
-module.exports.updateCodeInFile = (code) => {
-    let filePath = __dirname + '/submission.js';
+module.exports.updateCodeInFile = (socketId, code) => {
+    let filePath = path.resolve(__dirname, '..', 'client-files', 'submissions', socketId + '.js');
     // wrap user-submitted code inside a try-catch block
     let finalCode =
     `"use strict";\ntry {\n${code}\n} catch (err) {
         console.log('${SECRET_DIVIDER_TOKEN}');
         console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
     }`;
+    console.log('heher')
     try {
         fs.writeFileSync(filePath, finalCode);
         console.log(`Submitted code written to file: ${filePath}`);
@@ -17,8 +20,8 @@ module.exports.updateCodeInFile = (code) => {
     }
 }
 
-module.exports.readOutput = () => {
-    let filePath = __dirname + '/output.txt';
+module.exports.readOutput = (socketId) => {
+    let filePath = path.resolve(__dirname, '..', 'client-files', 'outputs', socketId + '.txt');
     try {
         /*
          *  Reads output of the user-submitted code.
