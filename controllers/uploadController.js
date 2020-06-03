@@ -27,6 +27,7 @@ const upload = multer({ storage, fileFilter });
 let fileUpload = upload.single('submission');
 
 module.exports = uploadController = (req, res) => {
+    console.log("POST request received at /upload");
     /*
     * All possible req.body params =>
     * 1. req.body.socketId: String => contains socket ID of the connected client

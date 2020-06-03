@@ -1,5 +1,4 @@
 module.exports = socketController = (req, res) => {
-    console.log("POST request received at /execute");
     /*
     * All req.body params =>
     * 1. req.body.socketId: String => contains socket ID of the connected client
