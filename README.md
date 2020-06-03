@@ -10,10 +10,6 @@
     ```sh
     npm install
     ```
-* Create a 'client-files' directory at the root of the project
-    ```sh
-    mkdir client-files && cd client-files && mkdir submissions outputs
-    ```
 * Create a '.env' file at the root of the project and append environment variables and their values to the file
     ```sh
     touch .env
