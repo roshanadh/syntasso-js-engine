@@ -1,5 +1,5 @@
 const DockerApp = require('../docker/app.js');
-const { readOutput } = require('../file/index.js');
+const { readOutput } = require('../filesystem/index.js');
 
 const dockerApp = new DockerApp();
 
@@ -52,8 +52,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().output,
-                error: readOutput().error,
+                output: readOutput(req.session.socketId).output,
+                error: readOutput(req.session.socketId).error,
                 imageBuildTime,
                 containerCreateTime,
                 containerStartTime,
@@ -93,8 +93,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().output,
-                error: readOutput().error,
+                output: readOutput(req.session.socketId).output,
+                error: readOutput(req.session.socketId).error,
                 containerStartTime,
                 execTime,
             };
@@ -118,8 +118,8 @@ class DockerConfigHandler {
         } else {
             console.log('\nResponse to the client:');
             const response = {
-                output: readOutput().output,
-                error: readOutput().error,
+                output: readOutput(req.session.socketId).output,
+                error: readOutput(req.session.socketId).error,
                 execTime,
             };
             console.dir(response);
