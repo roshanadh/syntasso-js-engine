@@ -1,4 +1,5 @@
 node_modules/
-client-files/
+client-files/submissions/*.js
+client-files/outputs/*.txt
 .vscode
 .env
