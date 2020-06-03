@@ -1,5 +1,6 @@
+const socketController = require('./socketController.js');
 const Handler = require('./DockerConfigHandler.js');
-const { updateCodeInFile } = require('../file/index.js');
+const { updateCodeInFile } = require('../filesystem/index.js');
 
 const handler = new Handler();
 module.exports = executionController = (req, res) => {
@@ -16,7 +17,7 @@ module.exports = executionController = (req, res) => {
     * 
     * executionController middleware deals with the code and dockerConfig parameters
     */
-
+    socketController(req, res);
     if (!req.body.code) {
         res.status(400).json({ error: "Bad Request: No Code Provided!" });
         throw new Error("Bad Request Error at /execute POST. No Code Provided!");
@@ -26,7 +27,7 @@ module.exports = executionController = (req, res) => {
         throw new Error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
     }
     // write the provided code into a file
-    updateCodeInFile(req.body.code);
+    updateCodeInFile(req.session.socketId, req.body.code);
     let dockerConfig = req.body.dockerConfig;
     try {
         dockerConfig = parseInt(req.body.dockerConfig);
