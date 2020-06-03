@@ -88,7 +88,7 @@ module.exports = uploadController = (req, res) => {
                     break;
                 default:
                     res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
-                    throw new Error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");    
+                    throw console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");    
             }
         }
     });
