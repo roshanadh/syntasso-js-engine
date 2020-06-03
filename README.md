@@ -51,7 +51,7 @@ The API exposes three endpoints and the following actions:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
-    ii *code* [String]: The code snippet to be executed by the engine. 
+    ii. *code* [String]: The code snippet to be executed by the engine. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
     
@@ -63,7 +63,7 @@ The API exposes three endpoints and the following actions:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
-    ii *submission* [A .js file]: The JavaScript file to be executed. 
+    ii. *submission* [A .js file]: The JavaScript file to be executed. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
        
