@@ -18,9 +18,11 @@ module.exports = socketController = (req, res) => {
     
     if (!req.body.socketId) {
         res.status(400).json({ error: "Bad Request: No Socket ID Provided!" });
+        // TODO
         throw new Error(`Bad Request Error at ${req.url} POST. No Socket ID Provided!`);
     }
     if (!listOfClients.includes(req.body.socketId)) {
+        // TODO
         res.status(401).json({ error: "Unauthorized Request: Socket ID Not Recognized!" });
         throw new Error(`Unauthorized Request Error at ${req.url} POST. Socket ID Not Recognized!`);
     }

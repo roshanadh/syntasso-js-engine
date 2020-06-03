@@ -21,10 +21,12 @@ module.exports = executionController = (req, res) => {
     socketController(req, res);
     if (!req.body.code) {
         res.status(400).json({ error: "Bad Request: No Code Provided!" });
+        // TODO
         throw new Error("Bad Request Error at /execute POST. No Code Provided!");
     }
     if (!req.body.dockerConfig) {
         res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
+        // TODO
         throw new Error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
     }
     // write the provided code into a file
