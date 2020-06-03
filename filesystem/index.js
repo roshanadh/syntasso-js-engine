@@ -11,7 +11,6 @@ module.exports.updateCodeInFile = (socketId, code) => {
         console.log('${SECRET_DIVIDER_TOKEN}');
         console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
     }`;
-    console.log('heher')
     try {
         fs.writeFileSync(filePath, finalCode);
         console.log(`Submitted code written to file: ${filePath}`);
