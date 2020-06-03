@@ -46,34 +46,35 @@ module.exports = uploadController = (req, res) => {
     fileUpload(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             // A Multer error occurred during uploading
-            res.status(503).json({
+            console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
+            return res.status(503).json({
                 error: 'An error occurred while uploading the submitted JavaScript file'
             });
-            console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
         } else if (err) {
             // An error occurred during uploading
-            res.status(503).json({
+            console.error(`An error occurred at uploadController while uploading:\n${err}`);
+            return res.status(503).json({
                 error: 'An error occurred while uploading the submitted JavaScript file'
             });
-            console.error(`An error occurred at uploadController while uploading:\n${err}`);
         } else {
-            socketController(req, res);
+            const socketStatus = socketController(req, res);
+            if (socketStatus === -1) return;
             
             if (!req.file) {
-                res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
-                return console.error('Bad Request Error at /execute POST. No JavaScript File Provided!');
+                console.error('Bad Request Error at /execute POST. No JavaScript File Provided!');
+                return res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
             }
             if (!req.body.dockerConfig) {
-                res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
-                return console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+                console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+                return res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
             }
             
             let dockerConfig = req.body.dockerConfig;
             try {
                 dockerConfig = parseInt(req.body.dockerConfig);
             } catch (err) {
-                res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
-                return console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
+                console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
+                return res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
             }
 
             switch(dockerConfig) {
@@ -87,8 +88,8 @@ module.exports = uploadController = (req, res) => {
                     handler.handleConfigTwo(req, res);
                     break;
                 default:
-                    res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
-                    throw console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");    
+                    console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!"); 
+                    return res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
             }
         }
     });

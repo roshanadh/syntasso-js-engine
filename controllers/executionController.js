@@ -18,14 +18,16 @@ module.exports = executionController = (req, res) => {
     * 
     * executionController middleware deals with the code and dockerConfig parameters
     */
-    socketController(req, res);
+    const socketStatus = socketController(req, res);
+    if (socketStatus === -1) return;
+    
     if (!req.body.code) {
-        res.status(400).json({ error: "Bad Request: No Code Provided!" });
-        throw console.error("Bad Request Error at /execute POST. No Code Provided!");
+        console.error("Bad Request Error at /execute POST. No Code Provided!");
+        return res.status(400).json({ error: "Bad Request: No Code Provided!" });
     }
     if (!req.body.dockerConfig) {
-        res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
-        throw console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+        console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+        return res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
     }
     // write the provided code into a file
     updateCodeInFile(req.session.socketId, req.body.code);
@@ -33,8 +35,8 @@ module.exports = executionController = (req, res) => {
     try {
         dockerConfig = parseInt(req.body.dockerConfig);
     } catch (err) {
-        res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
-        throw console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
+        console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
+        return res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
     }
 
     switch(dockerConfig) {
@@ -48,8 +50,8 @@ module.exports = executionController = (req, res) => {
             handler.handleConfigTwo(req, res);
             break;
         default:
-            res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
-            throw console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");    
+            console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");
+            return res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
     }
 }
 

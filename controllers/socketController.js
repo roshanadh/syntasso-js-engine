@@ -17,13 +17,16 @@ module.exports = socketController = (req, res) => {
     const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
     
     if (!req.body.socketId) {
+        console.error(`Bad Request Error at ${req.url} POST. No Socket ID Provided!`);
         res.status(400).json({ error: "Bad Request: No Socket ID Provided!" });
-        throw console.error(`Bad Request Error at ${req.url} POST. No Socket ID Provided!`);
+        return -1;
     }
     if (!listOfClients.includes(req.body.socketId)) {
+        console.error(`Unauthorized Request Error at ${req.url} POST. Socket ID Not Recognized!`);
         res.status(401).json({ error: "Unauthorized Request: Socket ID Not Recognized!" });
-        throw console.error(`Unauthorized Request Error at ${req.url} POST. Socket ID Not Recognized!`);
+        return -1;
     }
 
     req.session.socketId = req.body.socketId;
+    return;
 }
