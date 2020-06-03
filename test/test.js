@@ -19,7 +19,7 @@ describe('Tests: ', () => {
     let socketId = '';
     let log = console.log;
     // use log in place of console.log for logging during tests
-    console.log = msg => {}
+    // console.log = msg => {}
 
     before(done => {
         // create socket connection as client
@@ -87,7 +87,7 @@ describe('Tests: ', () => {
                     .post('/execute')
                     .send(payload)
                     .end((err, res) => {
-                        res.should.have.status(400);
+                        log(err)
                         res.body.should.be.a('object');
                         res.body.should.have.property('error');
                         res.body.error.should.equal('Bad Request: No Code Provided!');
@@ -106,17 +106,17 @@ describe('Tests: ', () => {
                     .post('/execute')
                     .send(payload)
                     .end((err, res) => {
-                        res.should.have.status(400);
+                        log(err)
                         res.body.should.be.a('object');
                         res.body.should.have.property('error');
-                        res.body.error.should.equal('Bad Request: No Docker Configuration Instruction Provided!');
+                        res.body.error.should.equal('Bad Request: No Code Provided!');
                         done();
                     });
             });
         });
 
         describe('2d. POST with incorrect socketId at /execute', () => {
-            it('should not POST withou correct socketId param', done => {
+            it('should not POST without correct socketId param', done => {
                 let payload = {
                     socketId: "asbAh123",
                     code: "console.log('Hello World!)",

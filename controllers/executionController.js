@@ -33,7 +33,7 @@ module.exports = executionController = (req, res) => {
     try {
         dockerConfig = parseInt(req.body.dockerConfig);
     } catch (err) {
-        res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
+        res.status(400).json({ error: "Bad Request: dockerConfig Value Is Not A Number!" });
         throw new Error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
     }
 
@@ -48,7 +48,7 @@ module.exports = executionController = (req, res) => {
             handler.handleConfigTwo(req, res);
             break;
         default:
-            res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
+            res.status(400).json({ error: "Bad Request: dockerConfig Value Is Not A Valid Number!" });
             throw new Error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!");    
     }
 }

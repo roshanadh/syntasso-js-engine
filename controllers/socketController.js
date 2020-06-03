@@ -25,5 +25,7 @@ module.exports = socketController = (req, res) => {
         throw new Error(`Unauthorized Request Error at ${req.url} POST. Socket ID Not Recognized!`);
     }
 
+    console.log('ok passed upto here!');
+    console.log('socketID is: ' + req.body.socketId);
     req.session.socketId = req.body.socketId;
 }
