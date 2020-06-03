@@ -15,11 +15,12 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.originalname.split('.').length > 2) {
-        cb(new Error('File name cannot contain more than one period (.)'), false);
-    } else if (file.originalname.split('.')[1] !== 'js') {
-        cb(new Error('Only .js files can be uploaded'), false);
-    }
+    if (file.originalname.split('.').length > 2)
+        return cb(new Error('File name cannot contain more than one period (.)'), false);
+    if (file.originalname.split('.')[1] !== 'js')
+        return cb(new Error('Only .js files can be uploaded'), false);
+    if (!req.body.socketId)
+        return cb(null, false);
     cb(null, true);
 }
 
@@ -60,12 +61,13 @@ module.exports = uploadController = (req, res) => {
             const socketStatus = socketController(req, res);
             if (socketStatus === -1) return;
             
+            console.log(req.file);
             if (!req.file) {
-                console.error('Bad Request Error at /execute POST. No JavaScript File Provided!');
+                console.error('Bad Request Error at /upload POST. No JavaScript File Provided!');
                 return res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
             }
             if (!req.body.dockerConfig) {
-                console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+                console.error("Bad Request Error at /upload POST. No Docker Configuration Instruction Provided!");
                 return res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
             }
             
@@ -73,7 +75,7 @@ module.exports = uploadController = (req, res) => {
             try {
                 dockerConfig = parseInt(req.body.dockerConfig);
             } catch (err) {
-                console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Number!");
+                console.error("Bad Request Error at /upload POST. dockerConfig Value Is Not A Number!");
                 return res.status(400).send("Bad Request: dockerConfig Value Is Not A Number!");
             }
 
@@ -88,7 +90,7 @@ module.exports = uploadController = (req, res) => {
                     handler.handleConfigTwo(req, res);
                     break;
                 default:
-                    console.error("Bad Request Error at /execute POST. dockerConfig Value Is Not A Valid Number!"); 
+                    console.error("Bad Request Error at /upload POST. dockerConfig Value Is Not A Valid Number!"); 
                     return res.status(400).send("Bad Request: dockerConfig Value Is Not A Valid Number!");
             }
         }
