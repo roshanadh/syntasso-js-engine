@@ -24,6 +24,30 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 	}
 };
 
+module.exports.addDividerToken = async (socketId) => {
+	let filePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+		"submissions",
+		socketId + ".js"
+	);
+
+	let fileContent = fs.readFileSync(filePath);
+
+	// wrap user-submitted code inside a try-catch block
+	let finalCode = `"use strict";\ntry {\n${fileContent}\n} catch (err) {
+		console.log('${SECRET_DIVIDER_TOKEN}');
+		console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
+	}`;
+	try {
+		fs.writeFileSync(filePath, finalCode);
+		console.log(`Divider token added to file: ${filePath}`);
+	} catch (err) {
+		return console.error(`Error during adding divider token to file: ${err}`);
+	}
+}
+
 module.exports.readOutput = async (socketId) => {
 	let filePath = path.resolve(
 		__dirname,
