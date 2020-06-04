@@ -11,21 +11,21 @@ const { PORT, LIVE_SERVER_PORT, SECRET_SESSION_KEY } = require("./config.js");
 const client = redis.createClient();
 const app = express();
 app.use(
-  session({
-    secret: SECRET_SESSION_KEY,
-    store: new RedisStore({
-      host: "localhost",
-      port: 6379,
-      client,
-    }),
-    saveUninitialized: false,
-    resave: false,
-  })
+	session({
+		secret: SECRET_SESSION_KEY,
+		store: new RedisStore({
+			host: "localhost",
+			port: 6379,
+			client,
+		}),
+		saveUninitialized: false,
+		resave: false,
+	})
 );
 
 // change origin to Syntasso Client's protocol://address:port when NODE_ENV = prod
 app.use(
-  cors({ credentials: true, origin: `http://127.0.0.1:${LIVE_SERVER_PORT}` })
+	cors({ credentials: true, origin: `http://127.0.0.1:${LIVE_SERVER_PORT}` })
 );
 // app.use(cors());
 
@@ -39,7 +39,7 @@ app.use(bodyParser.json());
 app.use(router);
 
 const server = app.listen(PORT, () => {
-  console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
+	console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
 });
 
 socketInstance = new Socket(server);
