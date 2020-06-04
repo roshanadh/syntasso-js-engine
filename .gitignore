@@ -1,3 +1,4 @@
 node_modules/
 client-files/
 .env
+.vscode/launch.json
