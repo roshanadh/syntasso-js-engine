@@ -10,6 +10,8 @@ const chaiHttp = require("chai-http");
 const io = require("socket.io-client");
 
 const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 
 const { server } = require("../server.js");
 
@@ -35,16 +37,6 @@ describe("Tests: ", () => {
 		socket.on("disconnect", () => {
 			log("Socket disconnected!");
 		});
-		done();
-	});
-	
-	after(done => {
-		if (socket.connected) {
-			log("Disconnecting socket...");
-			socket.disconnect();
-		} else {
-			log("No socket connection exists!");
-		}
 		done();
 	});
 	
@@ -418,6 +410,45 @@ describe("Tests: ", () => {
 						done();
 					});
 			});
+		});
+	});
+
+	describe("4. Clean up files after socket disconnect", () => {
+		before(done => {
+			if (socket.connected) {
+				log("Disconnecting socket...");
+				socket.disconnect();
+				// 10 seconds delay to wait for socket.disconnect() to cleanup files and container
+				setTimeout(() => {
+					done();
+				}, 10000);
+			} else {
+				log("No socket connection exists!");
+				done();
+			}
+		});
+		
+		it("should remove the docker container if it was created", done => {
+			let filter = `\"name=${socketId}\"`;
+			// // 10 seconds delay to wait for socket.disconnect() to remove temp files
+			// setTimeout(() => {
+				
+			// }, 10000);
+			const searchContainerOutput = execSync(`docker ps -aqf ${filter}`, {
+				stdio: ["pipe", "pipe", "pipe"]
+			});
+			expect(searchContainerOutput.toString().trim()).to.be.empty;
+			done();
+		});
+		it("should remove the JavaScript file if it was created", done => {
+			const filePath = path.resolve("client-files", "submissions", `${socketId}.js`);
+			expect(fs.existsSync(filePath)).to.be.false;
+			done();
+		});
+		it("should remove the output file if it was created", done => {
+			const filePath = path.resolve("client-files", "outputs", `${socketId}.txt`);
+			expect(fs.existsSync(filePath)).to.be.false;
+			done();
 		});
 	});
 });
