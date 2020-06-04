@@ -107,4 +107,23 @@ module.exports.readOutput = async (socketId) => {
 	} catch (err) {
 		return console.error(`Error during reading output from file: ${err}`);
 	}
-};
+}
+
+module.exports.removeTempFiles = (socketId) => {
+	let filePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+	);
+	let jsFilePath = path.resolve(filePath, "submissions", `${socketId}.js`),
+		outputFilePath = path.resolve(filePath, "outputs", `${socketId}.txt`);
+	
+	fs.unlink(jsFilePath, err => {
+		if (err) return console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
+		console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`)
+	});
+	fs.unlink(outputFilePath, err => {
+		if (err) return console.error(`Error while removing output file '${socketId}.txt': ${err}`);
+		console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`)
+	});
+}
