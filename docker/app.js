@@ -411,6 +411,7 @@ class DockerApp {
 				* ... as mentioned above.
 				* 
 				*/
+				stderr = stderr.toString('utf-8');
 				const errorArr = stderr.split(':');
 				if (errorArr[1].trim() !== 'No such container') {
 					console.error(`Error during the execution of 'docker container rm' command.`);
