@@ -418,22 +418,14 @@ describe("Tests: ", () => {
 			if (socket.connected) {
 				log("Disconnecting socket...");
 				socket.disconnect();
-				// 10 seconds delay to wait for socket.disconnect() to cleanup files and container
-				setTimeout(() => {
-					done();
-				}, 10000);
 			} else {
 				log("No socket connection exists!");
-				done();
 			}
+			done();
 		});
 		
 		it("should remove the docker container if it was created", done => {
 			let filter = `\"name=${socketId}\"`;
-			// // 10 seconds delay to wait for socket.disconnect() to remove temp files
-			// setTimeout(() => {
-				
-			// }, 10000);
 			const searchContainerOutput = execSync(`docker ps -aqf ${filter}`, {
 				stdio: ["pipe", "pipe", "pipe"]
 			});
