@@ -295,7 +295,7 @@ describe("Tests: ", () => {
 			it("should not POST without .js file extension", done => {
 				chai.request(server)
 					.post("/upload")
-					.field("socketId", "abcd")
+					.field("socketId", socketId)
 					.attach("submission", path.resolve("test", "test-upload-files", "submission.ts"))
 					.field("dockerConfig", "0")
 					.end((err, res) => {
@@ -312,7 +312,7 @@ describe("Tests: ", () => {
 			it("should not POST with file name containing more than 1 period (.)", done => {
 				chai.request(server)
 					.post("/upload")
-					.field("socketId", "abcd")
+					.field("socketId", socketId)
 					.attach("submission", path.resolve("test", "test-upload-files", "submission.a.js"))
 					.field("dockerConfig", "0")
 					.end((err, res) => {
