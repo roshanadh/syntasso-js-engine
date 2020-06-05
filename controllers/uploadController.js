@@ -17,12 +17,16 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
+	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
+	
+	if (!req.body.socketId)
+		return cb(null, false);
+	if (!listOfClients.includes(req.body.socketId))
+		return cb(null, false);
     if (file.originalname.split('.').length > 2)
         return cb(new Error('File name cannot contain more than one period (.)'), false);
     if (file.originalname.split('.')[1] !== 'js')
         return cb(new Error('Only .js files can be uploaded'), false);
-    if (!req.body.socketId)
-        return cb(null, false);
     cb(null, true);
 }
 
@@ -45,25 +49,25 @@ module.exports = uploadController = (req, res) => {
 	* uploadController middleware deals with the dockerConfig request body parameter ...
 	* ... and the file included in the request
 	*/
-
+	
 	fileUpload(req, res, async (err) => {
-		if (err instanceof multer.MulterError) {
-			// A Multer error occurred during uploading
-			res.status(503).json({
-				error: 'An error occurred while uploading the submitted JavaScript file!',
-				message: err.message,				
-			});
-			console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
-		} else if (err) {
-			// An error occurred during uploading
-			res.status(503).json({
-				error: 'An error occurred while uploading the submitted JavaScript file!',
-				message: err.message,
-			});
-			console.error(`An error occurred at uploadController while uploading:\n${err}`);
-		} else {
-			try {
-				await socketController(req, res);
+		try {
+			await socketController(req, res);
+			if (err instanceof multer.MulterError) {
+				// A Multer error occurred during uploading
+				res.status(503).json({
+					error: 'An error occurred while uploading the submitted JavaScript file!',
+					message: err.message,
+				});
+				console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
+			} else if (err) {
+				// An error occurred during uploading
+				res.status(503).json({
+					error: 'An error occurred while uploading the submitted JavaScript file!',
+					message: err.message,
+				});
+				console.error(`An error occurred at uploadController while uploading:\n${err}`);
+			} else {
 				if (!req.file) {
 					res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
 					return console.error('Bad Request Error at /execute POST. No JavaScript File Provided!');
@@ -80,7 +84,7 @@ module.exports = uploadController = (req, res) => {
 						"Bad Request: dockerConfig Value Is Not A Number!"
 					);
 				let dockerConfig = parseInt(req.body.dockerConfig);
-
+				
 				switch (dockerConfig) {
 					case 0:
 						handler.handleConfigZero(req, res);
@@ -97,11 +101,11 @@ module.exports = uploadController = (req, res) => {
 							"Bad Request: dockerConfig Value Is Not A Valid Number!"
 						);
 				}
-			} catch (err) {
-				res.status(err.status).json({
-					error: err.message,
-				});
 			}
+		} catch (err) {
+			res.status(err.status).json({
+				error: err.message,
+			});
 		}
 	});
 }
