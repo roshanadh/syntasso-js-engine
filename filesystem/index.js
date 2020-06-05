@@ -141,19 +141,19 @@ module.exports.removeTempFiles = (socketId) => {
 		// use asynchronous function fs.unlink() for dev and prod NODE_ENV
 		fs.unlink(jsFilePath, err => {
 			if (err) {
-				err.message.includes("ENOENT")
+				return err.message.includes("ENOENT")
 					? console.log("No temporary JavaScript file was found.")
 					: console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
-			};
-			console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
+			}
+			return console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
 		});
 		fs.unlink(outputFilePath, err => {
 			if (err) {
-				err.message.includes("ENOENT")
+				return err.message.includes("ENOENT")
 					? console.log("No temporary output file was found.")
 					: console.error(`Error while removing output file '${socketId}.js': ${err}`);
 			};
-			console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
+			return console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
 		});
 	}	
 }
