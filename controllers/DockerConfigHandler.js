@@ -72,6 +72,7 @@ class DockerConfigHandler {
 				containerStartTime,
 				execTime,
 			};
+			console.dir(response);
 			res.status(200).json(response);
 		}
 	};

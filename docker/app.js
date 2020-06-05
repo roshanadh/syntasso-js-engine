@@ -1,4 +1,4 @@
-const { exec, spawnSync } = require('child_process');
+const { exec, spawn, spawnSync } = require('child_process');
 const { performance } = require('perf_hooks');
 
 modifyTime = (time) => {
@@ -380,45 +380,100 @@ class DockerApp {
 		this._times = null;
 		this._totalTime = null;
 		
-		// use performance.now() for timing synchronous methods
+		let NODE_ENV = process.env.NODE_ENV;
+		if (NODE_ENV === "test") {
+			// use spawnSync to write blocking code for testing
+			let stepTime = 0.0;
+			try {
+				stepTime = performance.now();
+				// copy submission.js from host to container's home/submission.js
+				const container = spawnSync('docker',
+					['container', 'rm', socketId, '--force'], {
+					stdio: ['pipe', 'pipe', 'pipe'],
+				});
+				
+				const io = container.output.toString("utf-8").split(",");
+				// io[stdin, stdout, stderr]
+				if (io[1].trim() === socketId) {
+					console.error(
+						`Container named ${socketId} has been removed after the client's socket disconnection.`
+					);
+					console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+				}
+				if (io[2].trim() !== "") {
+					/*
+					* Any potential stderr may be: ...
+					* ... 'Error: No such container: ${containerId}'
+					* In such cases, the connected client may not have created a container ...
+					* ... so there's no problem if a non-existent container couldn't be removed.
+					*
+					* And so we don't need to log such an error.
+					*
+					* We need to parse stderr to see if it is the very same error ...
+					* ... as mentioned above.
+					* 
+					*/
+					console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+					stderr = stderr.toString('utf-8');
+					const errorArr = stderr.split(':');
+					if (errorArr[1].trim() !== 'No such container') {
+						console.error(`Error during the execution of 'docker container rm' command.`);
+						console.error(`Error during removing the container: ${stderr}`);
+					} else {
+						console.log('No container was removed.')
+					}
+					return { error: stderr };
+				}
+			} catch (err) {
+				console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+				console.error(`Error in dockerApp.removeNodeContainer(): ${err}`);
+				return { error: err };
+			}
+		}
+		// if NODE_ENV is not 'test', use asynchronous function like spawn()
 		let stepTime = 0.0;
 		try {
 			stepTime = performance.now();
 			// copy submission.js from host to container's home/submission.js
-			const container = spawnSync('docker',
+			const container = spawn('docker',
 				['container', 'rm', socketId, '--force'], {
 					stdio: ['pipe', 'pipe', 'pipe'],
 			});
-			console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
-			
-			const io = container.output.toString().split(',');
-			/*
-			 * io = [0, 1, 2]
-			 * io = [stdin, stdout, stderr]
-			 * We need to catch any potential stderr
-			 * 
-			 * Also, any potential stderr may be: ...
-			 * ... 'Error: No such container: ${containerId}'
-			 * In such cases, the connected client may not have created a container ...
-			 * ... so there's no problem if a non-existent container couldn't be removed.
-			 * 
-			 * And so we don't need to log such an error.
-			 * 
-			 * We need to parse io[2] (i.e. the stderr) to see if it is the very same error ...
-			 * ... as mentioned above.
-			*/
-			if (io[2] !== '') {
-				const errorArr = io[2].split(':');
+						
+			container.stdout.on('data', containerId => {
+				if (containerId.toString('utf-8').trim() === socketId)
+					console.error(
+						`Container named ${socketId} has been removed after the client's socket disconnection.`
+					);
+				console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+			});
+
+			container.stderr.on('data', stderr => {
+				/*
+				* Any potential stderr may be: ...
+				* ... 'Error: No such container: ${containerId}'
+				* In such cases, the connected client may not have created a container ...
+				* ... so there's no problem if a non-existent container couldn't be removed.
+				*
+				* And so we don't need to log such an error.
+				*
+				* We need to parse stderr to see if it is the very same error ...
+				* ... as mentioned above.
+				* 
+				*/
+				console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
+				stderr = stderr.toString('utf-8');
+				const errorArr = stderr.split(':');
 				if (errorArr[1].trim() !== 'No such container') {
 					console.error(`Error during the execution of 'docker container rm' command.`);
-					console.error(`Error during removing the container: ${io[2]}`);
+					console.error(`Error during removing the container: ${stderr}`);
 				} else {
 					console.log('No container was removed.')
 				}
-				return { error: io[2] };    
-			}
-			console.error(`Container named ${socketId} has been removed after the client's socket disconnection.`);
+				return { error: stderr };    
+			});
 		} catch (err) {
+			console.log('Time taken for removeNodecontainer() call: ' + (performance.now() - stepTime) + 'ms');
 			console.error(`Error in dockerApp.removeNodeContainer(): ${err}`);
 			return { error: err };
 		}

@@ -24,6 +24,30 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 	}
 };
 
+module.exports.addDividerToken = async (socketId) => {
+	let filePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+		"submissions",
+		socketId + ".js"
+	);
+
+	let fileContent = fs.readFileSync(filePath);
+
+	// wrap user-submitted code inside a try-catch block
+	let finalCode = `"use strict";\ntry {\n${fileContent}\n} catch (err) {
+		console.log('${SECRET_DIVIDER_TOKEN}');
+		console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
+	}`;
+	try {
+		fs.writeFileSync(filePath, finalCode);
+		console.log(`Divider token added to file: ${filePath}`);
+	} catch (err) {
+		return console.error(`Error during adding divider token to file: ${err}`);
+	}
+}
+
 module.exports.readOutput = async (socketId) => {
 	let filePath = path.resolve(
 		__dirname,
@@ -83,4 +107,53 @@ module.exports.readOutput = async (socketId) => {
 	} catch (err) {
 		return console.error(`Error during reading output from file: ${err}`);
 	}
-};
+}
+
+module.exports.removeTempFiles = (socketId) => {
+	let filePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+	);
+	let jsFilePath = path.resolve(filePath, "submissions", `${socketId}.js`),
+		outputFilePath = path.resolve(filePath, "outputs", `${socketId}.txt`);
+
+	const NODE_ENV = process.env.NODE_ENV;
+	if (NODE_ENV === "test") {
+		// use synchronous function fs.unlinkSync() for testing
+		try {
+			fs.unlinkSync(jsFilePath);
+			console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
+		} catch (err) {
+			err.message.includes("ENOENT")
+				? console.log("No temporary JavaScript file was found.")
+				: console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
+		}
+		try {
+			fs.unlinkSync(outputFilePath);
+			console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
+		} catch (err) {
+			err.message.includes("ENOENT")
+				? console.log("No temporary output file was found.")
+				: console.error(`Error while removing output file '${socketId}.js': ${err}`);
+		}
+	} else {
+		// use asynchronous function fs.unlink() for dev and prod NODE_ENV
+		fs.unlink(jsFilePath, err => {
+			if (err) {
+				return err.message.includes("ENOENT")
+					? console.log("No temporary JavaScript file was found.")
+					: console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
+			}
+			return console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
+		});
+		fs.unlink(outputFilePath, err => {
+			if (err) {
+				return err.message.includes("ENOENT")
+					? console.log("No temporary output file was found.")
+					: console.error(`Error while removing output file '${socketId}.js': ${err}`);
+			};
+			return console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
+		});
+	}	
+}

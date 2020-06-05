@@ -1,5 +1,6 @@
 const multer = require('multer');
 
+const { addDividerToken } = require("../filesystem/index.js");
 const socketController = require('./socketController.js');
 const Handler = require('./DockerConfigHandler.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
@@ -49,13 +50,15 @@ module.exports = uploadController = (req, res) => {
 		if (err instanceof multer.MulterError) {
 			// A Multer error occurred during uploading
 			res.status(503).json({
-				error: 'An error occurred while uploading the submitted JavaScript file'
+				error: 'An error occurred while uploading the submitted JavaScript file!',
+				message: err.message,				
 			});
 			console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
 		} else if (err) {
 			// An error occurred during uploading
 			res.status(503).json({
-				error: 'An error occurred while uploading the submitted JavaScript file'
+				error: 'An error occurred while uploading the submitted JavaScript file!',
+				message: err.message,
 			});
 			console.error(`An error occurred at uploadController while uploading:\n${err}`);
 		} else {
@@ -69,7 +72,8 @@ module.exports = uploadController = (req, res) => {
 					res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
 					return console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
 				}
-
+				// add secret divider token to the user-submitted file
+				await addDividerToken(req.session.socketId);
 				if (isNaN(req.body.dockerConfig))
 					throw new ErrorWithStatus(
 						400,

@@ -27,7 +27,6 @@ app.use(
 app.use(
 	cors({ credentials: true, origin: `http://127.0.0.1:${LIVE_SERVER_PORT}` })
 );
-// app.use(cors());
 
 const router = require("./routes/router.js");
 
