@@ -414,7 +414,7 @@ class DockerApp {
 					* 
 					*/
 					console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
-					stderr = stderr.toString("utf-8");
+					let stderr = io[2].trim().toString("utf-8");
 					const errorArr = stderr.split(":");
 					if (errorArr[1].trim() !== "No such container") {
 						console.error(`Error during the execution of 'docker container rm' command.`);
