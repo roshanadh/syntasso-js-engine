@@ -3,7 +3,7 @@ const { performance } = require("perf_hooks");
 
 modifyTime = (time) => {
 	/*
-	 * execTime is of type 'number' : It represents miliseconds
+	 * execTime is of type 'number' : It represents milliseconds
 	 * Other performance times (imageBuildTime, containerCreateTime, and containerStartTime) ...
 	 * ... are in the form '0m0.000s'
 	 * We need to return these times in a similar structure as execTime
@@ -12,7 +12,7 @@ modifyTime = (time) => {
 		let minutes = parseInt(time.split("m")[0]);
 		// remove trailing 's'
 		let seconds = parseFloat((time.split("m")[1]).replace("s", ""));
-		// return the time interms of milliseconds
+		// return the time in terms of milliseconds
 		return ((minutes * 60) + seconds) * 1000;
 	} catch (err) {
 		return err;
@@ -100,7 +100,7 @@ class DockerApp {
 		const { socketInstance } = require("../server.js");
 		
 		return new Promise((resolve, reject) => {
-			console.log(`Removing any prexisting Node.js container: ${session.socketId}... `);
+			console.log(`Removing any pre-existing Node.js container: ${session.socketId}... `);
 			// remove any preexisting container
 			exec(`docker container rm ${session.socketId} --force`, (error, stdout, stderr) => {
 				// emit create message to the connected socket ID
@@ -398,7 +398,7 @@ class DockerApp {
 					console.error(
 						`Container named ${socketId} has been removed after the client's socket disconnection.`
 					);
-					console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
+					console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
 				}
 				if (io[2].trim() !== "") {
 					/*
@@ -413,8 +413,8 @@ class DockerApp {
 					* ... as mentioned above.
 					* 
 					*/
-					console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
-					stderr = stderr.toString("utf-8");
+					console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
+					let stderr = io[2].trim().toString("utf-8");
 					const errorArr = stderr.split(":");
 					if (errorArr[1].trim() !== "No such container") {
 						console.error(`Error during the execution of 'docker container rm' command.`);
@@ -425,7 +425,7 @@ class DockerApp {
 					return { error: stderr };
 				}
 			} catch (err) {
-				console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
+				console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
 				console.error(`Error in dockerApp.removeNodeContainer(): ${err}`);
 				return { error: err };
 			}
@@ -445,7 +445,7 @@ class DockerApp {
 					console.error(
 						`Container named ${socketId} has been removed after the client's socket disconnection.`
 					);
-				console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
+				console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
 			});
 
 			container.stderr.on("data", stderr => {
@@ -461,7 +461,7 @@ class DockerApp {
 				* ... as mentioned above.
 				* 
 				*/
-				console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
+				console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
 				stderr = stderr.toString("utf-8");
 				const errorArr = stderr.split(":");
 				if (errorArr[1].trim() !== "No such container") {
@@ -473,7 +473,7 @@ class DockerApp {
 				return { error: stderr };
 			});
 		} catch (err) {
-			console.log("Time taken for removeNodecontainer() call: " + (performance.now() - stepTime) + "ms");
+			console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
 			console.error(`Error in dockerApp.removeNodeContainer(): ${err}`);
 			return { error: err };
 		}
