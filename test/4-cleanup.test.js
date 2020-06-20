@@ -30,4 +30,28 @@ describe("4. Clean up files after socket disconnect", () => {
 		expect(fs.existsSync(filePath)).to.be.false;
 		done();
 	});
+	it("should remove any sample input files if they exist", done => {
+		const filePath = path.resolve("client-files", "tests", "sampleInputs");
+		let count = 0;
+		fs.readdirSync(filePath)
+			.forEach(sampleInputFile => {
+				let fileNames = sampleInputFile.split("-");
+				let parsedSocketId = `${fileNames[0]}-${fileNames[1]}`;
+				if (parsedSocketId === socketId) count++;
+			});
+		expect(count).to.equal(0);
+		done();
+	});
+	it("should remove any expected output files if they exist", done => {
+		const filePath = path.resolve("client-files", "tests", "expectedOutputs");
+		let count = 0;
+		fs.readdirSync(filePath)
+			.forEach(expectedOutputFile => {
+				let fileNames = expectedOutputFile.split("-");
+				let parsedSocketId = `${fileNames[0]}-${fileNames[1]}`;
+				if (parsedSocketId === socketId) count++;
+			});
+		expect(count).to.equal(0);
+		done();
+	});
 });
