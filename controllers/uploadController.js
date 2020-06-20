@@ -1,7 +1,8 @@
 const multer = require('multer');
+const path = require("path");
 
 const { addDividerToken } = require("../filesystem/index.js");
-const socketController = require('./socketController.js');
+const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
 const {
@@ -12,7 +13,7 @@ const {
 
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, __dirname + '/../client-files/submissions');
+		cb(null, path.resolve(__dirname, "..", "client-files", "submissions"));
 	},
 	filename: (req, file, cb) => {
 		cb(null, req.body.socketId + '.js');
@@ -55,7 +56,7 @@ module.exports = uploadController = (req, res) => {
 	
 	fileUpload(req, res, async (err) => {
 		try {
-			await socketController(req, res);
+			await socketValidator(req, res);
 			if (err instanceof multer.MulterError) {
 				// A Multer error occurred during uploading
 				res.status(503).json({
@@ -73,11 +74,11 @@ module.exports = uploadController = (req, res) => {
 			} else {
 				if (!req.file) {
 					res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
-					return console.error('Bad Request Error at /execute POST. No JavaScript File Provided!');
+					return console.error('Bad Request Error at /upload POST. No JavaScript File Provided!');
 				}
 				if (!req.body.dockerConfig) {
 					res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
-					return console.error("Bad Request Error at /execute POST. No Docker Configuration Instruction Provided!");
+					return console.error("Bad Request Error at /upload POST. No Docker Configuration Instruction Provided!");
 				}
 				// add secret divider token to the user-submitted file
 				await addDividerToken(req.session.socketId);
