@@ -2,11 +2,6 @@ const { mocha, chai, should, expect, server, path } = require("./test-config.js"
 
 describe("3. POST requests at /upload", () => {
 	let socket, socketId;
-
-	const log = console.log;
-	// use log in place of console.log for logging during tests
-	console.log = msg => { }
-
 	before(() => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
