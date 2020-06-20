@@ -2,16 +2,16 @@ const { mocha, chai, should, expect, path, fs, execSync } = require("./test-conf
 
 describe("4. Clean up files after socket disconnect", () => {
 	let socket, socketId;
-
-	const log = console.log;
-	// use log in place of console.log for logging during tests
-	console.log = msg => { }
-
 	before(async () => {
 		const { removeConnection } = require("./test-config.js");
-		socketId = await removeConnection();
+		socket= await removeConnection();
+		socketId = socket.id;
 	});
 
+	it("should disconnect from socket", done => {
+		expect(socket.connected).to.be.false;
+		done();
+	});
 	it("should remove the docker container if it was created", done => {
 		let filter = `\"name=${socketId}\"`;
 		const searchContainerOutput = execSync(`docker ps -aqf ${filter}`, {
