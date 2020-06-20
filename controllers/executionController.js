@@ -1,10 +1,13 @@
 const socketController = require("./socketController.js");
-const Handler = require("./DockerConfigHandler.js");
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
 const { updateCodeInFile } = require("../filesystem/index.js");
 
-const handler = new Handler();
+const {
+	handleConfigZero,
+	handleConfigOne,
+	handleConfigTwo
+} = require("./dockerConfigController.js");
 
 const executionController = async (req, res) => {
 	console.log("POST request received at /execute");
@@ -42,13 +45,13 @@ const executionController = async (req, res) => {
 
 		switch (dockerConfig) {
 			case 0:
-				handler.handleConfigZero(req, res);
+				handleConfigZero(req, res);
 				break;
 			case 1:
-				handler.handleConfigOne(req, res);
+				handleConfigOne(req, res);
 				break;
 			case 2:
-				handler.handleConfigTwo(req, res);
+				handleConfigTwo(req, res);
 				break;
 			default:
 				throw new ErrorWithStatus(
