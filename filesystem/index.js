@@ -147,7 +147,7 @@ module.exports.removeTempFiles = (socketId) => {
 				let fileNames = sampleInputFile.split(".");
 				// remove .txt files
 				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(sampleInputFile);
+					fs.unlinkSync(path.resolve(sampleInputsPath, sampleInputFile));
 					console.log(`Temporary sample input file(s) for socket ${socketId} removed because of disconnection.`);
 				}	
 			});
@@ -164,7 +164,7 @@ module.exports.removeTempFiles = (socketId) => {
 				let fileNames = expectedOutputFile.split(".");
 				// remove .txt files
 				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(expectedOutputFile);
+					fs.unlinkSync(path.resolve(expectedOutputsPath, expectedOutputFile));
 					console.log(`Temporary expected output file(s) for socket ${socketId} removed because of disconnection.`);
 				}
 			});
@@ -202,13 +202,21 @@ module.exports.removeTempFiles = (socketId) => {
 		// remove sampleInputs
 		fs.readdir(sampleInputsPath, (err, files) => {
 			if (err)
-				return console.error(`Error while removing sample input file '${socketId}.js': ${err}`);
+				return console.error(`Error while reading sample input file for socket ID: ${socketId}: ${err}`);
 			files.forEach(sampleInputFile => {
 				let fileNames = sampleInputFile.split(".");
+				let extension = fileNames[fileNames.length - 1];
+
+				let tokens = sampleInputFile.split("-");
+				let parsedSocketId = `${tokens[0]}-${tokens[1]}`;
 				// remove .txt files
-				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(sampleInputFile);
-					console.log(`Temporary sample input file(s) for socket ${socketId} removed because of disconnection.`);
+				if (parsedSocketId === socketId && fileNames[fileNames.length - 1] === "txt") {
+					fs.unlink(path.resolve(sampleInputsPath, sampleInputFile), err => {
+						if (err)
+							return console.error(`Error while removing sample input file for socket ID: ${socketId}: ${err}`);
+						return console.log(`Temporary sample input file(s) for socket ${socketId} removed because of disconnection.`);
+					});
+					
 				}	
 			});
 
@@ -218,16 +226,23 @@ module.exports.removeTempFiles = (socketId) => {
 		// remove expectedOutputs
 		fs.readdir(expectedOutputsPath, (err, files) => {
 			if (err)
-				console.error(`Error while removing expected output file '${socketId}.js': ${err}`);
+				console.error(`Error while reading expected output file for socket ID: ${socketId}: ${err}`);
 			files.forEach(expectedOutputFile => {
 				let fileNames = expectedOutputFile.split(".");
+				let extension = fileNames[fileNames.length - 1];
+
+				let tokens = expectedOutputFile.split("-");
+				let parsedSocketId = `${tokens[0]}-${tokens[1]}`;
 				// remove .txt files
-				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(expectedOutputFile);
-					console.log(`Temporary expected output file(s) for socket ${socketId} removed because of disconnection.`);
+				if (parsedSocketId === socketId && fileNames[fileNames.length - 1] === "txt") {
+					fs.unlink(path.resolve(expectedOutputsPath, expectedOutputFile), err => {
+						if (err)
+							console.error(`Error while removing expected output file for socket ID: ${socketId}: ${err}`);
+						return console.log(`Temporary expected output file(s) for socket ${socketId} removed because of disconnection.`);
+					});
 				}
 			});
-
+			
 			if (files.length === 0)
 				console.log("No temporary expected output file was found.");
 		});
