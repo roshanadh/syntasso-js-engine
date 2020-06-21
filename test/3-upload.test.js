@@ -43,7 +43,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.end((err, res) => {
 					res.should.have.status(400);
 					res.body.should.be.a("object");
@@ -59,7 +59,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", "abcd")
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(401);
@@ -76,7 +76,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.ts"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.ts"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(503);
@@ -93,7 +93,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.a.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.a.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(503);
@@ -112,7 +112,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -134,7 +134,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "1")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -154,7 +154,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -173,7 +173,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submission-incorrect.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission-incorrect.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
