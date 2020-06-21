@@ -1,4 +1,4 @@
-const { mocha, chai, should, expect, server } = require("./test-config.js");
+const { mocha, chai, should, expect, server, fs, path } = require("./test-config.js");
 
 describe("2. POST requests at /execute", () => {
 	let socket, socketId;
@@ -174,6 +174,126 @@ describe("2. POST requests at /execute", () => {
 					res.body.error.should.have.property("columnNumber");
 					res.body.error.should.have.property("errorStack");
 					res.body.error.errorName.should.equal("ReferenceError");
+					done();
+				});
+		});
+	});
+	describe("2i. POST with sampleInputs, expectedOutputs, and dockerConfig = 2 at /execute", () => {
+		let testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		let uploadedFilesPath = path.resolve(__dirname, "..", "client-files", "tests");
+
+		it("should not POST without .txt file extension", done => {
+			chai.request(server)
+				.post("/execute")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md"))
+				.field("dockerConfig", "2")
+				.field("code", "console.log('Hello World!')")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("Only .txt files can be uploaded");
+					done();
+				});
+		});
+
+		it("should not POST with file name containing more than 1 period (.)", done => {
+			chai.request(server)
+				.post("/execute")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md.txt"))
+				.field("dockerConfig", "2")
+				.field("code", "console.log('Hello World!')")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("File name cannot contain more than one period (.)");
+					done();
+				});
+		});
+
+		it("should upload 3 sampleInput files and 3 expectedOutput files", done => {
+			chai.request(server)
+				.post("/execute")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.field("dockerConfig", "2")
+				.field("code", "console.log('Hello World!')")
+				.end((err, res) => {
+					res.body.should.be.a("object");
+					res.body.should.have.property("output");
+					res.body.should.have.property("error");
+					res.body.should.have.property("execTime");
+					res.body.output.should.equal("Hello World!\r\n");
+					expect(res.body.error).to.be.null;
+					const sampleInputs = [
+						"sampleInput0.txt",
+						"sampleInput1.txt",
+						"sampleInput2.txt",
+					];
+					const expectedOutputs = [
+						"expectedOutput0.txt",
+						"expectedOutput1.txt",
+						"expectedOutput2.txt",
+					];
+
+					sampleInputs.forEach((sampleInput, index) => {
+						let fileName = `${socketId}-sampleInput-${index}.txt`;
+						if (!fs.existsSync(path.resolve(uploadedFilesPath, "sampleInputs", fileName)))
+							throw new Error(`${fileName} file hasn't been uploaded!`);
+					});
+					expectedOutputs.forEach((expectedOutput, index) => {
+						let fileName = `${socketId}-expectedOutput-${index}.txt`;
+						if (!fs.existsSync(path.resolve(uploadedFilesPath, "expectedOutputs", fileName)))
+							throw new Error(`${expectedOutput} file hasn't been uploaded!`);
+					});
+					done();
+				});
+		});
+
+		it("should not upload 10 sampleInput files and 10 expectedOutput files", done => {
+			chai.request(server)
+				.post("/execute")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.field("dockerConfig", "2")
+				.field("code", "console.log('Hello World!')")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("Unexpected field");
 					done();
 				});
 		});
