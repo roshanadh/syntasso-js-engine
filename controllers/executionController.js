@@ -122,9 +122,10 @@ const executionController = (req, res) => {
 		} catch (err) {
 			// if the error object 'err' contains a status code, ...
 			// ... it was thrown using custom ErrorWithStatus class
-			err.status && res.status(err.status).json({
-				error: err.message,
-			});
+			if (err.status)
+				return res.status(err.status).json({
+					error: err.message,
+				});
 			// otherwise, a different error occurred and should be ...
 			// ... logged to console
 			console.error({
