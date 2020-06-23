@@ -12,10 +12,16 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 		socketId + ".js"
 	);
 	// wrap user-submitted code inside a try-catch block
-	let finalCode = `"use strict";\ntry {\n${code}\n} catch (err) {
-		console.log('${SECRET_DIVIDER_TOKEN}');
-		console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
-	}`;
+	let finalCode =
+	`
+		"use strict";
+		try {
+			${code}
+		} catch (err) {
+			console.log('${SECRET_DIVIDER_TOKEN}');
+			console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
+		}
+	`;
 	try {
 		fs.writeFileSync(filePath, finalCode);
 		console.log(`Submitted code written to file: ${filePath}`);
