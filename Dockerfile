@@ -5,4 +5,6 @@ RUN apt-get update \
 && curl -sL https://deb.nodesource.com/setup_4.x | bash \
 && apt-get install -y nodejs
 
+COPY /client-files/wrapper-programs/main-wrapper.js /home/main-wrapper.js
+
 CMD ["bash"]
