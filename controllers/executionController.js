@@ -1,5 +1,6 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
@@ -15,13 +16,26 @@ const {
 let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, path.resolve(__dirname, "..", "client-files", "tests", file.fieldname));
+		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
+		try {
+			if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
+			let sampleInputsPath = path.resolve(basePath, "sampleInputs");
+			let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
+
+			if (!fs.existsSync(sampleInputsPath)) fs.mkdirSync(sampleInputsPath);
+			if (!fs.existsSync(expectedOutputsPath)) fs.mkdirSync(expectedOutputsPath);
+		} catch (err) {
+			cb(new Error(`Error while creating directory: MAIN directory ${req.body.socketId}: ${err}`), false);
+		}
+		cb(null, path.resolve(__dirname, "..", "client-files", req.body.socketId, file.fieldname));
 	},
 	filename: (req, file, cb) => {
-		let name = file.fieldname === "sampleInputs"
-			? `${req.body.socketId}-sampleInput-${sampleInputFileNameIndex++}.txt`
-			: `${req.body.socketId}-expectedOutput-${expectedOutputFileNameIndex++}.txt`;
-		cb(null, name);
+		if (file.fieldname === "sampleInputs")
+			cb(null, `${req.body.socketId}-sampleInput-${sampleInputFileNameIndex++}.txt`);
+		else if (file.fieldname === "expectedOutputs")
+			cb(null, `${req.body.socketId}-expectedOutput-${expectedOutputFileNameIndex++}.txt`);
+		else
+			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
 	}
 });
 
@@ -35,7 +49,7 @@ const fileFilter = (req, file, cb) => {
 	if (file.originalname.split('.').length > 2)
 		return cb(new Error('File name cannot contain more than one period (.)'), false);
 	if (file.originalname.split('.')[1] !== 'txt')
-		return cb(new Error('Only .txt files can be uploaded'), false);
+		return cb(new Error('Only .txt files can be uploaded as sampleInputs or expectedOutputs'), false);
 	cb(null, true);
 }
 
