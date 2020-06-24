@@ -84,7 +84,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.have.property("error");
 					res.body.should.have.property("message");
 					res.body.error.should.equal("An error occurred while uploading the submitted JavaScript file!");
-					res.body.message.should.equal("Only .js files can be uploaded");
+					res.body.message.should.equal("Only .js files can be uploaded as submission");
 					done();
 				});
 		});
