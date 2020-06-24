@@ -8,8 +8,8 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 		__dirname,
 		"..",
 		"client-files",
-		"submissions",
-		socketId + ".js"
+		socketId,
+		"submission.js"
 	);
 	// wrap user-submitted code inside a try-catch block
 	let finalCode =
@@ -23,10 +23,19 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 		}
 	`;
 	try {
+		/*
+		 * /client-files/${socketId} directory may not have been created if ...
+		 * ... no sampleInputs and expectedOutputs files have been uploaded ...
+		 * since they're created (fs.mkdir) inside the 'destination' function ...
+		 * ... of multer.diskStorage.
+		 * So, create the required directories if they do not exist yet.
+		*/
+		let basePath = path.resolve(__dirname, "..", "client-files", socketId);
+		if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
 		fs.writeFileSync(filePath, finalCode);
 		console.log(`Submitted code written to file: ${filePath}`);
 	} catch (err) {
-		return console.error(`Error during writing code to file: ${err}`);
+		return console.error(`Error during writing code to file: ${err.stack}`);
 	}
 };
 
@@ -35,8 +44,8 @@ module.exports.addDividerToken = async (socketId) => {
 		__dirname,
 		"..",
 		"client-files",
-		"submissions",
-		socketId + ".js"
+		socketId,
+		"submission.js"
 	);
 
 	let fileContent = fs.readFileSync(filePath);
