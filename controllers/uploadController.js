@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require("path");
 const fs = require("fs");
 
-const { addDividerToken } = require("../filesystem/index.js");
+const { initDirectories, addDividerToken } = require("../filesystem/index.js");
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
@@ -84,6 +84,7 @@ let fileUpload = upload.fields([
 
 module.exports = uploadController = (req, res) => {
 	console.log("POST request received at /upload");
+	initDirectories();
 	/*
 	* All possible req.body params =>
 	* 1. req.body.socketId: String => contains socket ID of the connected client

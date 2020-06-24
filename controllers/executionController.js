@@ -5,7 +5,7 @@ const fs = require("fs");
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
-const { updateCodeInFile } = require("../filesystem/index.js");
+const { initDirectories, updateCodeInFile } = require("../filesystem/index.js");
 
 const {
 	handleConfigZero,
@@ -67,6 +67,7 @@ let fileUpload = upload.fields([
 
 const executionController = (req, res) => {
 	console.log("POST request received at /execute");
+	initDirectories();
 	sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 	/*
 	 * All req.body params =>
