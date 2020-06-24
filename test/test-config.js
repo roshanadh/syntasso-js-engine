@@ -33,9 +33,10 @@ createConnection = async () => {
 }
 
 removeConnection = async () => {
+	let socketId = socket.id;
 	if (socket.connected) {
 		socket.disconnect();
-		return socket;
+		return { socket, socketId };
 	} else {
 		log("Socket connection doesn't exist.");
 		return null;
