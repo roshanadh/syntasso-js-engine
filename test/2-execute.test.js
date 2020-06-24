@@ -1,11 +1,14 @@
 const { mocha, chai, should, expect, server, fs, path } = require("./test-config.js");
 
 describe("2. POST requests at /execute", () => {
-	let socket, socketId;
+	let socket, socketId, testFilesPath, uploadedFilesPath;
 	before(() => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
 		socketId = socket.id;
+		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
+
 	});
 	
 	describe("2a. POST without socketId at /execute", () => {
@@ -179,9 +182,6 @@ describe("2. POST requests at /execute", () => {
 		});
 	});
 	describe("2i. POST with sampleInputs, expectedOutputs, and dockerConfig = 2 at /execute", () => {
-		let testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
-		let uploadedFilesPath = path.resolve(__dirname, "..", "client-files", "tests");
-
 		it("should not POST without .txt file extension", done => {
 			chai.request(server)
 				.post("/execute")
@@ -195,7 +195,7 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("error");
 					res.body.should.have.property("message");
-					res.body.message.should.equal("Only .txt files can be uploaded");
+					res.body.message.should.equal("Only .txt files can be uploaded as sampleInputs or expectedOutputs");
 					done();
 				});
 		});
