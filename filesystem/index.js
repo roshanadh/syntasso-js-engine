@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const rimraf = require("rimraf");
 
 const { SECRET_DIVIDER_TOKEN } = require("../config.js");
 
@@ -125,27 +126,30 @@ module.exports.readOutput = async (socketId) => {
 }
 
 module.exports.removeTempFiles = (socketId) => {
-	let filePath = path.resolve(
+	let tempFilesPath = path.resolve(
 		__dirname,
 		"..",
 		"client-files",
+		socketId
 	);
-	let jsFilePath = path.resolve(filePath, "submissions", `${socketId}.js`),
-		outputFilePath = path.resolve(filePath, "outputs", `${socketId}.txt`);
-
-	let sampleInputsPath = path.resolve(filePath, "tests", "sampleInputs"),
-		expectedOutputsPath = path.resolve(filePath, "tests", "expectedOutputs");
+	let outputFilePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+		"outputs",
+		`${socketId}.txt`
+	);
 
 	const NODE_ENV = process.env.NODE_ENV;
 	if (NODE_ENV === "test") {
 		// use synchronous function fs.unlinkSync() for testing
 		try {
-			fs.unlinkSync(jsFilePath);
-			console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
+			rimraf.sync(tempFilesPath);
+			console.log(`Temporary client files for socket ${socketId} removed because of disconnection.`);
 		} catch (err) {
 			err.message.includes("ENOENT")
-				? console.log("No temporary JavaScript file was found.")
-				: console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
+				? console.log("No temporary client files were found.")
+				: console.error(`Error while removing temporary client files file for socket ID: ${socketId}: ${err}`);
 		}
 		try {
 			fs.unlinkSync(outputFilePath);
@@ -155,48 +159,15 @@ module.exports.removeTempFiles = (socketId) => {
 				? console.log("No temporary output file was found.")
 				: console.error(`Error while removing output file '${socketId}.js': ${err}`);
 		}
-		// remove sampleInputs
-		try {
-			const sampleInputFiles = fs.readdirSync(sampleInputsPath);
-			sampleInputFiles.forEach(sampleInputFile => {
-				let fileNames = sampleInputFile.split(".");
-				// remove .txt files
-				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(path.resolve(sampleInputsPath, sampleInputFile));
-					console.log(`Temporary sample input file(s) for socket ${socketId} removed because of disconnection.`);
-				}	
-			});
-			if (sampleInputFiles.length === 0)
-				console.log("No temporary sample input file was found.");
-		
-		} catch (err) {
-			console.error(`Error while removing sample input file '${socketId}.js': ${err}`);
-		}
-		// remove expectedOutputs
-		try {
-			const expectedOutputFiles = fs.readdirSync(expectedOutputsPath);
-			expectedOutputFiles.forEach(expectedOutputFile => {
-				let fileNames = expectedOutputFile.split(".");
-				// remove .txt files
-				if (fileNames[fileNames.length - 1] === "txt") {
-					fs.unlinkSync(path.resolve(expectedOutputsPath, expectedOutputFile));
-					console.log(`Temporary expected output file(s) for socket ${socketId} removed because of disconnection.`);
-				}
-			});
-			if (expectedOutputFiles.length === 0)
-				console.log("No temporary expected output file was found.");
-		} catch (err) {
-			console.error(`Error while removing expected output file '${socketId}.js': ${err}`);
-		}
 	} else {
 		// use asynchronous function fs.unlink() for dev and prod NODE_ENV
-		fs.unlink(jsFilePath, err => {
+		rimraf(tempFilesPath, err => {
 			if (err) {
 				return err.message.includes("ENOENT")
-					? console.log("No temporary JavaScript file was found.")
-					: console.error(`Error while removing JavaScript file '${socketId}.js': ${err}`);
+					? console.log("No temporary client files were found.")
+					: console.error(`Error while removing temporary client files file for socket ID: ${socketId}: ${err}`);
 			}
-			return console.log(`Temporary JavaScript file for socket ${socketId} removed because of disconnection.`);
+			return console.log(`Temporary client files for socket ${socketId} removed because of disconnection.`);
 		});
 		fs.unlink(outputFilePath, err => {
 			if (err) {
@@ -205,61 +176,6 @@ module.exports.removeTempFiles = (socketId) => {
 					: console.error(`Error while removing output file '${socketId}.js': ${err}`);
 			};
 			return console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
-		});
-		fs.unlink(outputFilePath, err => {
-			if (err) {
-				return err.message.includes("ENOENT")
-					? console.log("No temporary output file was found.")
-					: console.error(`Error while removing output file '${socketId}.js': ${err}`);
-			};
-			return console.log(`Temporary output file for socket ${socketId} removed because of disconnection.`);
-		});
-		// remove sampleInputs
-		fs.readdir(sampleInputsPath, (err, files) => {
-			if (err)
-				return console.error(`Error while reading sample input file for socket ID: ${socketId}: ${err}`);
-			files.forEach(sampleInputFile => {
-				let fileNames = sampleInputFile.split(".");
-				let extension = fileNames[fileNames.length - 1];
-
-				let tokens = sampleInputFile.split("-");
-				let parsedSocketId = `${tokens[0]}-${tokens[1]}`;
-				// remove .txt files
-				if (parsedSocketId === socketId && fileNames[fileNames.length - 1] === "txt") {
-					fs.unlink(path.resolve(sampleInputsPath, sampleInputFile), err => {
-						if (err)
-							return console.error(`Error while removing sample input file for socket ID: ${socketId}: ${err}`);
-						return console.log(`Temporary sample input file(s) for socket ${socketId} removed because of disconnection.`);
-					});
-					
-				}	
-			});
-
-			if (files.length === 0)
-				console.log("No temporary sample input file was found.");
-		});
-		// remove expectedOutputs
-		fs.readdir(expectedOutputsPath, (err, files) => {
-			if (err)
-				console.error(`Error while reading expected output file for socket ID: ${socketId}: ${err}`);
-			files.forEach(expectedOutputFile => {
-				let fileNames = expectedOutputFile.split(".");
-				let extension = fileNames[fileNames.length - 1];
-
-				let tokens = expectedOutputFile.split("-");
-				let parsedSocketId = `${tokens[0]}-${tokens[1]}`;
-				// remove .txt files
-				if (parsedSocketId === socketId && fileNames[fileNames.length - 1] === "txt") {
-					fs.unlink(path.resolve(expectedOutputsPath, expectedOutputFile), err => {
-						if (err)
-							console.error(`Error while removing expected output file for socket ID: ${socketId}: ${err}`);
-						return console.log(`Temporary expected output file(s) for socket ${socketId} removed because of disconnection.`);
-					});
-				}
-			});
-			
-			if (files.length === 0)
-				console.log("No temporary expected output file was found.");
 		});
 	}	
 }
