@@ -43,13 +43,19 @@ The API exposes three endpoints and the following actions:
     ```
     POST /execute
     ```
-    The request body must include three parameters:
+    The request body ***must*** include three parameters (via JSON or x-www-form-urlencoded):
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
     ii. *code* [String]: The code snippet to be executed by the engine. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
+
+    The request body ***may*** also include the following fields (if these are included, send the request via form-data, including the three parameters mentioned above):
+    
+    i. *sampleInputs* [.txt file] [maxCount: 8]: For supplying the client-submitted code with input data.
+
+    ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
     
 3. Route to POST a JavaScript file
     ```
@@ -59,11 +65,15 @@ The API exposes three endpoints and the following actions:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
-    ii. *submission* [A .js file]: The JavaScript file to be executed. 
+    ii. *submission* [.js file] [maxCount: 1]: The JavaScript file to be executed. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
        
+    The request body ***may*** also include the following fields (if these are included, send the request via form-data, including the three parameters mentioned above):
+    
+    i. *sampleInputs* [.txt file] [maxCount: 8]: For supplying the client-submitted program with input data.
 
+    ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
 
 
 
