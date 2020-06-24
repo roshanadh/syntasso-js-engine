@@ -1,5 +1,6 @@
 const { exec, spawn, spawnSync } = require("child_process");
 const { performance } = require("perf_hooks");
+const path = require("path");
 
 modifyTime = (time) => {
 	/*
@@ -262,12 +263,19 @@ class DockerApp {
 			});
 			
 			stepTime = performance.now();
-			// copy submission.js from host to container's home/submission.js
+			// copy client-files/ from host to container's home/client-files/
+			const localPath = path.resolve(
+				__dirname,
+				"..",
+				"client-files",
+				`${session.socketId}`
+			);
+
 			const container = spawnSync("docker",
-				["cp", `client-files/submissions/${session.socketId}.js`, containerId + ":/home/submission.js"], {
+				["cp", localPath, containerId + ":/home/client-files/"], {
 					stdio: ["pipe", "pipe", "pipe"],
 			});
-			console.log("Time taken to copy submission.js into the container: " + (performance.now() - stepTime) + "ms");
+			console.log("Time taken to copy client-files/ into the container: " + (performance.now() - stepTime) + "ms");
 			
 			const io = container.output.toString().split(",");
 			/*
@@ -299,11 +307,11 @@ class DockerApp {
 					};
 				}
 				console.error(`Error during the execution of 'docker cp' command.`);
-				console.error(`Error during copying submission.js into the container: ${io[2]}`);
+				console.error(`Error during copying client-files/ into the container: ${io[2]}`);
 				return { error: io[2] };    
 			}
 		} catch (err) {
-			console.error(`Error during copying submission.js into the container: ${err}`);
+			console.error(`Error during copying client-files/ into the container: ${err}`);
 			
 			socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 				stdout: "An error occurred while executing code inside the Node.js container."
@@ -320,7 +328,7 @@ class DockerApp {
 			
 			stepTime = performance.now();
 			const child = spawnSync("docker",
-				["exec", "-it", containerId, "node", "home/submission.js", "|", "tee", `client-files/outputs/${session.socketId}.txt`], {
+				["exec", "-it", containerId, "node", `home/client-files/${session.socketId}/submission.js`, "|", "tee", `client-files/outputs/${session.socketId}.txt`], {
 					shell: true,
 					stdio: ["inherit", "pipe", "pipe"],
 			});
@@ -348,7 +356,8 @@ class DockerApp {
 						errorType: "container-not-started-beforehand",
 						error: io.stderr,
 					};
-				}                
+				}
+				console.error(`Error during JavaScript code execution: ${err.stack}`);
 				return { error: io.stderr };
 			}
 			console.log("Time taken to execute the code: " + (now - stepTime) + "ms");
