@@ -1,5 +1,6 @@
 const multer = require('multer');
 const path = require("path");
+const fs = require("fs");
 
 const { addDividerToken } = require("../filesystem/index.js");
 const socketValidator = require('../middlewares/socketValidator.js');
@@ -13,10 +14,36 @@ const {
 
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, path.resolve(__dirname, "..", "client-files", "submissions"));
+		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
+		try {
+			if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
+
+			let sampleInputsPath = path.resolve(basePath, "sampleInputs");
+			let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
+
+			if (!fs.existsSync(sampleInputsPath)) fs.mkdirSync(sampleInputsPath);
+			if (!fs.existsSync(expectedOutputsPath)) fs.mkdirSync(expectedOutputsPath);
+		} catch (err) {
+			cb(new Error(`Error while creating directory: MAIN directory ${req.body.socketId}: ${err}`), false);
+		}
+		if (file.fieldname === "submission")
+			cb(null, basePath);
+		else if (file.fieldname === "sampleInputs")
+			cb(null, sampleInputsPath);
+		else if (file.fieldname === "expectedOutputs")
+			cb(null, expectedOutputsPath);
+		else
+			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
 	},
 	filename: (req, file, cb) => {
-		cb(null, req.body.socketId + '.js');
+		if (file.fieldname === "submission")
+			cb(null, "submission.js");
+		else if (file.fieldname === "sampleInputs")
+			cb(null, `${req.body.socketId}-sampleInput-${sampleInputFileNameIndex++}.txt`);
+		else if (file.fieldname === "expectedOutputs")
+			cb(null, `${req.body.socketId}-expectedOutput-${expectedOutputFileNameIndex++}.txt`);
+		else
+			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
 	}
 });
 
@@ -28,14 +55,32 @@ const fileFilter = (req, file, cb) => {
 	if (!listOfClients.includes(req.body.socketId))
 		return cb(null, false);
     if (file.originalname.split('.').length > 2)
-        return cb(new Error('File name cannot contain more than one period (.)'), false);
-    if (file.originalname.split('.')[1] !== 'js')
-        return cb(new Error('Only .js files can be uploaded'), false);
+		return cb(new Error('File name cannot contain more than one period (.)'), false);
+	if (file.fieldname === "submission" && file.originalname.split('.')[1] !== 'js')
+		return cb(new Error('Only .js files can be uploaded as submission'), false);
+    if (
+		(file.fieldname === "sampleInputs" || file.fieldname === "expectedOutputs")
+		&& file.originalname.split('.')[1] !== 'txt'
+	)
+        return cb(new Error('Only .txt files can be uploaded as sampleInputs or expectedOutputs'), false);
     cb(null, true);
 }
 
 const upload = multer({ storage, fileFilter });
-let fileUpload = upload.single('submission');
+let fileUpload = upload.fields([
+	{
+		name: "submission",
+		maxCount: 1
+	},
+	{
+		name: "sampleInputs",
+		maxCount: 8
+	},
+	{
+		name: "expectedOutputs",
+		maxCount: 8
+	}
+]);
 
 module.exports = uploadController = (req, res) => {
 	console.log("POST request received at /upload");
@@ -72,7 +117,7 @@ module.exports = uploadController = (req, res) => {
 				});
 				console.error(`An error occurred at uploadController while uploading:\n${err}`);
 			} else {
-				if (!req.file) {
+				if (!req.files["submission"]) {
 					res.status(400).json({ error: "Bad Request: No JavaScript File Provided!" });
 					return console.error('Bad Request Error at /upload POST. No JavaScript File Provided!');
 				}
@@ -107,8 +152,20 @@ module.exports = uploadController = (req, res) => {
 				}
 			}
 		} catch (err) {
-			res.status(err.status).json({
+			// if the error object 'err' contains a status code, ...
+			// ... it was thrown using custom ErrorWithStatus class
+			if (err.status)
+				return res.status(err.status).json({
+					error: err.message,
+				});
+			// otherwise, a different error occurred and should be ...
+			// ... logged to console
+			console.error({
 				error: err.message,
+				stack: err.stack
+			});
+			res.status(503).json({
+				error: 'Service is currently unavailable!',
 			});
 		}
 	});
