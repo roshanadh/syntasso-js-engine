@@ -4,6 +4,21 @@ const rimraf = require("rimraf");
 
 const { SECRET_DIVIDER_TOKEN } = require("../config.js");
 
+module.exports.initDirectories = () => {
+	let outputsDirPath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+		"outputs"
+	);
+	
+	try {
+		if (!fs.existsSync(outputsDirPath)) fs.mkdirSync(outputsDirPath);
+	} catch (err) {
+		return console.error(`Error while creating outputs directory: ${err.stack}`);
+	}
+}
+
 module.exports.updateCodeInFile = async (socketId, code) => {
 	let filePath = path.resolve(
 		__dirname,
