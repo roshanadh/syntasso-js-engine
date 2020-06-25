@@ -408,6 +408,7 @@ class DockerApp {
 						`Container named ${socketId} has been removed after the client's socket disconnection.`
 					);
 					console.log("Time taken for removeNodeContainer() call: " + (performance.now() - stepTime) + "ms");
+					return;
 				}
 				if (io[2].trim() !== "") {
 					/*
