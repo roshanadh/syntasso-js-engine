@@ -328,7 +328,7 @@ class DockerApp {
 			
 			stepTime = performance.now();
 			const child = spawnSync("docker",
-				["exec", "-it", containerId, "node", `home/client-files/${session.socketId}/submission.js`, "|", "tee", `client-files/outputs/${session.socketId}.txt`], {
+				["exec", "-ite", `socketId='${session.socketId}'`, containerId, "node", `home/client-files/main-wrapper.js`, "|", "tee", `client-files/outputs/${session.socketId}.txt`], {
 					shell: true,
 					stdio: ["inherit", "pipe", "pipe"],
 			});
@@ -357,7 +357,7 @@ class DockerApp {
 						error: io.stderr,
 					};
 				}
-				console.error(`Error during JavaScript code execution: ${err.stack}`);
+				console.error(`Error during JavaScript code execution: ${io.stderr}`);
 				return { error: io.stderr };
 			}
 			console.log("Time taken to execute the code: " + (now - stepTime) + "ms");
