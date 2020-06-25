@@ -9,82 +9,96 @@
 */
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawnSync } = require("child_process");
 
-const ErrorWithStatus = require("../../utils/ErrorWithStatus.js");
-
-const socketId = process.env.socketId.trim();
-
-let submissionFileContents = "";
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
 
-// main-wrapper.js is in the location: home/main-wrapper.js inside the container
-// submission.js is in the location: home/submission.js inside the container
-const submissionFilePath = path.resolve(
-	`${socketId}.js`
-);
+let socketId = process.env.socketId.trim();
 
+// main-wrapper.js is in the location: home/client-files/main-wrapper.js inside the container
+// submission.js is in the location: home/client-files/${socketId}/submission.js inside the container
+const submissionFilePath = path.resolve(
+	__dirname,
+	socketId,
+	"submission.js"
+);
 const sampleInputFilePath = path.resolve(
 	__dirname,
-	"..",
-	"tests",
+	socketId,
 	"sampleInputs",
 	`${socketId}-sampleInput-0.txt`
 );
 
 const expectedOutputFilePath = path.resolve(
 	__dirname,
-	"..",
-	"tests",
+	socketId,
 	"expectedOutputs",
 	`${socketId}-expectedOutput-0.txt`
 );
 
-const nodeProcess = spawn("node", [submissionFilePath]);
-
-nodeProcess.stdout.on("data", stdout => {
-	fs.readFile(expectedOutputFilePath, (err, data) => {
+const writeToStdin = () => {
+	fs.readFile(sampleInputFilePath, (err, data) => {
 		if (err) {
-			console.error(`Error while reading expectedOutput file:${socketId}.js: ${err}`);
-			throw new ErrorWithStatus(500, "Error while reading submitted expected output");
-		}
-		expectedOutputFileContents = data;
-		let testStatus = true;
-		if (expectedOutputFileContents !== stdout) {
-			console.error(`Expected output doesn't match observed output for socketId: ${socketId}`);
-			testStatus = false;
-		}
-		return {
-			testStatus,
-			expectedOutput: expectedOutputFileContents.toString(),
-			observedOutput: stdout.toString()
-		};
-	});
-});
+			if (err.message.includes("ENOENT"))
+				// write empty string to nodeProcess.stdin if ...
+				// ... no sampleInputs file has been uploaded
+				return "";
 
-fs.readFile(sampleInputFilePath, (err, data) => {
-	if (err) {
-		console.error(`Error while reading sampleInput file:${socketId}.js: ${err}`);
-		throw new ErrorWithStatus(500, "Error while reading submitted sample input");
-	}
-	sampleInputFileContents = data.toString();
-	sampleInputFileContents = sampleInputFileContents.split("\n");
-	sampleInputFileContents = JSON.stringify(sampleInputFileContents);
-	
-	nodeProcess.stdin.write(sampleInputFileContents, err => {
-		if (err) {
-			console.error(`Error while passing sample input to submission file:${socketId}.js: ${err}`);
-			throw new ErrorWithStatus(500, "Error while passing sample input to the submitted program");
+			console.error(`Error while reading sampleInput file: ${err}`);
+			throw new Error(`Error while reading sampleInput file: ${err}`);
+		} else {
+			sampleInputFileContents = data.toString();
+			sampleInputFileContents = sampleInputFileContents.split("\n");
+			sampleInputFileContents = JSON.stringify(sampleInputFileContents);
+
+			return sampleInputFileContents;
 		}
 	});
-	nodeProcess.stdin.end();
-});
+}
+try {
+	const nodeProcess = spawnSync("node", [submissionFilePath], {
+		input: writeToStdin()
+	});
 
-fs.readFile(submissionFilePath, (err, data) => {
-	if (err) {
-		console.error(`Error while reading submission file:${socketId}.js: ${err}`);
-		throw new ErrorWithStatus(500, "Error while reading submitted program");
+	const io = nodeProcess.output;
+	const stdout = io[1].toString();
+	const stderr = io[2].toString();
+
+	if (stderr === "") {
+		// no stderr was observed
+		let response = {};
+		fs.readFile(expectedOutputFilePath, (err, data) => {
+			if (err) {
+				if (err.message.includes("ENOENT")) {
+					// no expectedOutputs file has been uploaded ...
+					// ... so testStatus and expectedOutput are non-existent
+					response = {
+						testStatus: null,
+						expectedOutput: null,
+						observedOutput: stdout
+					}
+				} else {
+					console.error(`Error while reading expectedOutput file: ${err}`);
+					throw new Error(`Error while reading expectedOutput file: ${err}`);
+				}
+			} else {
+				expectedOutputFileContents = data.toString();
+				let testStatus = true;
+				if (expectedOutputFileContents !== stdout)
+					testStatus = false;
+
+				response = {
+					testStatus,
+					expectedOutput: expectedOutputFileContents.toString(),
+					observedOutput: stdout.toString()
+				}
+			}
+			console.log(JSON.stringify(response));
+		});
+	} else {
+		throw new Error(`stderr during execution of submission.js: ${stderr}`)
 	}
-	submissionFileContents = data;
-});
+} catch (err) {
+	throw new Error(err);
+}
