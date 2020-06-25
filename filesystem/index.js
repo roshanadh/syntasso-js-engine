@@ -87,6 +87,7 @@ module.exports.readOutput = async (socketId) => {
 		"outputs",
 		socketId + ".txt"	
 	);
+	let fileContents = "";
 	try {
 	/*
 	 *  Reads output of the user-submitted code.
@@ -104,39 +105,57 @@ module.exports.readOutput = async (socketId) => {
 	 *  ... point of substring.
 	 *
 	 */
-	const fileContent = await fs.readFileSync(filePath).toString("utf-8");
-	const startIndex = await fileContent.search(SECRET_DIVIDER_TOKEN);
-	let error, output;
-	if (startIndex === -1) {
-		output = fileContent;
-		error = null;
-	} else {
-	  	// length of SECRET_DIVIDER_TOKEN is 10
-		error = fileContent.substring(startIndex + 10).trim();
-		output = fileContent.substring(0, startIndex);
+		fileContents = await fs.readFileSync(filePath).toString("utf-8");
+		if (fileContents === "")
+		// the output file has not been populated
+			return {
+				testStatus: null,
+				expectedOutput: null,
+				observedOutput: null,
+				error: null
+			}
 
-		error = JSON.parse(error);
-		// parse error line number and column number from errorStack
-		let stack = error.errorStack;
-		let index = stack.search('/home/submission.js:');
+		fileContents = JSON.parse(fileContents);
+		let observedOutput = fileContents.observedOutput,
+			error;
+		const startIndex = observedOutput.search(SECRET_DIVIDER_TOKEN);
 
-		let str = stack.substring(index + '/home/submission.js:'.length);
-		let lineNumber = str.split(':')[0];
-		let columnNumber = str.split(':')[1].split(')')[0];
+		if (startIndex === -1) {
+			// no error was observed if SECRET_DIVIDER_TOKEN ...
+			// ... doesn't exist in observedOutput object
+			error = null;
+		} else {
+			// length of SECRET_DIVIDER_TOKEN is 10
+			error = observedOutput.substring(startIndex + 10).trim();
+			observedOutput = observedOutput.substring(0, startIndex);
 
-	  // delete errorStack property from error object to reorder its occurrence ...
-	  // ... below lineNumber and columnNumber
-		delete error.errorStack;
-		error = {
-			...error,
-			lineNumber,
-			columnNumber,
-			errorStack: stack,
+			error = JSON.parse(error);
+			// parse error line number and column number from errorStack
+			let stack = error.errorStack;
+			let index = stack.search(`/home/client-files/${socketId}/submission.js:`);
+
+			let str = stack.substring(index + `/home/client-files/${socketId}/submission.js:`.length);
+			let lineNumber = str.split(':')[0];
+			let columnNumber = str.split(':')[1].split(')')[0];
+
+			// delete errorStack property from error object to reorder its occurrence ...
+			// ... below lineNumber and columnNumber
+			delete error.errorStack;
+			error = {
+				...error,
+				lineNumber,
+				columnNumber,
+				errorStack: stack,
+			}
 		}
-	}
-	return { output, error }
+		return {
+			testStatus: fileContents.testStatus,
+			expectedOutput: fileContents.expectedOutput,
+			observedOutput,
+			error
+		}
 	} catch (err) {
-		return console.error(`Error during reading output from file: ${err}`);
+		return console.error(`Error during reading output from file: ${err.stack}`);
 	}
 }
 
