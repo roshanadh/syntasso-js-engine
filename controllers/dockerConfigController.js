@@ -63,8 +63,7 @@ handleConfigZero = async (req, res) => {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
 		const response = {
-			output: _res.output,
-			error: _res.error,
+			..._res,
 			imageBuildTime,
 			containerCreateTime,
 			containerStartTime,
@@ -116,8 +115,7 @@ handleConfigOne = async (req, res) => {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
 		const response = {
-			output: _res.output,
-			error: _res.error,
+			..._res,
 			containerStartTime,
 			execTime,
 		};
@@ -149,8 +147,7 @@ handleConfigTwo = async (req, res) => {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
 		const response = {
-			output: _res.output,
-			error: _res.error,
+			..._res,
 			execTime,
 		};
 		console.dir(response);
