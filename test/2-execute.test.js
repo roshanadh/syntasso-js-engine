@@ -232,11 +232,9 @@ describe("2. POST requests at /execute", () => {
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("observedOutput");
-					res.body.should.have.property("error");
+					res.body.should.have.property("sampleInputs");
+					res.body.sampleInputs.should.equal(3);
 					res.body.should.have.property("execTime");
-					res.body.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.error).to.be.null;
 					const sampleInputs = [
 						"sampleInput0.txt",
 						"sampleInput1.txt",
