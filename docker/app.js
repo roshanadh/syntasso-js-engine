@@ -337,9 +337,10 @@ class DockerApp {
 			const ioArray = child.output;
 			// ioArray = [0, 1, 2]
 			// ioArray = [stdin, stdout: Buffer, stderr: Buffer]
-			
+
 			const io = {
 				stdin: ioArray[0],
+				// convert stdout to a stringified JSON
 				stdout: ioArray[1].toString("utf-8"),
 				stderr: ioArray[2].toString("utf-8")
 			};
@@ -368,7 +369,11 @@ class DockerApp {
 			
 			console.log("Total time taken for all execution steps (Fetch ID, Copy, and Exec): " + (now - startTime) + "ms");
 			console.log("\nSTDIO for 'docker exec' command: ");
-			console.dir(io);
+			console.dir({
+				stdin: io.stdin,
+				stdout: io.stdout,
+				stderr: io.stderr
+			});
 			
 			return { execTime: now - stepTime };
 		} catch (err) {
