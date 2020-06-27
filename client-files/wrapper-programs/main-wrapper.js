@@ -11,6 +11,8 @@ const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 
+const { read } = require("./uploaded-files-reader.js");
+
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
 
@@ -23,82 +25,111 @@ const submissionFilePath = path.resolve(
 	socketId,
 	"submission.js"
 );
-const sampleInputFilePath = path.resolve(
-	__dirname,
-	socketId,
-	"sampleInputs",
-	`${socketId}-sampleInput-0.txt`
-);
 
-const expectedOutputFilePath = path.resolve(
-	__dirname,
-	socketId,
-	"expectedOutputs",
-	`${socketId}-expectedOutput-0.txt`
-);
+// array of sampleInput and expectedOutput filenames
+let sampleInputs,
+	expectedOutputs;
 
-const writeToStdin = () => {
-	fs.readFile(sampleInputFilePath, (err, data) => {
-		if (err) {
-			if (err.message.includes("ENOENT"))
-				// write empty string to nodeProcess.stdin if ...
-				// ... no sampleInputs file has been uploaded
-				return "";
+let nodeProcess,
+	response = {};
 
-			console.error(`Error while reading sampleInput file: ${err}`);
-			throw new Error(`Error while reading sampleInput file: ${err}`);
-		} else {
-			sampleInputFileContents = data.toString();
-			sampleInputFileContents = sampleInputFileContents.split("\n");
-			sampleInputFileContents = JSON.stringify(sampleInputFileContents);
-
-			return sampleInputFileContents;
-		}
-	});
-}
 try {
-	const nodeProcess = spawnSync("node", [submissionFilePath], {
-		input: writeToStdin()
-	});
+	read(socketId)
+		.then(response => {
+			sampleInputs = response.sampleInputs;
+			expectedOutputs = response.expectedOutputs;
 
-	const io = nodeProcess.output;
-	const stdout = io[1].toString();
-	const stderr = io[2].toString();
+			main();
+		})
+		.catch(err => {
+			if (
+				err.message === "No test files have been uploaded" ||
+				err.message === "Number of sampleInput and expectedOutput files"
+			) {
+				// spawn one process and do not pass any sample input to it
+				try {
+					nodeProcess = spawnSync("node", [submissionFilePath]);
 
-	if (stderr === "") {
-		// no stderr was observed
-		let response = {};
-		fs.readFile(expectedOutputFilePath, (err, data) => {
-			if (err) {
-				if (err.message.includes("ENOENT")) {
-					// no expectedOutputs file has been uploaded ...
-					// ... so testStatus and expectedOutput are non-existent
-					response = {
-						testStatus: null,
-						expectedOutput: null,
-						observedOutput: stdout
+					const io = nodeProcess.output;
+					const stdout = io[1];
+					const stderr = io[2].toString();
+
+					if (stderr === "") {
+						// no stderr was observed
+						let testStatus = null;
+						response = {
+							sampleInputs: 0,
+							testStatus,
+							expectedOutput: null,
+							observedOutput: stdout.toString()
+						}
+						process.stdout.write(Buffer.from(JSON.stringify(response)));
+					} else {
+						throw new Error(`stderr during execution of submission.js: ${stderr}`)
 					}
-				} else {
-					console.error(`Error while reading expectedOutput file: ${err}`);
-					throw new Error(`Error while reading expectedOutput file: ${err}`);
+				} catch (err) {
+					throw err;
 				}
-			} else {
-				expectedOutputFileContents = data.toString();
-				let testStatus = true;
-				if (expectedOutputFileContents !== stdout)
-					testStatus = false;
+			}
+			else throw err;
+		});
+} catch (err) {
+	throw err;
+}
 
-				response = {
+const main = () => {
+	// spawn n Node.js processes for n sampleInputs
+	response["sampleInputs"] = sampleInputs.length;
+	for (let i = 0; i < sampleInputs.length; i++) {
+		try {
+			nodeProcess = spawnSync("node", [submissionFilePath], {
+				input: writeToStdin(sampleInputs.files[i]),
+			});
+
+			const io = nodeProcess.output;
+			const stdout = io[1];
+			const stderr = io[2].toString();
+
+			if (stderr === "") {
+				// no stderr was observed
+				expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
+				let testStatus = true;
+				if (expectedOutputFileContents !== stdout.toString())
+					testStatus = false;
+				/*
+				 * response object looks like following:
+				 * {
+				 *		sampleInput0: {
+				 *			testStatus: true | false | null,
+				 *			expectedOutput: "Hello World!\n",
+				 *			observedOutput: "Hello World!\n",
+				 *		}
+				 *		...
+				 * }
+				 * 
+				*/
+				response[`sampleInput${i}`] = {
 					testStatus,
 					expectedOutput: expectedOutputFileContents.toString(),
 					observedOutput: stdout.toString()
 				}
+			} else {
+				throw new Error(`stderr during execution of submission.js: ${stderr}`)
 			}
-			console.log(JSON.stringify(response));
-		});
-	} else {
-		throw new Error(`stderr during execution of submission.js: ${stderr}`)
+		} catch (err) {
+			throw err;
+		}
 	}
-} catch (err) {
-	throw new Error(err);
+	process.stdout.write(Buffer.from(JSON.stringify(response)));
+}
+
+const writeToStdin = sampleInput => {
+	sampleInputFileContents = sampleInputs.fileContents[sampleInput].toString();
+	sampleInputFileContents = sampleInputFileContents.split("\n");
+	sampleInputFileContents = JSON.stringify(sampleInputFileContents);
+
+	return JSON.stringify({
+		sampleInputId: sampleInput,
+		fileContents: sampleInputFileContents,
+	});
 }
