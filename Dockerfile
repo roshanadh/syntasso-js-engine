@@ -6,6 +6,6 @@ RUN apt-get update \
 && apt-get install -y nodejs
 
 RUN mkdir home/client-files/
-COPY /client-files/wrapper-programs/main-wrapper.js /home/client-files/main-wrapper.js
+COPY /client-files/wrapper-programs/*.js /home/client-files/
 
 CMD ["bash"]
