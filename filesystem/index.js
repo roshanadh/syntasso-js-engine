@@ -205,6 +205,7 @@ module.exports.readOutput = async (socketId) => {
 			}
 			response[`sampleInput${i}`] = {
 				testStatus: fileContents[`sampleInput${i}`].testStatus,
+				sampleInput: fileContents[`sampleInput${i}`].sampleInput,
 				expectedOutput: fileContents[`sampleInput${i}`].expectedOutput,
 				observedOutput,
 				error
