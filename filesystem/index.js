@@ -208,7 +208,8 @@ module.exports.readOutput = async (socketId) => {
 				sampleInput: fileContents[`sampleInput${i}`].sampleInput,
 				expectedOutput: fileContents[`sampleInput${i}`].expectedOutput,
 				observedOutput,
-				error
+				error,
+				execTimeForProcess: fileContents[`sampleInput${i}`].execTimeForProcess
 			}
 		}
 		return response;

@@ -11,6 +11,7 @@
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
+const { performance } = require("perf_hooks");
 
 const { read } = require("./uploaded-files-reader.js");
 
@@ -32,6 +33,7 @@ let sampleInputs,
 	expectedOutputs;
 
 let nodeProcess,
+	execTimeForProcess,
 	response = {};
 
 try {
@@ -89,9 +91,11 @@ const main = () => {
 	response["sampleInputs"] = sampleInputs.length;
 	for (let i = 0; i < sampleInputs.length; i++) {
 		try {
+			execTimeForProcess = performance.now();
 			nodeProcess = spawnSync("node", [submissionFilePath], {
 				input: writeToStdin(sampleInputs.files[i]),
 			});
+			execTimeForProcess = performance.now() - execTimeForProcess;
 
 			const io = nodeProcess.output;
 			const stdout = io[1];
@@ -108,8 +112,10 @@ const main = () => {
 				 * {
 				 *		sampleInput0: {
 				 *			testStatus: true | false | null,
+				 *			sampleInput: "Hello World!\n",
 				 *			expectedOutput: "Hello World!\n",
 				 *			observedOutput: "Hello World!\n",
+				 *			execTimeForProcess: 65,
 				 *		}
 				 *		...
 				 * }
@@ -119,7 +125,8 @@ const main = () => {
 					testStatus,
 					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
 					expectedOutput: expectedOutputFileContents.toString(),
-					observedOutput: stdout.toString()
+					observedOutput: stdout.toString(),
+					execTimeForProcess,
 				}
 			} else {
 				throw new Error(`stderr during execution of submission.js: ${stderr}`)
