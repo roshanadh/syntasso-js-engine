@@ -8,7 +8,6 @@
  *	... spawned Node.js process
  *
 */
-const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const { performance } = require("perf_hooks");
