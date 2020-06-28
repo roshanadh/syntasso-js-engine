@@ -64,6 +64,12 @@ try {
 							expectedOutput: null,
 							observedOutput: stdout.toString()
 						}
+						// NOTE: Do not log to the console or write to stdout ...
+						// ... from inside main-wrapper.js except for the response ...
+						// ... object itself
+						// Any console.log or process.stdout.write from inside main-wrapper.js ...
+						// ... writes to the output file and may cause error during JSON.parse ...
+						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
 					} else {
 						throw new Error(`stderr during execution of submission.js: ${stderr}`)
@@ -111,6 +117,7 @@ const main = () => {
 				*/
 				response[`sampleInput${i}`] = {
 					testStatus,
+					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
 					expectedOutput: expectedOutputFileContents.toString(),
 					observedOutput: stdout.toString()
 				}
@@ -121,6 +128,12 @@ const main = () => {
 			throw err;
 		}
 	}
+	// NOTE: Do not log to the console or write to stdout ...
+	// ... from inside main-wrapper.js except for the response ...
+	// ... object itself
+	// Any console.log or process.stdout.write from inside main-wrapper.js ...
+	// ... writes to the output file and may cause error during JSON.parse ...
+	// ... of the contents obtained from the output file
 	process.stdout.write(Buffer.from(JSON.stringify(response)));
 }
 
