@@ -109,8 +109,8 @@ There are three possible values to dockerConfig: 0, 1, and 2.
    - Structure:
     ```json
         test-status = {
-            type: "test-status",
-		    process: [Integer],
-		    testStatus: [Boolean],
+        	type: "test-status",
+		process: [Integer],
+		testStatus: [Boolean],
         }
     ```
