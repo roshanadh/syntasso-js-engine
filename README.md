@@ -78,7 +78,7 @@ The API exposes three endpoints and the following actions:
 ## dockerConfig
 There are three possible values to dockerConfig: 0, 1, and 2.
 * 0:
-    * Using the Dockerfile in the root of the project, the engine will build an image tagged img_node.
+    * Using the Dockerfile at the root of the project, the engine will build an image tagged img_node.
     * After the image is built, the engine will create a container using *img_node*.
     * The engine will start the container.
     * The engine will start a bash environment inside the container using '*docker exec*' so as to execute the submitted code/file.
