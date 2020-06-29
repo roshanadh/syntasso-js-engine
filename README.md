@@ -75,5 +75,42 @@ The API exposes three endpoints and the following actions:
 
     ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
 
+## dockerConfig
+There are three possible values to dockerConfig: 0, 1, and 2.
+* 0:
+    * Using the Dockerfile in the root of the project, the engine will build an image tagged img_node.
+    * After the image is built, the engine will create a container using *img_node*.
+    * The engine will start the container.
+    * The engine will start a bash environment inside the container using '*docker exec*' so as to execute the submitted code/file.
+  
+* 1:
+    * The engine assumes that a container has already been created using *img_node* and so the engine attempts to start the container, i.e., if the container exists, otherwise the engine responds with an error.
+    * The engine will start a bash environment inside the container using '*docker exec*' so as to execute the submitted code/file.
 
+* 2:
+    * The engine assumes that a container has already been created using *img_node* and that the container has already been started.
+    * The engine attempts to start a bash environment inside the container using '*docker exec*', i.e., if the container exists and has already been started, otherwise the engine responds with an error.
 
+## Events
+1. docker-app-stdout:
+    
+    - Emitted by the engine to log steps performed for each request.
+    - Logs stdout for image build, and other logs for container creation, container start, copy, and exec operations.
+    - Structure:
+    ```json
+        docker-app-stdout = {
+            stdout: [string],
+        }
+    ```
+2. test-status:
+   
+   - Emitted by the engine to notify the client of each test case performed for the submitted code/file.
+   - n test-status events are emitted for n sample input files uploaded by the client.
+   - Structure:
+    ```json
+        test-status = {
+            type: "test-status",
+		    process: [Integer],
+		    testStatus: [Boolean],
+        }
+    ```
