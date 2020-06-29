@@ -33,7 +33,16 @@ let sampleInputs,
 
 let nodeProcess,
 	execTimeForProcess,
-	response = {};
+	response = {
+		type: "full-response",
+	};
+
+	/*
+	 * If response.type = "full-response", it signifies to any process ...
+	 * running 'node main-wrapper.js' and listening for its stdout that ...
+	 * the response it's receiving is a full-body response and not individual ...
+	 * 'test is complete' events emitted by main-wrapper.js
+	*/
 
 try {
 	read(socketId)
@@ -127,6 +136,13 @@ const main = () => {
 					observedOutput: stdout.toString(),
 					execTimeForProcess,
 				}
+
+				// write to stdout to indicate completion of test #i
+				process.stdout.write(JSON.stringify({
+					type: "test-status",
+					process: i,
+					testStatus,
+				}));
 			} else {
 				throw new Error(`stderr during execution of submission.js: ${stderr}`)
 			}

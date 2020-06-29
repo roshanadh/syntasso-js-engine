@@ -53,7 +53,7 @@ handleConfigZero = async (req, res) => {
 		throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
 	}
 
-	let { error, execTime } = dockerApp.execInNodeContainer(req.session);
+	let { error, execTime } = await dockerApp.execInNodeContainer(req.session);
 	if (error) {
 		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
 		res
