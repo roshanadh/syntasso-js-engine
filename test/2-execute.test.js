@@ -97,13 +97,13 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("imageBuildTime");
 					res.body.should.have.property("containerCreateTime");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -122,11 +122,11 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -145,10 +145,10 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -167,10 +167,10 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					expect(res.body.output).to.be.empty;
+					expect(res.body.observedOutput).to.be.empty;
 					res.body.error.should.have.property("errorName");
 					res.body.error.should.have.property("errorMessage");
 					res.body.error.should.have.property("lineNumber");
@@ -232,11 +232,9 @@ describe("2. POST requests at /execute", () => {
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
-					res.body.should.have.property("error");
+					res.body.should.have.property("sampleInputs");
+					res.body.sampleInputs.should.equal(3);
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
-					expect(res.body.error).to.be.null;
 					const sampleInputs = [
 						"sampleInput0.txt",
 						"sampleInput1.txt",

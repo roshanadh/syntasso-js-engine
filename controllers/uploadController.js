@@ -12,14 +12,18 @@ const {
 	handleConfigTwo
 } = require("./dockerConfigController.js");
 
+let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
+		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId),
+			sampleInputsPath = "",
+			expectedOutputsPath = "";
+
 		try {
 			if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
 
-			let sampleInputsPath = path.resolve(basePath, "sampleInputs");
-			let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
+			sampleInputsPath = path.resolve(basePath, "sampleInputs");
+			expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
 
 			if (!fs.existsSync(sampleInputsPath)) fs.mkdirSync(sampleInputsPath);
 			if (!fs.existsSync(expectedOutputsPath)) fs.mkdirSync(expectedOutputsPath);
@@ -85,6 +89,7 @@ let fileUpload = upload.fields([
 module.exports = uploadController = (req, res) => {
 	console.log("POST request received at /upload");
 	initDirectories();
+	sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 	/*
 	* All possible req.body params =>
 	* 1. req.body.socketId: String => contains socket ID of the connected client

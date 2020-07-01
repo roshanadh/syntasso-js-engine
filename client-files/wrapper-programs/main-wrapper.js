@@ -2,89 +2,170 @@
 /*
  *	Instead of compiling submission.js inside the container using ...
  *	... 'docker exec', compile main-wrapper.js
- *	This wrapper program will spawn a new Node.js process and compile ...
- *	... submission.js inside the process, all the while passing sampleInputs ...
- *	... to the process.stdin of the spawned Node.js process
- * 
+ *	This wrapper program will spawn n Node.js processes for n sampleInputs ...
+ *	... and compile submission.js inside each process, all the while passing ...
+ *	... corresponding sampleInput to the process.stdin of the corresponding ...
+ *	... spawned Node.js process
+ *
 */
-const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawnSync } = require("child_process");
+const { performance } = require("perf_hooks");
 
-const ErrorWithStatus = require("../../utils/ErrorWithStatus.js");
+const { read } = require("./uploaded-files-reader.js");
 
-const socketId = process.env.socketId.trim();
-
-let submissionFileContents = "";
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
 
-// main-wrapper.js is in the location: home/main-wrapper.js inside the container
-// submission.js is in the location: home/submission.js inside the container
+let socketId = process.env.socketId.trim();
+
+// main-wrapper.js is in the location: home/client-files/main-wrapper.js inside the container
+// submission.js is in the location: home/client-files/${socketId}/submission.js inside the container
 const submissionFilePath = path.resolve(
-	`${socketId}.js`
-);
-
-const sampleInputFilePath = path.resolve(
 	__dirname,
-	"..",
-	"tests",
-	"sampleInputs",
-	`${socketId}-sampleInput-0.txt`
+	socketId,
+	"submission.js"
 );
 
-const expectedOutputFilePath = path.resolve(
-	__dirname,
-	"..",
-	"tests",
-	"expectedOutputs",
-	`${socketId}-expectedOutput-0.txt`
-);
+// array of sampleInput and expectedOutput filenames
+let sampleInputs,
+	expectedOutputs;
 
-const nodeProcess = spawn("node", [submissionFilePath]);
+let nodeProcess,
+	execTimeForProcess,
+	response = {
+		type: "full-response",
+	};
 
-nodeProcess.stdout.on("data", stdout => {
-	fs.readFile(expectedOutputFilePath, (err, data) => {
-		if (err) {
-			console.error(`Error while reading expectedOutput file:${socketId}.js: ${err}`);
-			throw new ErrorWithStatus(500, "Error while reading submitted expected output");
+	/*
+	 * If response.type = "full-response", it signifies to any process ...
+	 * running 'node main-wrapper.js' and listening for its stdout that ...
+	 * the response it's receiving is a full-body response and not individual ...
+	 * 'test is complete' events emitted by main-wrapper.js
+	*/
+
+try {
+	read(socketId)
+		.then(response => {
+			sampleInputs = response.sampleInputs;
+			expectedOutputs = response.expectedOutputs;
+
+			main();
+		})
+		.catch(err => {
+			if (
+				err.message === "No test files have been uploaded" ||
+				err.message === "Number of sampleInput and expectedOutput files"
+			) {
+				// spawn one process and do not pass any sample input to it
+				try {
+					nodeProcess = spawnSync("node", [submissionFilePath]);
+
+					const io = nodeProcess.output;
+					const stdout = io[1];
+					const stderr = io[2].toString();
+
+					if (stderr === "") {
+						// no stderr was observed
+						let testStatus = null;
+						response = {
+							sampleInputs: 0,
+							testStatus,
+							expectedOutput: null,
+							observedOutput: stdout.toString()
+						}
+						// NOTE: Do not log to the console or write to stdout ...
+						// ... from inside main-wrapper.js except for the response ...
+						// ... object itself
+						// Any console.log or process.stdout.write from inside main-wrapper.js ...
+						// ... writes to the output file and may cause error during JSON.parse ...
+						// ... of the contents obtained from the output file
+						process.stdout.write(Buffer.from(JSON.stringify(response)));
+					} else {
+						throw new Error(`stderr during execution of submission.js: ${stderr}`)
+					}
+				} catch (err) {
+					throw err;
+				}
+			}
+			else throw err;
+		});
+} catch (err) {
+	throw err;
+}
+
+const main = () => {
+	// spawn n Node.js processes for n sampleInputs
+	response["sampleInputs"] = sampleInputs.length;
+	for (let i = 0; i < sampleInputs.length; i++) {
+		try {
+			execTimeForProcess = performance.now();
+			nodeProcess = spawnSync("node", [submissionFilePath], {
+				input: writeToStdin(sampleInputs.files[i]),
+			});
+			execTimeForProcess = performance.now() - execTimeForProcess;
+
+			const io = nodeProcess.output;
+			const stdout = io[1];
+			const stderr = io[2].toString();
+
+			if (stderr === "") {
+				// no stderr was observed
+				expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
+				let testStatus = true;
+				if (expectedOutputFileContents !== stdout.toString())
+					testStatus = false;
+				/*
+				 * response object looks like following:
+				 * {
+				 *		sampleInput0: {
+				 *			testStatus: true | false | null,
+				 *			sampleInput: "Hello World!\n",
+				 *			expectedOutput: "Hello World!\n",
+				 *			observedOutput: "Hello World!\n",
+				 *			execTimeForProcess: 65,
+				 *		}
+				 *		...
+				 * }
+				 * 
+				*/
+				response[`sampleInput${i}`] = {
+					testStatus,
+					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
+					expectedOutput: expectedOutputFileContents.toString(),
+					observedOutput: stdout.toString(),
+					execTimeForProcess,
+				}
+
+				// write to stdout to indicate completion of test #i
+				process.stdout.write(JSON.stringify({
+					type: "test-status",
+					process: i,
+					testStatus,
+				}));
+			} else {
+				throw new Error(`stderr during execution of submission.js: ${stderr}`)
+			}
+		} catch (err) {
+			throw err;
 		}
-		expectedOutputFileContents = data;
-		let testStatus = true;
-		if (expectedOutputFileContents !== stdout) {
-			console.error(`Expected output doesn't match observed output for socketId: ${socketId}`);
-			testStatus = false;
-		}
-		return {
-			testStatus,
-			expectedOutput: expectedOutputFileContents.toString(),
-			observedOutput: stdout.toString()
-		};
-	});
-});
-
-fs.readFile(sampleInputFilePath, (err, data) => {
-	if (err) {
-		console.error(`Error while reading sampleInput file:${socketId}.js: ${err}`);
-		throw new ErrorWithStatus(500, "Error while reading submitted sample input");
 	}
-	sampleInputFileContents = data.toString();
+	// NOTE: Do not log to the console or write to stdout ...
+	// ... from inside main-wrapper.js except for the response ...
+	// ... object itself
+	// Any console.log or process.stdout.write from inside main-wrapper.js ...
+	// ... writes to the output file and may cause error during JSON.parse ...
+	// ... of the contents obtained from the output file
+	process.stdout.write(Buffer.from(JSON.stringify(response)));
+}
+
+const writeToStdin = sampleInput => {
+	sampleInputFileContents = sampleInputs.fileContents[sampleInput].toString();
 	sampleInputFileContents = sampleInputFileContents.split("\n");
 	sampleInputFileContents = JSON.stringify(sampleInputFileContents);
-	
-	nodeProcess.stdin.write(sampleInputFileContents, err => {
-		if (err) {
-			console.error(`Error while passing sample input to submission file:${socketId}.js: ${err}`);
-			throw new ErrorWithStatus(500, "Error while passing sample input to the submitted program");
-		}
-	});
-	nodeProcess.stdin.end();
-});
 
-fs.readFile(submissionFilePath, (err, data) => {
-	if (err) {
-		console.error(`Error while reading submission file:${socketId}.js: ${err}`);
-		throw new ErrorWithStatus(500, "Error while reading submitted program");
-	}
-	submissionFileContents = data;
-});
+	return JSON.stringify({
+		sampleInputId: sampleInput,
+		fileContents: sampleInputFileContents,
+	});
+}
