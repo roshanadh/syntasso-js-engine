@@ -150,9 +150,6 @@ handleConfigTwo = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		console.dir({
-			_res
-		})
 		if (!_res.errorInProcess) {
 			const response = {
 				..._res,
