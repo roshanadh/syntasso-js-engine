@@ -196,13 +196,15 @@ class DockerApp {
 					
 					let errorString = `No such container: ${session.socketId}`;
 					if (error.message.includes(errorString)) {
-						return reject({
+						reject({
 							errorType: "container-not-created-beforehand",
 							error,
 						});
+						return;
 					}
 					console.error(`Error during Node.js container start: ${error.message}`);
-					return reject(error.message);
+					reject(error.message);
+					return;
 				}
 				if (stderr) {
 					/*
@@ -266,7 +268,7 @@ class DockerApp {
 				console.log("Time taken to perform copy operation: client-files/ into the container: " + (now - stepTime) + "ms");
 
 				if (error) {
-					console.error(`Error during copying client-files/ into the container: ${err}`);
+					console.error(`Error during copying client-files/ into the container: ${error}`);
 
 					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 						stdout: "An error occurred while executing code inside the Node.js container."
@@ -303,8 +305,26 @@ class DockerApp {
 					reject({ error: stderr });
 					return;
 				}
-				resolve({ copyTime: now });
+				resolve({ copyTime: now - stepTime });
 			});	
+		});
+	}
+
+	writeOutputToFile = (outputFilePath, data, socketInstance) => {
+		return new Promise((resolve, reject) => {
+			let stepTime = performance.now();
+			fs.writeFile(outputFilePath, JSON.stringify(data), err => {
+				if (err) {
+					console.error(`Error while writing output to .txt file: ${err.stack}`);
+
+					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
+						stdout: "An error occurred while executing code inside the Node.js container."
+					});
+					reject({ error: err });
+					return;
+				}
+				resolve({ writeToOutputTime: performance.now() - stepTime })
+			});
 		});
 	}
 	
@@ -337,48 +357,85 @@ class DockerApp {
 			});
 
 			let stepTime = performance.now();
-
 			try {
 				// child_process.exec() returns output in plain string, no need to ...
 				// ... explicitly convert to string
 				const containerBash = exec(`docker exec -i ${containerId} /bin/bash`);
 				// let stdout = [];
-				containerBash.stdout.on("data", stdout => {
-					stdout = JSON.parse(stdout.trim());
+				containerBash.stdout.on("data", async stdout => {
+					let now = performance.now();
+					let execTime = now - stepTime;
+					
+					console.log("Time taken to execute the code: " + execTime + "ms");
+					
+					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
+						stdout: `Time taken to execute the code: ${execTime}`
+					});
+					
+					// nested try...catch to catch any JSON parse errors
+					try {
+						stdout = JSON.parse(stdout.toString().trim());
 
-					if (stdout.type && stdout.type === "test-status") {
-						socketInstance.instance.to(session.socketId).emit("test-status", {
-							...stdout
-						});
-					} else {
-						// stdout.type === "full-response"
-						let now = parseFloat(performance.now());
-						let execTime = now - stepTime;
-						console.log("Time taken to execute the code: " + execTime + "ms");
-
-						socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
-							stdout: `Time taken to execute the code: ${execTime}`
-						});
-						// write stdout to output file
-						fs.writeFile(outputFilePath, JSON.stringify(stdout), err => {
-							if (err) {
-								console.error(`Error while writing output to .txt file: ${err.stack}`);
-
-								socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
-									stdout: "An error occurred while executing code inside the Node.js container."
-								});
-								reject({ error: err });
-								return;
-							}
-
-							console.log("Total time taken for all execution steps (Copy and Exec): " + (copyTime + execTime) + "ms");
+						if (stdout.type && stdout.type === "test-status") {
+							socketInstance.instance.to(session.socketId).emit("test-status", {
+								...stdout
+							});
+						} else {
+							// stdout.type === "full-response"
+							// write stdout to output file
+							const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
+							
+							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + execTime) + "ms");
 
 							console.log("\nSTDOUT for 'docker exec' command: ");
 							console.dir({
 								stdout,
 							});
-							resolve({ execTime: copyTime + execTime })
-						});
+
+							if (error) reject({ error });
+							else resolve({ execTime: execTime + copyTime + writeToOutputTime });
+						}
+					} catch (err) {
+						if (err.message.includes("Unexpected token { in JSON")) {
+							// this error happens because containerBash.stdout ...
+							// ... outputs a stream of JSON objects like:
+							// ... {}{}{}...
+							// we need to create an array of JSON objects: ...
+							// ... [{}, {}, {}, ...] in such a case
+
+							let stream = stdout.toString().trim();
+							stream = stream.split("}{")
+							stream.forEach(async (element, index) => {
+								// add missing braces as .split("}{") removes ...
+								// ... every instance of "}{" in the stdout
+								if (index === 0) stream[index] = element + "}";
+								else if (index === stream.length - 1) stream[index] = "{" + element;
+								else stream[index] = "{" + element + "}";
+								
+								// parse JSON and create an array of JSON objects
+								stream[index] = JSON.parse(stream[index]);
+								// if stream[index] is a test-status type JSON, emit:
+								if (stream[index].type && stream[index].type === "test-status") {
+									socketInstance.instance.to(session.socketId).emit("test-status", {
+										...stream[index]
+									});
+								} else {
+									// stream[index].type === "full-response"
+									// write stream[index] to output file
+									const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stream[index], socketInstance);
+
+									console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + execTime) + "ms");
+
+									console.log("\nSTDOUT for 'docker exec' command: ");
+									console.dir({
+										stdout: stream[index],
+									});
+
+									if (error) reject({ error });
+									else resolve({ execTime: execTime + copyTime + writeToOutputTime });								
+								}
+							});
+						} else reject({ error: err });
 					}
 				});
 
