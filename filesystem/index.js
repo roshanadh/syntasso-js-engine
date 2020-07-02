@@ -3,7 +3,6 @@ const path = require("path");
 const rimraf = require("rimraf");
 
 const { SECRET_DIVIDER_TOKEN } = require("../config.js");
-const { resolve } = require("path");
 
 module.exports.initDirectories = () => {
 	return new Promise((resolve, reject) => {
