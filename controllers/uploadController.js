@@ -132,30 +132,31 @@ module.exports = uploadController = (req, res) => {
 						return console.error("Bad Request Error at /upload POST. No Docker Configuration Instruction Provided!");
 					}
 					// add secret divider token to the user-submitted file
-					await addDividerToken(req.session.socketId);
-					if (isNaN(req.body.dockerConfig))
-						throw new ErrorWithStatus(
-							400,
-							"Bad Request: dockerConfig Value Is Not A Number!"
-						);
-					let dockerConfig = parseInt(req.body.dockerConfig);
-
-					switch (dockerConfig) {
-						case 0:
-							handleConfigZero(req, res);
-							break;
-						case 1:
-							handleConfigOne(req, res);
-							break;
-						case 2:
-							handleConfigTwo(req, res);
-							break;
-						default:
+					addDividerToken(req.session.socketId).then(() => {
+						if (isNaN(req.body.dockerConfig))
 							throw new ErrorWithStatus(
 								400,
-								"Bad Request: dockerConfig Value Is Not A Valid Number!"
+								"Bad Request: dockerConfig Value Is Not A Number!"
 							);
-					}
+						let dockerConfig = parseInt(req.body.dockerConfig);
+
+						switch (dockerConfig) {
+							case 0:
+								handleConfigZero(req, res);
+								break;
+							case 1:
+								handleConfigOne(req, res);
+								break;
+							case 2:
+								handleConfigTwo(req, res);
+								break;
+							default:
+								throw new ErrorWithStatus(
+									400,
+									"Bad Request: dockerConfig Value Is Not A Valid Number!"
+								);
+						}
+					});
 				}
 			} catch (err) {
 				// if the error object 'err' contains a status code, ...
