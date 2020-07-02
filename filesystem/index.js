@@ -3,33 +3,49 @@ const path = require("path");
 const rimraf = require("rimraf");
 
 const { SECRET_DIVIDER_TOKEN } = require("../config.js");
+const { resolve } = require("path");
 
 module.exports.initDirectories = () => {
-	let outputsDirPath = path.resolve(
-		__dirname,
-		"..",
-		"client-files",
-		"outputs"
-	);
-	
-	try {
-		if (!fs.existsSync(outputsDirPath)) fs.mkdirSync(outputsDirPath);
-	} catch (err) {
-		return console.error(`Error while creating outputs directory: ${err.stack}`);
-	}
+	return new Promise((resolve, reject) => {
+		let outputsDirPath = path.resolve(
+			__dirname,
+			"..",
+			"client-files",
+			"outputs"
+		);
+		fs.stat(outputsDirPath, (err, stats) => {
+			if (err) {
+				if (err.message.includes("ENOENT: no such file or directory")) {
+					fs.mkdir(outputsDirPath, (err) => {
+						if (err) {
+							console.error(`Error while creating outputs directory: ${err.stack}`);
+							reject(false);
+							throw err;
+						}
+						resolve(true);
+					});
+				}
+				console.error(`Error while creating outputs directory: ${err.stack}`);
+				reject(false);
+				throw err;
+			} 
+			resolve(true);
+		});
+	});
 }
 
 module.exports.updateCodeInFile = async (socketId, code) => {
-	let filePath = path.resolve(
-		__dirname,
-		"..",
-		"client-files",
-		socketId,
-		"submission.js"
-	);
-	// wrap user-submitted code inside a try-catch block
-	let finalCode =
-	`
+	return new Promise((resolve, reject) => {
+		let filePath = path.resolve(
+			__dirname,
+			"..",
+			"client-files",
+			socketId,
+			"submission.js"
+		);
+		// wrap user-submitted code inside a try-catch block
+		let finalCode =
+			`
 		"use strict";
 		try {
 			${code}
@@ -38,7 +54,6 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 			console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
 		}
 	`;
-	try {
 		/*
 		 * /client-files/${socketId} directory may not have been created if ...
 		 * ... no sampleInputs and expectedOutputs files have been uploaded ...
@@ -47,12 +62,43 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 		 * So, create the required directories if they do not exist yet.
 		*/
 		let basePath = path.resolve(__dirname, "..", "client-files", socketId);
-		if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
-		fs.writeFileSync(filePath, finalCode);
-		console.log(`Submitted code written to file: ${filePath}`);
-	} catch (err) {
-		return console.error(`Error during writing code to file: ${err.stack}`);
-	}
+		// check if ${basePath} dir exits before creating it
+		fs.stat(basePath, (err, stats) => {
+			if (err) {
+				if (err.message.includes("ENOENT: no such file or directory")) {
+					fs.mkdir(basePath, (err) => {
+						if (err) {
+							console.error(`Error while creating client-files/${socketId}/ directory: ${err.stack}`);
+							reject(false);
+							throw err;
+						}
+						fs.writeFile(filePath, finalCode, (err) => {
+							if (err) {
+								console.error(`Error during writing code to file: ${err.stack}`);
+								reject(false);
+								throw err;
+							}
+							console.log(`Submitted code written to file: ${filePath}`);
+							resolve(true);
+						});
+					});
+				} else {
+					console.error(`Error while reading client-files/${socketId}/ directory: ${err.stack}`);
+					reject(false);
+					throw err;
+				}
+			}
+			fs.writeFile(filePath, finalCode, (err) => {
+				if (err) {
+					console.error(`Error during writing code to file: ${err.stack}`);
+					reject(false);
+					throw err;
+				}
+				console.log(`Submitted code written to file: ${filePath}`);
+				resolve(true);
+			});
+		});
+	});
 };
 
 module.exports.addDividerToken = async (socketId) => {
