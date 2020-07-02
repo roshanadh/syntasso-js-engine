@@ -33,7 +33,7 @@ module.exports.initDirectories = () => {
 	});
 }
 
-module.exports.updateCodeInFile = async (socketId, code) => {
+module.exports.updateCodeInFile = (socketId, code) => {
 	return new Promise((resolve, reject) => {
 		let filePath = path.resolve(
 			__dirname,
@@ -100,31 +100,43 @@ module.exports.updateCodeInFile = async (socketId, code) => {
 	});
 };
 
-module.exports.addDividerToken = async (socketId) => {
-	let filePath = path.resolve(
-		__dirname,
-		"..",
-		"client-files",
-		socketId,
-		"submission.js"
-	);
+module.exports.addDividerToken = (socketId) => {
+	return new Promise((resolve, reject) => {
+		let filePath = path.resolve(
+			__dirname,
+			"..",
+			"client-files",
+			socketId,
+			"submission.js"
+		);
+		let fileContent;
+		fs.readFile(filePath, (err, data) => {
+			if (err) {
+				console.error(`Error while reading submission.js: ${err}`);
+				reject(false);
+				throw err;
+			}
+			fileContent = data;
 
-	let fileContent = fs.readFileSync(filePath);
-
-	// wrap user-submitted code inside a try-catch block
-	let finalCode = `"use strict";\ntry {\n${fileContent}\n} catch (err) {
-		console.log('${SECRET_DIVIDER_TOKEN}');
-		console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
-	}`;
-	try {
-		fs.writeFileSync(filePath, finalCode);
-		console.log(`Divider token added to file: ${filePath}`);
-	} catch (err) {
-		return console.error(`Error during adding divider token to file: ${err}`);
-	}
+			// wrap user-submitted code inside a try-catch block
+			let finalCode = `"use strict";\ntry {\n${fileContent}\n} catch (err) {
+				console.log('${SECRET_DIVIDER_TOKEN}');
+				console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.		stack }));
+			}`;
+			fs.writeFile(filePath, finalCode, (err) => {
+				if (err) {
+					console.error(`Error during adding divider token to file: ${err}`);
+					reject(false);
+					throw err;
+				}
+				console.log(`Divider token added to file: ${filePath}`);
+				resolve(true);
+			});
+		});
+	});
 }
 
-module.exports.readOutput = async (socketId) => {
+module.exports.readOutput = (socketId) => {
 	let filePath = path.resolve(
 		__dirname,
 		"..",
