@@ -11,12 +11,20 @@ chai.use(chaiHttp);
 const sendRequest = () => {
 	return new Promise((resolve, reject) => {
 		try {
-			// server="http://127.0.0.1:8080"
 			socket = io.connect("http://127.0.0.1:8080");
+
+			socket.on("disconnect", reason => {
+				console.dir({
+					message: "Socket disconnected for " + threadId,
+					reason
+				});
+			});
 			socket.on("connect", () => {
 				socketCreation = performance.now();
 				socketId = socket.id;
-
+				console.dir({
+					message: `Socket ${socketId} connected`
+				})
 				testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
 				uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
 
@@ -24,31 +32,32 @@ const sendRequest = () => {
 				chai.request('http://localhost:8080')
 					.post("/execute")
 					.field("socketId", socketId)
-					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+					.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+					.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
 					.field("dockerConfig", "0")
 					.field("code", "console.log('Hello World!')")
 					.end((err, res) => {
 						console.dir({
 							forThread: threadId,
+							socketId,
 							requestSent,
 							responseReceived: performance.now(),
 							timeInBetween: performance.now() - requestSent,
 							responseBody: res.body
 						});
 						const sampleInputs = [
-							"sampleInput0.txt",
-							"sampleInput1.txt",
-							"sampleInput2.txt",
+							"sampleInput-0.txt",
+							"sampleInput-1.txt",
+							"sampleInput-2.txt",
 						];
 						const expectedOutputs = [
-							"expectedOutput0.txt",
-							"expectedOutput1.txt",
-							"expectedOutput2.txt",
+							"expectedOutput-0.txt",
+							"expectedOutput-1.txt",
+							"expectedOutput-2.txt",
 						];
 
 						sampleInputs.forEach((sampleInput, index) => {
@@ -64,14 +73,16 @@ const sendRequest = () => {
 					});
 			});
 		} catch (err) {
-			console.error(err);
+			console.error("For thread: " + threadId);
+			throw err;
 		}
 	})
 }
 
+let numOfWorkers = parseInt(process.argv[2]);
 let workers = [];
 if (isMainThread) {
-	for (let i = 0; i < 15; i++)
+	for (let i = 0; i < numOfWorkers; i++)
 		workers[i] = new Worker("./test/concurrency-test.js");
 } else {
 	console.dir({
