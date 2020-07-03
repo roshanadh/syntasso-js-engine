@@ -23,11 +23,12 @@ module.exports.initDirectories = () => {
 						}
 						resolve(true);
 					});
+				} else {
+					console.error(`Error while reading outputs directory: ${err.stack}`);
+					reject(false);
+					throw err;
 				}
-				console.error(`Error while creating outputs directory: ${err.stack}`);
-				reject(false);
-				throw err;
-			} 
+			}
 			resolve(true);
 		});
 	});
