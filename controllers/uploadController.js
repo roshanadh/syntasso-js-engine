@@ -12,7 +12,6 @@ const {
 	handleConfigTwo
 } = require("./dockerConfigController.js");
 
-let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
@@ -53,10 +52,8 @@ const storage = multer.diskStorage({
 	filename: (req, file, cb) => {
 		if (file.fieldname === "submission")
 			cb(null, "submission.js");
-		else if (file.fieldname === "sampleInputs")
-			cb(null, `${req.body.socketId}-sampleInput-${sampleInputFileNameIndex++}.txt`);
-		else if (file.fieldname === "expectedOutputs")
-			cb(null, `${req.body.socketId}-expectedOutput-${expectedOutputFileNameIndex++}.txt`);
+		else if (file.fieldname === "sampleInputs" || file.fieldname === "expectedOutputs")
+			cb(null, `${req.body.socketId}-${file.originalname}`);
 		else
 			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
 	}
@@ -64,7 +61,9 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
 	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
-	
+	const sampleInputFileNameRegex = /sampleInput-\b[0-8].txt$/;
+	const expectedOutputFileNameRegex = /expectedOutput-\b[0-8].txt$/;
+
 	if (!req.body.socketId)
 		return cb(null, false);
 	if (!listOfClients.includes(req.body.socketId))
@@ -77,7 +76,12 @@ const fileFilter = (req, file, cb) => {
 		(file.fieldname === "sampleInputs" || file.fieldname === "expectedOutputs")
 		&& file.originalname.split('.')[1] !== 'txt'
 	)
-        return cb(new Error('Only .txt files can be uploaded as sampleInputs or expectedOutputs'), false);
+		return cb(new Error('Only .txt files can be uploaded as sampleInputs or expectedOutputs'), false);
+	if (file.fieldname === "sampleInputs" && !file.originalname.match(sampleInputFileNameRegex))
+		return cb(new Error('Sample Input file name must be according to the specification'), false);
+	if (file.fieldname === "expectedOutputs" && !file.originalname.match(expectedOutputFileNameRegex))
+		return cb(new Error('Expected Output file name must be according to the specification'), false);
+
     cb(null, true);
 }
 
@@ -100,7 +104,6 @@ let fileUpload = upload.fields([
 module.exports = uploadController = (req, res) => {
 	console.log("POST request received at /upload");
 	initDirectories().then(() => {
-		sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 		/*
 		* All possible req.body params =>
 		* 1. req.body.socketId: String => contains socket ID of the connected client

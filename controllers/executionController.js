@@ -12,7 +12,6 @@ const {
 	handleConfigTwo
 } = require("./dockerConfigController.js");
 
-let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
@@ -51,10 +50,8 @@ const storage = multer.diskStorage({
 		});
 	},
 	filename: (req, file, cb) => {
-		if (file.fieldname === "sampleInputs")
-			cb(null, `${req.body.socketId}-sampleInput-${sampleInputFileNameIndex++}.txt`);
-		else if (file.fieldname === "expectedOutputs")
-			cb(null, `${req.body.socketId}-expectedOutput-${expectedOutputFileNameIndex++}.txt`);
+		if (file.fieldname === "sampleInputs" || file.fieldname === "expectedOutputs")
+			cb(null, `${req.body.socketId}-${file.originalname}`);
 		else
 			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
 	}
@@ -62,6 +59,8 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
 	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
+	const sampleInputFileNameRegex = /sampleInput-\b[0-8].txt$/;
+	const expectedOutputFileNameRegex = /expectedOutput-\b[0-8].txt$/;
 
 	if (!req.body.socketId)
 		return cb(null, false);
@@ -71,6 +70,11 @@ const fileFilter = (req, file, cb) => {
 		return cb(new Error('File name cannot contain more than one period (.)'), false);
 	if (file.originalname.split('.')[1] !== 'txt')
 		return cb(new Error('Only .txt files can be uploaded as sampleInputs or expectedOutputs'), false);
+	if (file.fieldname === "sampleInputs" && !file.originalname.match(sampleInputFileNameRegex))
+		return cb(new Error('Sample Input file name must be according to the specification'), false);
+	if (file.fieldname === "expectedOutputs" && !file.originalname.match(expectedOutputFileNameRegex))
+		return cb(new Error('Expected Output file name must be according to the specification'), false);
+
 	cb(null, true);
 }
 
@@ -89,7 +93,6 @@ let fileUpload = upload.fields([
 const executionController = (req, res) => {
 	console.log("POST request received at /execute");
 	initDirectories().then(() => {
-		sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 		/*
 		 * All req.body params =>
 		 * 1. req.body.socketId: String => contains socket ID of the connected client
@@ -105,6 +108,7 @@ const executionController = (req, res) => {
 		 */
 		fileUpload(req, res, (err) => {
 			try {
+				sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 				socketValidator(req, res);
 				if (err instanceof multer.MulterError) {
 					// A Multer error occurred during uploading
