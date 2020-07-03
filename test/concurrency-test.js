@@ -72,7 +72,7 @@ const sendRequest = () => {
 let workers = [];
 if (isMainThread) {
 	for (let i = 0; i < 15; i++)
-		workers[i] = new Worker("./test/async-test.js");
+		workers[i] = new Worker("./test/concurrency-test.js");
 } else {
 	console.dir({
 		message: "Thread " + threadId + " created",
