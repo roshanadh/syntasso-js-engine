@@ -1,6 +1,6 @@
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
-const socketValidator = async (req, res) => {
+const socketValidator = (req, res) => {
 	/*
 	 * All req.body params =>
 	 * 1. req.body.socketId: String => contains socket ID of the connected client
