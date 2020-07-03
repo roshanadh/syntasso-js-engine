@@ -15,29 +15,40 @@ const {
 let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId),
-			sampleInputsPath = "",
-			expectedOutputsPath = "";
+		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
+		let sampleInputsPath = path.resolve(basePath, "sampleInputs");
+		let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
 
-		try {
-			if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
-
-			sampleInputsPath = path.resolve(basePath, "sampleInputs");
-			expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
-
-			if (!fs.existsSync(sampleInputsPath)) fs.mkdirSync(sampleInputsPath);
-			if (!fs.existsSync(expectedOutputsPath)) fs.mkdirSync(expectedOutputsPath);
-		} catch (err) {
-			cb(new Error(`Error while creating directory: MAIN directory ${req.body.socketId}: ${err}`), false);
-		}
-		if (file.fieldname === "submission")
-			cb(null, basePath);
-		else if (file.fieldname === "sampleInputs")
-			cb(null, sampleInputsPath);
-		else if (file.fieldname === "expectedOutputs")
-			cb(null, expectedOutputsPath);
-		else
-			cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
+		fs.mkdir(sampleInputsPath, {
+			recursive: true
+		}, (err) => {
+			// do nothing if the directories already exist, ...
+			// ... i.e., when an EEXIST error is thrown
+			if (err && err.code === "EEXIST") { }
+			else if (err)
+				cb(new Error(`Error while creating directory: ${sampleInputsPath} for socketId: ${req.body.socketId}: ${err}`), false);
+			else {
+				fs.mkdir(expectedOutputsPath, {
+					recursive: true
+				}, (err) => {
+					// do nothing if the directories already exist, ...
+					// ... i.e., when an EEXIST error is thrown
+					if (err && err.code === "EEXIST") { }
+					else if (err)
+						cb(new Error(`Error while creating directory: ${expectedOutputsPath} for socketId: ${req.body.socketId}: ${err}`), false);
+					else {
+						if (file.fieldname === "submission")
+							cb(null, basePath);
+						else if (file.fieldname === "sampleInputs")
+							cb(null, sampleInputsPath);
+						else if (file.fieldname === "expectedOutputs")
+							cb(null, expectedOutputsPath);
+						else
+							cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
+					}
+				});
+			}
+		});
 	},
 	filename: (req, file, cb) => {
 		if (file.fieldname === "submission")
@@ -105,9 +116,9 @@ module.exports = uploadController = (req, res) => {
 		* ... and the file included in the request
 		*/
 
-		fileUpload(req, res, async (err) => {
+		fileUpload(req, res, (err) => {
 			try {
-				await socketValidator(req, res);
+				socketValidator(req, res);
 				if (err instanceof multer.MulterError) {
 					// A Multer error occurred during uploading
 					res.status(503).json({

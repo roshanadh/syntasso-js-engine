@@ -6,7 +6,6 @@ const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
 const { initDirectories, updateCodeInFile } = require("../filesystem/index.js");
-
 const {
 	handleConfigZero,
 	handleConfigOne,
@@ -17,17 +16,39 @@ let sampleInputFileNameIndex = 0, expectedOutputFileNameIndex = 0;
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		let basePath = path.resolve(__dirname, "..", "client-files", req.body.socketId);
-		try {
-			if (!fs.existsSync(basePath)) fs.mkdirSync(basePath);
-			let sampleInputsPath = path.resolve(basePath, "sampleInputs");
-			let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
+		let sampleInputsPath = path.resolve(basePath, "sampleInputs");
+		let expectedOutputsPath = path.resolve(basePath, "expectedOutputs");
 
-			if (!fs.existsSync(sampleInputsPath)) fs.mkdirSync(sampleInputsPath);
-			if (!fs.existsSync(expectedOutputsPath)) fs.mkdirSync(expectedOutputsPath);
-		} catch (err) {
-			cb(new Error(`Error while creating directory: MAIN directory ${req.body.socketId}: ${err}`), false);
-		}
-		cb(null, path.resolve(__dirname, "..", "client-files", req.body.socketId, file.fieldname));
+		fs.mkdir(sampleInputsPath, {
+			recursive: true
+		}, (err) => {
+			// do nothing if the directories already exist, ...
+			// ... i.e., when an EEXIST error is thrown
+			if (err && err.code === "EEXIST") { }
+			else if (err)
+				cb(new Error(`Error while creating directory: ${sampleInputsPath} for socketId: ${req.body.socketId}: ${err}`), false);
+			else {
+				fs.mkdir(expectedOutputsPath, {
+					recursive: true
+				}, (err) => {
+					// do nothing if the directories already exist, ...
+					// ... i.e., when an EEXIST error is thrown
+					if (err && err.code === "EEXIST") { }
+					else if (err)
+						cb(new Error(`Error while creating directory: ${expectedOutputsPath} for socketId: ${req.body.socketId}: ${err}`), false);
+					else {
+						if (file.fieldname === "submission")
+							cb(null, basePath);
+						else if (file.fieldname === "sampleInputs")
+							cb(null, sampleInputsPath);
+						else if (file.fieldname === "expectedOutputs")
+							cb(null, expectedOutputsPath);
+						else
+							cb(new Error(`Unexpected fieldname: ${file.fieldname}`), false);
+					}
+				});
+			}
+		});
 	},
 	filename: (req, file, cb) => {
 		if (file.fieldname === "sampleInputs")
@@ -82,23 +103,23 @@ const executionController = (req, res) => {
 		 *
 		 * executionController middleware deals with the code and dockerConfig parameters
 		 */
-		fileUpload(req, res, async (err) => {
+		fileUpload(req, res, (err) => {
 			try {
-				await socketValidator(req, res);
+				socketValidator(req, res);
 				if (err instanceof multer.MulterError) {
 					// A Multer error occurred during uploading
 					res.status(503).json({
 						error: 'An error occurred while uploading the test files!',
 						message: err.message,
 					});
-					console.error(`A Multer error occurred at uploadController while uploading:\n${err}`);
+					console.error(`A Multer error occurred at executionController while uploading:\n${err}`);
 				} else if (err) {
 					// An error occurred during uploading
 					res.status(503).json({
 						error: 'An error occurred while uploading the test files!',
 						message: err.message,
 					});
-					console.error(`An error occurred at uploadController while uploading:\n${err}`);
+					console.error(`An error occurred at executionController while uploading:\n${err}`);
 				} else {
 					if (!req.body.code) {
 						return res.status(400).json({ error: "Bad Request: No Code Provided!" });
