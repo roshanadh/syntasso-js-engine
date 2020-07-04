@@ -138,11 +138,11 @@ const main = () => {
 				}
 
 				// write to stdout to indicate completion of test #i
-				process.stdout.write(JSON.stringify({
+				process.stdout.write(Buffer.from(JSON.stringify({
 					type: "test-status",
 					process: i,
 					testStatus,
-				}));
+				})));
 			} else {
 				throw new Error(`stderr during execution of submission.js: ${stderr}`)
 			}

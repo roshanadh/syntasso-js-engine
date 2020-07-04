@@ -1,6 +1,6 @@
 const { mocha, chai, should, expect, path, fs, execSync } = require("./test-config.js");
 
-describe("4. Clean up files after socket disconnect", () => {
+describe("5. Clean up files after socket disconnect", () => {
 	let socket, socketId, tempFilesPath, outputFilePath;
 	before(async () => {
 		const { removeConnection } = require("./test-config.js");

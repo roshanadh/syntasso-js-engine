@@ -62,15 +62,17 @@ handleConfigZero = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			..._res,
-			imageBuildTime,
-			containerCreateTime,
-			containerStartTime,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				imageBuildTime,
+				containerCreateTime,
+				containerStartTime,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 
@@ -114,13 +116,15 @@ handleConfigOne = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			..._res,
-			containerStartTime,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				containerStartTime,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 
@@ -146,12 +150,14 @@ handleConfigTwo = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			..._res,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 

@@ -237,12 +237,12 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
 				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
@@ -251,14 +251,14 @@ describe("3. POST requests at /upload", () => {
 					res.body.sampleInputs.should.equal(3);
 					res.body.should.have.property("execTime");
 					const sampleInputs = [
-						"sampleInput0.txt",
-						"sampleInput1.txt",
-						"sampleInput2.txt",
+						"sampleInput-0.txt",
+						"sampleInput-1.txt",
+						"sampleInput-2.txt",
 					];
 					const expectedOutputs = [
-						"expectedOutput0.txt",
-						"expectedOutput1.txt",
-						"expectedOutput2.txt",
+						"expectedOutput-0.txt",
+						"expectedOutput-1.txt",
+						"expectedOutput-2.txt",
 					];
 
 					sampleInputs.forEach((sampleInput, index) => {
@@ -279,26 +279,26 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
 				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
