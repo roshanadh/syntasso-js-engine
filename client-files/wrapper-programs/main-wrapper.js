@@ -55,7 +55,7 @@ try {
 		.catch(err => {
 			if (
 				err.message === "No test files have been uploaded" ||
-				err.message === "Number of sampleInput and expectedOutput files"
+				err.message === "Number of sampleInput and expectedOutput files mismatch"
 			) {
 				// spawn one process and do not pass any sample input to it
 				try {

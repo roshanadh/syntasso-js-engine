@@ -23,7 +23,7 @@ const readFiles = () => {
 		expectedOutputFilePath;
 
 	if (len_sampleInputs !== len_expectedOutputs)
-		throw new Error("Number of sampleInput and expectedOutput files");
+		throw new Error("Number of sampleInput and expectedOutput files mismatch");
 
 	for (let i = 0; i < len_sampleInputs; i++) {
 		sampleInputFilePath = path.resolve(
@@ -68,7 +68,7 @@ const readDirs = async () => {
 			throw new Error("No test files have been uploaded")
 		return await readFiles();
 	} catch (err) {
-		if (err.message === "Number of sampleInput and expectedOutput files")
+		if (err.message === "Number of sampleInput and expectedOutput files mismatch")
 			throw err;
 		if (err.message === "No test files have been uploaded")
 			throw err;
