@@ -1,1 +1,0 @@
-console.log('File name should be: expectedOutput2.txt');

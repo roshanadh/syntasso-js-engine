@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const redis = require("redis");
 const RedisStore = require("connect-redis")(session);
 const cors = require("cors");
+const blocked = require('blocked-at')
 
 const Socket = require("./socket/socket.js");
 const { PORT, LIVE_SERVER_PORT, SECRET_SESSION_KEY } = require("./config.js");
@@ -36,6 +37,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use(router);
+
+if (process.env.NODE_ENV === "dev")
+	// inspect event-loop blocks
+	blocked((time, stack) => {
+		console.log(`Blocked for ${time}ms, operation started here:`, stack)
+	});
 
 const server = app.listen(PORT, () => {
 	console.log(`Syntasso JS Engine server listening on port ${PORT}...`);

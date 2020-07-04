@@ -1,11 +1,14 @@
 const { mocha, chai, should, expect, server, fs, path } = require("./test-config.js");
 
 describe("2. POST requests at /execute", () => {
-	let socket, socketId;
+	let socket, socketId, testFilesPath, uploadedFilesPath;
 	before(() => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
 		socketId = socket.id;
+		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
+
 	});
 	
 	describe("2a. POST without socketId at /execute", () => {
@@ -94,13 +97,13 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("imageBuildTime");
 					res.body.should.have.property("containerCreateTime");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -119,11 +122,11 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -135,17 +138,17 @@ describe("2. POST requests at /execute", () => {
 			let payload = {
 				socketId,
 				code: "console.log('Hello World!')",
-				dockerConfig: "1"
+				dockerConfig: "2"
 			}
 			chai.request(server)
 				.post("/execute")
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -164,10 +167,10 @@ describe("2. POST requests at /execute", () => {
 				.send(payload)
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					expect(res.body.output).to.be.empty;
+					expect(res.body.observedOutput).to.be.empty;
 					res.body.error.should.have.property("errorName");
 					res.body.error.should.have.property("errorMessage");
 					res.body.error.should.have.property("lineNumber");
@@ -179,9 +182,6 @@ describe("2. POST requests at /execute", () => {
 		});
 	});
 	describe("2i. POST with sampleInputs, expectedOutputs, and dockerConfig = 2 at /execute", () => {
-		let testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
-		let uploadedFilesPath = path.resolve(__dirname, "..", "client-files", "tests");
-
 		it("should not POST without .txt file extension", done => {
 			chai.request(server)
 				.post("/execute")
@@ -195,7 +195,7 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("error");
 					res.body.should.have.property("message");
-					res.body.message.should.equal("Only .txt files can be uploaded");
+					res.body.message.should.equal("Only .txt files can be uploaded as sampleInputs or expectedOutputs");
 					done();
 				});
 		});
@@ -222,30 +222,28 @@ describe("2. POST requests at /execute", () => {
 			chai.request(server)
 				.post("/execute")
 				.field("socketId", socketId)
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
 				.field("dockerConfig", "2")
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
-					res.body.should.have.property("error");
+					res.body.should.have.property("sampleInputs");
+					res.body.sampleInputs.should.equal(3);
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
-					expect(res.body.error).to.be.null;
 					const sampleInputs = [
-						"sampleInput0.txt",
-						"sampleInput1.txt",
-						"sampleInput2.txt",
+						"sampleInput-0.txt",
+						"sampleInput-1.txt",
+						"sampleInput-2.txt",
 					];
 					const expectedOutputs = [
-						"expectedOutput0.txt",
-						"expectedOutput1.txt",
-						"expectedOutput2.txt",
+						"expectedOutput-0.txt",
+						"expectedOutput-1.txt",
+						"expectedOutput-2.txt",
 					];
 
 					sampleInputs.forEach((sampleInput, index) => {
@@ -266,26 +264,26 @@ describe("2. POST requests at /execute", () => {
 			chai.request(server)
 				.post("/execute")
 				.field("socketId", socketId)
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput1.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput2.txt"))
-				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput1.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput2.txt"))
-				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
 				.field("dockerConfig", "2")
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {

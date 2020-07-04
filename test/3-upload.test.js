@@ -1,12 +1,15 @@
-const { mocha, chai, should, expect, server, path } = require("./test-config.js");
+const { mocha, chai, should, expect, server, fs, path } = require("./test-config.js");
 
 describe("3. POST requests at /upload", () => {
-	let socket, socketId;
+	let socket, socketId, testFilesPath, uploadedFilesPath;
 	before(() => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
 		socketId = socket.id;
+		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
 	});
+
 
 	describe("3a. POST without socketId at /upload", () => {
 		it("should not POST without socketId param", done => {
@@ -84,7 +87,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.have.property("error");
 					res.body.should.have.property("message");
 					res.body.error.should.equal("An error occurred while uploading the submitted JavaScript file!");
-					res.body.message.should.equal("Only .js files can be uploaded");
+					res.body.message.should.equal("Only .js files can be uploaded as submission");
 					done();
 				});
 		});
@@ -116,13 +119,13 @@ describe("3. POST requests at /upload", () => {
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("imageBuildTime");
 					res.body.should.have.property("containerCreateTime");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -138,11 +141,11 @@ describe("3. POST requests at /upload", () => {
 				.field("dockerConfig", "1")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("containerStartTime");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -158,10 +161,10 @@ describe("3. POST requests at /upload", () => {
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					res.body.output.should.equal("Hello World!\r\n");
+					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
 				});
@@ -177,16 +180,133 @@ describe("3. POST requests at /upload", () => {
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
-					res.body.should.have.property("output");
+					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("execTime");
-					expect(res.body.output).to.be.empty;
+					expect(res.body.observedOutput).to.be.empty;
 					res.body.error.should.have.property("errorName");
 					res.body.error.should.have.property("errorMessage");
 					res.body.error.should.have.property("lineNumber");
 					res.body.error.should.have.property("columnNumber");
 					res.body.error.should.have.property("errorStack");
 					res.body.error.errorName.should.equal("ReferenceError");
+					done();
+				});
+		});
+	});
+
+	describe("3j. POST with sampleInputs, expectedOutputs, and dockerConfig = 2 at /upload", () => {
+		it("should not POST without .txt file extension", done => {
+			chai.request(server)
+				.post("/upload")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.field("dockerConfig", "2")
+				.field("code", "console.log('Hello World!')")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("Only .txt files can be uploaded as sampleInputs or expectedOutputs");
+					done();
+				});
+		});
+
+		it("should not POST with file name containing more than 1 period (.)", done => {
+			chai.request(server)
+				.post("/upload")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md.txt"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.field("dockerConfig", "2")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("File name cannot contain more than one period (.)");
+					done();
+				});
+		});
+
+		it("should upload 3 sampleInput files and 3 expectedOutput files", done => {
+			chai.request(server)
+				.post("/upload")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.field("dockerConfig", "2")
+				.end((err, res) => {
+					res.body.should.be.a("object");
+					res.body.should.have.property("sampleInputs");
+					res.body.sampleInputs.should.equal(3);
+					res.body.should.have.property("execTime");
+					const sampleInputs = [
+						"sampleInput-0.txt",
+						"sampleInput-1.txt",
+						"sampleInput-2.txt",
+					];
+					const expectedOutputs = [
+						"expectedOutput-0.txt",
+						"expectedOutput-1.txt",
+						"expectedOutput-2.txt",
+					];
+
+					sampleInputs.forEach((sampleInput, index) => {
+						let fileName = `${socketId}-sampleInput-${index}.txt`;
+						if (!fs.existsSync(path.resolve(uploadedFilesPath, "sampleInputs", fileName)))
+							throw new Error(`${fileName} file hasn't been uploaded!`);
+					});
+					expectedOutputs.forEach((expectedOutput, index) => {
+						let fileName = `${socketId}-expectedOutput-${index}.txt`;
+						if (!fs.existsSync(path.resolve(uploadedFilesPath, "expectedOutputs", fileName)))
+							throw new Error(`${expectedOutput} file hasn't been uploaded!`);
+					});
+					done();
+				});
+		});
+
+		it("should not upload 10 sampleInput files and 10 expectedOutput files", done => {
+			chai.request(server)
+				.post("/upload")
+				.field("socketId", socketId)
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-1.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-2.txt"))
+				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
+				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
+				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.field("dockerConfig", "2")
+				.end((err, res) => {
+					res.should.have.status(503);
+					res.body.should.be.a("object");
+					res.body.should.have.property("error");
+					res.body.should.have.property("message");
+					res.body.message.should.equal("Unexpected field");
 					done();
 				});
 		});

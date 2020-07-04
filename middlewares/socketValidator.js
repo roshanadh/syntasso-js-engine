@@ -1,6 +1,6 @@
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
-const socketValidator = async (req, res) => {
+const socketValidator = (req, res) => {
 	/*
 	 * All req.body params =>
 	 * 1. req.body.socketId: String => contains socket ID of the connected client
@@ -14,7 +14,6 @@ const socketValidator = async (req, res) => {
 	 *
 	 * socketValidator deals with the socketId parameter included in the request body
 	 */
-	// try {
 	const { socketInstance } = require("../server.js");
 	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
 	if (!req.body.socketId)

@@ -53,7 +53,7 @@ handleConfigZero = async (req, res) => {
 		throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
 	}
 
-	let { error, execTime } = dockerApp.execInNodeContainer(req.session);
+	let { error, execTime } = await dockerApp.execInNodeContainer(req.session);
 	if (error) {
 		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
 		res
@@ -62,16 +62,17 @@ handleConfigZero = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			output: _res.output,
-			error: _res.error,
-			imageBuildTime,
-			containerCreateTime,
-			containerStartTime,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				imageBuildTime,
+				containerCreateTime,
+				containerStartTime,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 
@@ -115,14 +116,15 @@ handleConfigOne = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			output: _res.output,
-			error: _res.error,
-			containerStartTime,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				containerStartTime,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 
@@ -148,13 +150,14 @@ handleConfigTwo = async (req, res) => {
 	} else {
 		console.log("\nResponse to the client:");
 		const _res = await readOutput(req.session.socketId);
-		const response = {
-			output: _res.output,
-			error: _res.error,
-			execTime,
-		};
-		console.dir(response);
-		res.status(200).json(response);
+		if (!_res.errorInProcess) {
+			const response = {
+				..._res,
+				execTime,
+			};
+			console.dir(response);
+			res.status(200).json(response);
+		}
 	}
 };
 
