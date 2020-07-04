@@ -14,7 +14,6 @@ const socketValidator = (req, res) => {
 	 *
 	 * socketValidator deals with the socketId parameter included in the request body
 	 */
-	// try {
 	const { socketInstance } = require("../server.js");
 	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
 	if (!req.body.socketId)
