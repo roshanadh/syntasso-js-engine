@@ -83,12 +83,11 @@ The API exposes three endpoints and the following actions:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
-    ii. *submission* [.js file] [maxCount: 1]: The JavaScript file to be executed. 
+    ii. *code* [String]: The code snippet to be executed by the engine. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
         
     iv. *testCases* [Array]: An array of JSON objects. The engine will parse each element (each element being a JSON object) and generate files needed to run main-wrapper.js.
-    
     	Structure of testCases:
 	[
 		{
