@@ -61,7 +61,7 @@ The API exposes three endpoints and the following actions:
     ```
     POST /upload
     ```
-    The request body must include three parameters:
+    The request body ***must*** include three parameters:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
@@ -74,6 +74,28 @@ The API exposes three endpoints and the following actions:
     i. *sampleInputs* [.txt file] [maxCount: 8]: For supplying the client-submitted program with input data.
 
     ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
+    
+4. Route to POST a code snippet and test cases
+    ```
+    POST /submit
+    ```
+    The request body ***must*** include four parameters:
+    
+    i. *socketId* [String]: For verifying socket connection with the client.
+
+    ii. *submission* [.js file] [maxCount: 1]: The JavaScript file to be executed. 
+
+    iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
+        
+    iv. *testCases* [Array]: An array of JSON objects. The engine will parse each element (each element being a JSON object) and generate files needed to run main-wrapper.js.
+    
+    	Structure of testCases:
+	[
+		{
+			sampleInput: "",
+			expectedOutput: "",
+		}, {}, {}, ...
+	]
 
 ## dockerConfig
 There are three possible values to dockerConfig: 0, 1, and 2.
