@@ -32,31 +32,12 @@ module.exports = (socketId, code) => {
 		*/
 		let basePath = path.resolve(__dirname, "..", "client-files", socketId);
 		// check if ${basePath} dir exits before creating it
-		fs.stat(basePath, (err, stats) => {
+
+		fs.mkdir(basePath, { recursive:true }, (err) => {
 			if (err) {
-				if (err.message.includes("ENOENT: no such file or directory")) {
-					fs.mkdir(basePath, (err) => {
-						if (err) {
-							console.error(`Error while creating client-files/${socketId}/ directory: ${err.stack}`);
-							reject(false);
-							throw err;
-						}
-						fs.writeFile(filePath, finalCode, (err) => {
-							if (err) {
-								console.error(`Error during writing code to file: ${err.stack}`);
-								reject(false);
-								throw err;
-							}
-							console.log(`Submitted code written to file: ${filePath}`);
-							resolve(true);
-							return;
-						});
-					});
-				} else {
-					console.error(`Error while reading client-files/${socketId}/ directory: ${err.stack}`);
-					reject(false);
-					throw err;
-				}
+				console.error(`Error while creating client-files/${socketId}/ directory: ${err.stack}`);
+				reject(false);
+				throw err;
 			}
 			fs.writeFile(filePath, finalCode, (err) => {
 				if (err) {
@@ -66,6 +47,7 @@ module.exports = (socketId, code) => {
 				}
 				console.log(`Submitted code written to file: ${filePath}`);
 				resolve(true);
+				return;
 			});
 		});
 	});
