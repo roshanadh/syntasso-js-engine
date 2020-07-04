@@ -108,7 +108,6 @@ const executionController = (req, res) => {
 		 */
 		fileUpload(req, res, (err) => {
 			try {
-				sampleInputFileNameIndex = 0; expectedOutputFileNameIndex = 0;
 				socketValidator(req, res);
 				if (err instanceof multer.MulterError) {
 					// A Multer error occurred during uploading
