@@ -364,12 +364,12 @@ class DockerApp {
 				// let stdout = [];
 				containerBash.stdout.on("data", async stdout => {
 					let now = performance.now();
-					let execTime = now - stepTime;
+					let responseTime = now - stepTime;
 					
-					console.log("Time taken to execute the code: " + execTime + "ms");
+					console.log("Response time for exec command: " + responseTime + "ms");
 					
 					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
-						stdout: `Time taken to execute the code: ${execTime}`
+						stdout: `Response time for exec command: ${responseTime}`
 					});
 					
 					// nested try...catch to catch any JSON parse errors
@@ -385,7 +385,7 @@ class DockerApp {
 							// write stdout to output file
 							const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
 							
-							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + execTime) + "ms");
+							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + responseTime) + "ms");
 
 							console.log("\nSTDOUT for 'docker exec' command: ");
 							console.dir({
@@ -393,7 +393,7 @@ class DockerApp {
 							});
 
 							if (error) reject({ error });
-							else resolve({ execTime: execTime + copyTime + writeToOutputTime });
+							else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
 						}
 					} catch (err) {
 						if (err.message.includes("Unexpected token { in JSON")) {
@@ -424,7 +424,7 @@ class DockerApp {
 									// write stream[index] to output file
 									const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stream[index], socketInstance);
 
-									console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + execTime) + "ms");
+									console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + responseTime) + "ms");
 
 									console.log("\nSTDOUT for 'docker exec' command: ");
 									console.dir({
@@ -432,7 +432,7 @@ class DockerApp {
 									});
 
 									if (error) reject({ error });
-									else resolve({ execTime: execTime + copyTime + writeToOutputTime });								
+									else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });								
 								}
 							});
 						} else reject({ error: err });

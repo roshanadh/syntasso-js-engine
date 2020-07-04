@@ -124,7 +124,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.have.property("imageBuildTime");
 					res.body.should.have.property("containerCreateTime");
 					res.body.should.have.property("containerStartTime");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
@@ -144,7 +144,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
 					res.body.should.have.property("containerStartTime");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
@@ -163,7 +163,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
 					done();
@@ -182,7 +182,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					expect(res.body.observedOutput).to.be.empty;
 					res.body.error.should.have.property("errorName");
 					res.body.error.should.have.property("errorMessage");
@@ -249,7 +249,7 @@ describe("3. POST requests at /upload", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
 					res.body.sampleInputs.should.equal(3);
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					const sampleInputs = [
 						"sampleInput-0.txt",
 						"sampleInput-1.txt",

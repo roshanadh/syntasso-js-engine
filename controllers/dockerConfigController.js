@@ -53,7 +53,7 @@ handleConfigZero = async (req, res) => {
 		throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
 	}
 
-	let { error, execTime } = await dockerApp.execInNodeContainer(req.session);
+	let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
 	if (error) {
 		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
 		res
@@ -68,7 +68,7 @@ handleConfigZero = async (req, res) => {
 				imageBuildTime,
 				containerCreateTime,
 				containerStartTime,
-				execTime,
+				responseTime,
 			};
 			console.dir(response);
 			res.status(200).json(response);
@@ -107,7 +107,7 @@ handleConfigOne = async (req, res) => {
 		}
 	}
 
-	let { error, execTime } = await dockerApp.execInNodeContainer(req.session);
+	let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
 	if (error) {
 		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
 		res
@@ -120,7 +120,7 @@ handleConfigOne = async (req, res) => {
 			const response = {
 				..._res,
 				containerStartTime,
-				execTime,
+				responseTime,
 			};
 			console.dir(response);
 			res.status(200).json(response);
@@ -129,7 +129,7 @@ handleConfigOne = async (req, res) => {
 };
 
 handleConfigTwo = async (req, res) => {
-	let { error, errorType, execTime } = await dockerApp.execInNodeContainer(
+	let { error, errorType, responseTime } = await dockerApp.execInNodeContainer(
 		req.session
 	);
 	if (error) {
@@ -153,7 +153,7 @@ handleConfigTwo = async (req, res) => {
 		if (!_res.errorInProcess) {
 			const response = {
 				..._res,
-				execTime,
+				responseTime,
 			};
 			console.dir(response);
 			res.status(200).json(response);

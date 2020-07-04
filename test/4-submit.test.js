@@ -131,7 +131,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("imageBuildTime");
 					res.body.should.have.property("containerCreateTime");
 					res.body.should.have.property("containerStartTime");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
 					expect(fs.existsSync(path.resolve(
@@ -167,7 +167,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
 					res.body.should.have.property("containerStartTime");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
 					expect(fs.existsSync(path.resolve(
@@ -202,7 +202,7 @@ describe("4. POST requests at /submit", () => {
 				.end((err, res) => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
 					expect(fs.existsSync(path.resolve(
@@ -270,7 +270,7 @@ describe("4. POST requests at /submit", () => {
 				.end((err, res) => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
-					res.body.should.have.property("execTime");
+					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(10);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
 					expect(fs.existsSync(path.resolve(
