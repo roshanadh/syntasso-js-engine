@@ -43,11 +43,9 @@ module.exports = (req) => {
 				// at this point, both sampleInputs and expectedOutputs dirs have ...
 				// ... been created, so write files inside the directories
 				let sampleInputFilePath,
-					expectedOutputFilePath
+					expectedOutputFilePath;
+				
 				testCases.forEach((element, index) => {
-					sampleInputs[index] = element.sampleInput;
-					expectedOutputs[index] = element.expectedOutput;
-
 					sampleInputFilePath = path.resolve(
 						sampleInputsDirPath,
 						`${socketId}-sampleInput-${index}.txt`
@@ -56,19 +54,14 @@ module.exports = (req) => {
 						expectedOutputsDirPath,
 						`${socketId}-expectedOutput-${index}.txt`
 					);
-					fs.writeFile(sampleInputFilePath, element.sampleInput, (err) => {
-						if (err) {
-							reject(false);
-							throw err;
-						}
-						fs.writeFile(expectedOutputFilePath, element.expectedOutput, (err) => {
-							if (err) {
-								reject(false);
-								throw err;
-							}
-							resolve(true);
-						});
-					});
+					try {
+						fs.writeFileSync(sampleInputFilePath, element.sampleInput);
+						fs.writeFileSync(expectedOutputFilePath, element.expectedOutput);
+						resolve(true);
+					} catch (err) {
+						reject(err);
+						throw err;
+					}
 				});
 			});
 		});
