@@ -110,7 +110,7 @@ describe("4. POST requests at /submit", () => {
 	});
 
 	describe("4f. POST with socketId, code, dockerConfig, and testCases = 0 at /submit", () => {
-		it("should POST with all parameters provided and dockerConfig = 0", done => {
+		it("should POST with all parameters provided, one test case, and dockerConfig = 0", done => {
 			let payload = {
 				socketId,
 				code: "console.log('Hello World!')",
@@ -148,7 +148,7 @@ describe("4. POST requests at /submit", () => {
 	});
 
 	describe("4g. POST with socketId, code, testCases, and dockerConfig = 1 at /submit", () => {
-		it("should POST with all parameters provided and dockerConfig = 1", done => {
+		it("should POST with all parameters provided, one test case, and dockerConfig = 1", done => {
 			let payload = {
 				socketId,
 				code: "console.log('Hello World!')",
@@ -184,7 +184,7 @@ describe("4. POST requests at /submit", () => {
 	});
 
 	describe("4h. POST with socketId, code, testCases, and dockerConfig = 2 at /submit", () => {
-		it("should POST with all parameters provided and dockerConfig = 2", done => {
+		it("should POST with all parameters provided, one test case, and dockerConfig = 2", done => {
 			let payload = {
 				socketId,
 				code: "console.log('Hello World!')",
@@ -204,6 +204,74 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("sampleInputs");
 					res.body.should.have.property("execTime");
 					res.body.sampleInputs.should.equal(1);
+					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"sampleInputs"
+					))).to.be.true;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"expectedOutputs"
+					))).to.be.true;
+					done();
+				});
+		});
+		it("should POST with all parameters provided, ten test cases, and dockerConfig = 2", done => {
+			let payload = {
+				socketId,
+				code: "console.log('Hello World!')",
+				dockerConfig: "2",
+				testCases: [
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					},
+				]
+			}
+			chai.request(server)
+				.post("/submit")
+				.send(payload)
+				.end((err, res) => {
+					res.body.should.be.a("object");
+					res.body.should.have.property("sampleInputs");
+					res.body.should.have.property("execTime");
+					res.body.sampleInputs.should.equal(10);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
