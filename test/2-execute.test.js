@@ -138,7 +138,7 @@ describe("2. POST requests at /execute", () => {
 			let payload = {
 				socketId,
 				code: "console.log('Hello World!')",
-				dockerConfig: "1"
+				dockerConfig: "2"
 			}
 			chai.request(server)
 				.post("/execute")
