@@ -32,7 +32,7 @@ Environment variables for the project include:
 * SECRET_SESSION_KEY: For encrypting the session.
 
 ## Endpoints
-The API exposes three endpoints and the following actions:
+The API exposes four endpoints and the following actions:
 
 1. Simple 'Hello World!' route
     ```
