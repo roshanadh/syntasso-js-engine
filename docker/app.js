@@ -47,6 +47,7 @@ class DockerApp {
 						stdout: "An error occurred while building the Node.js image."
 					});
 					reject(error);
+					return;
 				}
 				if (stderr) {
 					/*
@@ -120,6 +121,7 @@ class DockerApp {
 							stdout: "An error occurred while creating the Node.js container."
 						});
 						reject(error);
+						return;
 					}
 					if (stderr) {
 						/*
@@ -349,8 +351,14 @@ class DockerApp {
 
 		return new Promise(async(resolve, reject) => {
 			let { copyTime, error, errorType } = await this.copyClientFilesToContainer(session);
-			if (errorType) reject({ errorType, error });
-			if (error) reject({ error });
+			if (errorType) {
+				reject({ errorType, error });
+				return;
+			}
+			if (error) {
+				reject({ error });
+				return;
+			}
 
 			// emit exec message to the connected socket ID
 			socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
@@ -393,8 +401,13 @@ class DockerApp {
 								stdout,
 							});
 
-							if (error) reject({ error });
-							else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+							if (error) {
+								reject({ error });
+								return;
+							} else {
+								resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+								return;
+							} 
 						}
 					} catch (err) {
 						if (err.message.includes("Unexpected token { in JSON")) {
@@ -432,11 +445,19 @@ class DockerApp {
 										stdout: stream[index],
 									});
 
-									if (error) reject({ error });
-									else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });								
+									if (error) {
+										reject({ error });
+										return;
+									} else {
+										resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+										return;
+									}								
 								}
 							});
-						} else reject({ error: err });
+						} else {
+							reject({ error: err });
+							return;
+						}
 					}
 				});
 
@@ -452,9 +473,11 @@ class DockerApp {
 							errorType: "container-not-started-beforehand",
 							error: stderr,
 						});
+						return;
 					}
 					console.error(`Error during JavaScript code execution: ${stderr}`);
 					reject({ error: stderr });
+					return;
 				});
 
 				// execute main-wrapper.js by writing execution command to bash
