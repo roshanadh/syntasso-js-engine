@@ -52,27 +52,33 @@ handleConfigZero = async (req, res) => {
 			.send(`Service currently unavailable due to server conditions.`);
 		throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
 	}
-
-	let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
-	if (error) {
-		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
+	try {
+		let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
+		if (error) {
+			console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
+			res
+				.status(503)
+				.send(`Service currently unavailable due to server conditions.`);
+		} else {
+			console.log("\nResponse to the client:");
+			const _res = await readOutput(req.session.socketId);
+			if (!_res.errorInProcess) {
+				const response = {
+					..._res,
+					imageBuildTime,
+					containerCreateTime,
+					containerStartTime,
+					responseTime,
+				};
+				console.dir(response);
+				res.status(200).json(response);
+			}
+		}
+	} catch (err) {
 		res
 			.status(503)
 			.send(`Service currently unavailable due to server conditions.`);
-	} else {
-		console.log("\nResponse to the client:");
-		const _res = await readOutput(req.session.socketId);
-		if (!_res.errorInProcess) {
-			const response = {
-				..._res,
-				imageBuildTime,
-				containerCreateTime,
-				containerStartTime,
-				responseTime,
-			};
-			console.dir(response);
-			res.status(200).json(response);
-		}
+		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
 	}
 };
 
@@ -107,57 +113,71 @@ handleConfigOne = async (req, res) => {
 		}
 	}
 
-	let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
-	if (error) {
-		console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
-		res
-			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-	} else {
-		console.log("\nResponse to the client:");
-		const _res = await readOutput(req.session.socketId);
-		if (!_res.errorInProcess) {
-			const response = {
-				..._res,
-				containerStartTime,
-				responseTime,
-			};
-			console.dir(response);
-			res.status(200).json(response);
-		}
-	}
-};
-
-handleConfigTwo = async (req, res) => {
-	let { error, errorType, responseTime } = await dockerApp.execInNodeContainer(
-		req.session
-	);
-	if (error) {
-		if (errorType === "container-not-started-beforehand") {
-			res.status(503).json({
-				error:
-					"The container is not currently running on the server. Request again with dockerConfig 0 or 1.",
-			});
-			return console.error(
-				"Requested container is not currently running on the server."
-			);
-		} else {
+	try {
+		let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
+		if (error) {
 			console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
 			res
 				.status(503)
 				.send(`Service currently unavailable due to server conditions.`);
+		} else {
+			console.log("\nResponse to the client:");
+			const _res = await readOutput(req.session.socketId);
+			if (!_res.errorInProcess) {
+				const response = {
+					..._res,
+					containerStartTime,
+					responseTime,
+				};
+				console.dir(response);
+				res.status(200).json(response);
+			}
 		}
-	} else {
-		console.log("\nResponse to the client:");
-		const _res = await readOutput(req.session.socketId);
-		if (!_res.errorInProcess) {
-			const response = {
-				..._res,
-				responseTime,
-			};
-			console.dir(response);
-			res.status(200).json(response);
+	} catch (err) {
+		res
+			.status(503)
+			.send(`Service currently unavailable due to server conditions.`);
+		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
+	}
+};
+
+handleConfigTwo = async (req, res) => {
+	try {
+		let { error, errorType, responseTime } = await dockerApp.execInNodeContainer(
+			req.session
+		);
+		if (error) {
+			if (errorType === "container-not-started-beforehand") {
+				res.status(503).json({
+					error:
+						"The container is not currently running on the server. Request again with dockerConfig 0 or 1.",
+				});
+				return console.error(
+					"Requested container is not currently running on the server."
+				);
+			} else {
+				console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
+				res
+					.status(503)
+					.send(`Service currently unavailable due to server conditions.`);
+			}
+		} else {
+			console.log("\nResponse to the client:");
+			const _res = await readOutput(req.session.socketId);
+			if (!_res.errorInProcess) {
+				const response = {
+					..._res,
+					responseTime,
+				};
+				console.dir(response);
+				res.status(200).json(response);
+			}
 		}
+	} catch (err) {
+		res
+			.status(503)
+			.send(`Service currently unavailable due to server conditions.`);
+		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
 	}
 };
 
