@@ -422,6 +422,14 @@ class DockerApp {
 							// we need to create an array of JSON objects: ...
 							// ... [{}, {}, {}, ...] in such a case
 
+							responseTime = now - stepTime;
+
+							console.log("Response time for exec command: " + responseTime + "ms");
+
+							socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
+								stdout: `Response time for exec command: ${responseTime}`
+							});
+
 							let stream = stdout.toString().trim();
 							stream = stream.split("}{")
 							stream.forEach(async(element, index) => {
