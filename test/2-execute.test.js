@@ -105,6 +105,10 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
+					expect(res.body.imageBuildTime).to.not.be.NaN;
+					expect(res.body.containerCreateTime).to.not.be.NaN;
+					expect(res.body.containerStartTime).to.not.be.NaN;
+					expect(res.body.responseTime).to.not.be.NaN;
 					done();
 				});
 		});
@@ -128,6 +132,8 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
+					expect(res.body.containerStartTime).to.not.be.NaN;
+					expect(res.body.responseTime).to.not.be.NaN;
 					done();
 				});
 		});
@@ -150,6 +156,7 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.have.property("responseTime");
 					res.body.observedOutput.should.equal("Hello World!\n");
 					expect(res.body.error).to.be.null;
+					expect(res.body.responseTime).to.not.be.NaN;
 					done();
 				});
 		});
@@ -171,6 +178,7 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.have.property("error");
 					res.body.should.have.property("responseTime");
 					expect(res.body.observedOutput).to.be.empty;
+					expect(res.body.responseTime).to.not.be.NaN;
 					res.body.error.should.have.property("errorName");
 					res.body.error.should.have.property("errorMessage");
 					res.body.error.should.have.property("lineNumber");
@@ -235,6 +243,7 @@ describe("2. POST requests at /execute", () => {
 					res.body.should.have.property("sampleInputs");
 					res.body.sampleInputs.should.equal(3);
 					res.body.should.have.property("responseTime");
+					expect(res.body.responseTime).to.not.be.NaN;
 					const sampleInputs = [
 						"sampleInput-0.txt",
 						"sampleInput-1.txt",
