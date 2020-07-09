@@ -13,13 +13,12 @@ handleConfigZero = async (req, res) => {
 			: console.log("Node.js image built.");
 	} catch (err) {
 		// handle promise rejection
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.buildNodeImage(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 	try {
-		let { stdout, stderr, totalTime } = await dockerApp.createNodeContainer(
+		let { stderr, totalTime } = await dockerApp.createNodeContainer(
 			req.session
 		);
 		containerCreateTime = totalTime;
@@ -29,10 +28,9 @@ handleConfigZero = async (req, res) => {
 			)
 			: console.log("Node.js container created.");
 	} catch (err) {
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.createNodeContainer(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 	try {
 		let { stderr, totalTime } = await dockerApp.startNodeContainer(
@@ -47,10 +45,9 @@ handleConfigZero = async (req, res) => {
 			: console.log("Node.js container started.");
 	} catch (err) {
 		// handle promise rejection
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 	try {
 		let { error, responseTime } = await dockerApp.execInNodeContainer(req.session);
@@ -75,10 +72,9 @@ handleConfigZero = async (req, res) => {
 			}
 		}
 	} catch (err) {
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 };
 
@@ -106,10 +102,9 @@ handleConfigOne = async (req, res) => {
 				"Requested container could not be started because it has not been created yet."
 			);
 		} else {
-			res
+			return res
 				.status(503)
 				.send(`Service currently unavailable due to server conditions.`);
-			throw new Error(`Error in dockerApp.startNodeContainer(): ${err}`);
 		}
 	}
 
@@ -134,10 +129,9 @@ handleConfigOne = async (req, res) => {
 			}
 		}
 	} catch (err) {
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 };
 
@@ -156,8 +150,7 @@ handleConfigTwo = async (req, res) => {
 					"Requested container is not currently running on the server."
 				);
 			} else {
-				console.error(`Error in dockerApp.execInNodeContainer(): ${error}`);
-				res
+				return res
 					.status(503)
 					.send(`Service currently unavailable due to server conditions.`);
 			}
@@ -174,10 +167,9 @@ handleConfigTwo = async (req, res) => {
 			}
 		}
 	} catch (err) {
-		res
+		return res
 			.status(503)
-			.send(`Service currently unavailable due to server conditions.`);
-		throw new Error(`Error in dockerApp.execInNodeContainer(): ${err}`);
+			.json({ error: "Service currently unavailable due to server conditions" });
 	}
 };
 
