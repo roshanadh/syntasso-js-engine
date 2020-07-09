@@ -134,10 +134,10 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.imageBuildTime).to.not.be.NaN;
-					expect(res.body.containerCreateTime).to.not.be.NaN;
-					expect(res.body.containerStartTime).to.not.be.NaN;
-					expect(res.body.responseTime).to.not.be.NaN;
+					expect(res.body.imageBuildTime).to.not.be.null;
+					expect(res.body.containerCreateTime).to.not.be.null;
+					expect(res.body.containerStartTime).to.not.be.null;
+					expect(res.body.responseTime).to.not.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -174,8 +174,8 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.containerStartTime).to.not.be.NaN;
-					expect(res.body.responseTime).to.not.be.NaN;
+					expect(res.body.containerStartTime).to.not.be.null;
+					expect(res.body.responseTime).to.not.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -211,7 +211,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(1);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.responseTime).to.not.be.NaN;
+					expect(res.body.responseTime).to.not.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -280,7 +280,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("responseTime");
 					res.body.sampleInputs.should.equal(10);
 					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.responseTime).to.not.be.NaN;
+					expect(res.body.responseTime).to.not.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -315,7 +315,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.should.have.property("sampleInputs");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
-					expect(res.body.responseTime).to.not.be.NaN;
+					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
