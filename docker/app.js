@@ -47,6 +47,7 @@ class DockerApp {
 						stdout: "An error occurred while building the Node.js image."
 					});
 					reject(error);
+					return;
 				}
 				if (stderr) {
 					/*
@@ -120,6 +121,7 @@ class DockerApp {
 							stdout: "An error occurred while creating the Node.js container."
 						});
 						reject(error);
+						return;
 					}
 					if (stderr) {
 						/*
@@ -266,7 +268,6 @@ class DockerApp {
 
 			exec(`docker cp ${localPath} ${containerId}:/home/client-files/`, (error, stdout, stderr) => {
 				let now = performance.now();
-				console.log("Time taken to perform copy operation: client-files/ into the container: " + (now - stepTime) + "ms");
 
 				if (error) {
 					console.error(`Error during copying client-files/ into the container: ${error}`);
@@ -274,7 +275,10 @@ class DockerApp {
 					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 						stdout: "An error occurred while executing code inside the Node.js container."
 					});
-					reject({ error });
+					reject({
+						errorOrigin: "copyClientFilesToContainer",
+						error
+					});
 					return;
 				}
 
@@ -297,15 +301,21 @@ class DockerApp {
 					const errorString = `No such container:path: ${session.socketId}:/home`;
 					if (stderr.includes(errorString)) {
 						reject({
+							errorOrigin: "copyClientFilesToContainer",
 							errorType: "container-not-started-beforehand",
 							error: stderr,
 						});
 					}
 					console.error(`Error during the execution of 'docker cp' command.`);
 					console.error(`Error during copying client-files/ into the container: ${stderr}`);
-					reject({ error: stderr });
+					reject({
+						errorOrigin: "copyClientFilesToContainer",
+						error: stderr
+					});
 					return;
 				}
+				console.log("Time taken to perform copy operation: client-files/ into the container: " + (now - stepTime) + "ms");
+
 				resolve({ copyTime: now - stepTime });
 			});
 		});
@@ -321,7 +331,10 @@ class DockerApp {
 					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 						stdout: "An error occurred while executing code inside the Node.js container."
 					});
-					reject({ error: err });
+					reject({
+						errorOrigin: "writeOutputToFile",
+						error: err
+					});
 					return;
 				}
 				resolve({ writeToOutputTime: performance.now() - stepTime })
@@ -348,10 +361,6 @@ class DockerApp {
 			);
 
 		return new Promise(async(resolve, reject) => {
-			let { copyTime, error, errorType } = await this.copyClientFilesToContainer(session);
-			if (errorType) reject({ errorType, error });
-			if (error) reject({ error });
-
 			// emit exec message to the connected socket ID
 			socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 				stdout: "Executing JavaScript code inside the container..."
@@ -359,20 +368,15 @@ class DockerApp {
 
 			let stepTime = performance.now();
 			try {
+				let { copyTime } = await this.copyClientFilesToContainer(session);
+
 				// child_process.exec() returns output in plain string, no need to ...
 				// ... explicitly convert to string
 				const containerBash = exec(`docker exec -i ${containerId} /bin/bash`);
-				// let stdout = [];
+				let now, responseTime;
 				containerBash.stdout.on("data", async stdout => {
-					let now = performance.now();
-					let responseTime = now - stepTime;
+					now = performance.now();
 					
-					console.log("Response time for exec command: " + responseTime + "ms");
-					
-					socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
-						stdout: `Response time for exec command: ${responseTime}`
-					});
-
 					// nested try...catch to catch any JSON parse errors
 					try {
 						stdout = JSON.parse(stdout.toString().trim());
@@ -384,6 +388,15 @@ class DockerApp {
 						} else {
 							// stdout.type === "full-response"
 							// write stdout to output file
+							// responseTime is the time taken to receive full-response ...
+							// ... from the exec command
+							responseTime = now - stepTime;
+
+							console.log("Response time for exec command: " + responseTime + "ms");
+
+							socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
+								stdout: `Response time for exec command: ${responseTime}`
+							});
 							const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
 							
 							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + responseTime) + "ms");
@@ -393,8 +406,13 @@ class DockerApp {
 								stdout,
 							});
 
-							if (error) reject({ error });
-							else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+							if (error) {
+								reject(error);
+								return;
+							} else {
+								resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+								return;
+							} 
 						}
 					} catch (err) {
 						if (err.message.includes("Unexpected token { in JSON")) {
@@ -432,11 +450,19 @@ class DockerApp {
 										stdout: stream[index],
 									});
 
-									if (error) reject({ error });
-									else resolve({ responseTime: responseTime + copyTime + writeToOutputTime });								
+									if (error) {
+										reject(error);
+										return;
+									} else {
+										resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+										return;
+									}								
 								}
 							});
-						} else reject({ error: err });
+						} else {
+							reject(err);
+							return;
+						}
 					}
 				});
 
@@ -452,20 +478,34 @@ class DockerApp {
 							errorType: "container-not-started-beforehand",
 							error: stderr,
 						});
+						return;
 					}
 					console.error(`Error during JavaScript code execution: ${stderr}`);
-					reject({ error: stderr });
+					reject(stderr);
+					return;
 				});
 
 				// execute main-wrapper.js by writing execution command to bash
 				containerBash.stdin.write(`socketId="${session.socketId}" SECRET_DIVIDER_TOKEN="${SECRET_DIVIDER_TOKEN}" node home/client-files/main-wrapper.js\n`);
 			} catch (err) {
-				console.error(`Error during JavaScript code execution: ${err.stack}`);
-
 				socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 					stdout: "An error occurred while executing code inside the Node.js container."
 				});
-				reject({ error: err });
+				// check for errorOrigin to see where the error originated
+				if (err.errorOrigin && err.errorOrigin === "copyClientFilesToContainer") {
+					err.errorType
+						? reject({ errorType: err.errorType, error })
+						: reject(err.error);
+					return;
+				} else if (err.errorOrigin && err.errorOrigin === "writeOutputToFile") {
+					reject({ error: err.error });
+					return;
+				} else {
+					// error was not generated from copyClientFilesToContainer call ...
+					// ... or from writeOutputToFile call
+					console.error(`Error during JavaScript code execution: ${err.stack}`);
+					reject(err);
+				}
 			}
 		});
 	}
