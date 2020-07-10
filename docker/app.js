@@ -397,7 +397,7 @@ class DockerApp {
 							socketInstance.instance.to(session.socketId).emit("docker-app-stdout", {
 								stdout: `Response time for exec command: ${responseTime}`
 							});
-							const { writeToOutputTime, error } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
+							const { writeToOutputTime } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
 							
 							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + responseTime) + "ms");
 
@@ -406,13 +406,8 @@ class DockerApp {
 								stdout,
 							});
 
-							if (error) {
-								reject(error);
-								return;
-							} else {
-								resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
-								return;
-							} 
+							resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+							return;
 						}
 					} catch (err) {
 						if (err.message.includes("Unexpected token { in JSON")) {
@@ -468,7 +463,8 @@ class DockerApp {
 								}
 							});
 						} else {
-							reject(err);
+							console.error(`Error during JavaScript code execution: ${stderr}`);
+							reject(stderr);
 							return;
 						}
 					}
