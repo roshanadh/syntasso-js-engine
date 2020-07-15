@@ -12,7 +12,7 @@ class Socket {
 
 		// assign custom socket IDs
 		this.instance.engine.generateId = (req) => {
-			return `s-${cryptoRandomString({length: 18, type: 'hex'})}`;
+			return `s-${cryptoRandomString({ length: 18, type: 'hex' })}`;
 		}
 
 		this.instance.on("connection", socket => {
