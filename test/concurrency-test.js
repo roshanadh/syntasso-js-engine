@@ -9,6 +9,10 @@ const { Worker, isMainThread, threadId } = require("worker_threads");
 chai.use(chaiHttp);
 
 const sendRequest = () => {
+	let socket,
+		requestSent,
+		responseReceived,
+		timeBetweenRequestAndResponse;
 	try {
 		socket = io.connect("http://127.0.0.1:8080");
 
@@ -40,13 +44,13 @@ const sendRequest = () => {
 				.field("dockerConfig", "0")
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {
+					responseReceived = performance.now();
+					timeBetweenRequestAndResponse = responseReceived - requestSent;
 					console.dir({
-						forThread: threadId,
-						socketId,
 						requestSent,
-						responseReceived: performance.now(),
-						timeInBetween: performance.now() - requestSent,
-						responseBody: res.body
+						responseReceived,
+						timeBetweenRequestAndResponse,
+						forThread: threadId,
 					});
 					const sampleInputs = [
 						"sampleInput-0.txt",
