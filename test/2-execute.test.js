@@ -8,7 +8,6 @@ describe("2. POST requests at /execute", () => {
 		socketId = socket.id;
 		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
 		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
-
 	});
 	
 	describe("2a. POST without socketId at /execute", () => {
