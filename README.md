@@ -135,3 +135,59 @@ There are three possible values to dockerConfig: 0, 1, and 2.
 		testStatus: [Boolean],
         }
     ```
+## Sample Responses
+### Response for /execute
+   1. **With no test cases**:
+   
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   0                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            imageBuildTime: 828,
+            containerCreateTime: 3192,
+            containerStartTime: 4413,
+            responseTime: 512.7250329996459
+        }
+        ```
+        <br />
+
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   1                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            containerStartTime: 33,
+            responseTime: 505.02770400000736
+        }
+        ```
+        <br />
+
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   2                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            responseTime: 602.801325999666
+        }
+        ```
+
+
