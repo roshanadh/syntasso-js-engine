@@ -36,16 +36,20 @@ module.exports = (socketId) => {
 					reject({ errorInProcess: err });
 				}
 				fileContents = data;
-				if (fileContents.toString().trim() === "")
+				if (fileContents.toString().trim() === "") {
 					// the output file has not been populated
 					resolve({
 						sampleInputs: null,
 						testStatus: null,
+						timedOut: null,
 						expectedOutput: null,
 						observedOutput: null,
 						error: null,
 						errorInProcess: "The output file has not been populated"
 					});
+					return;
+				}
+
 				// fetch fileContents.sampleInputs to get number of test cases
 				// and get observed output for each sampleInput
 				fileContents = JSON.parse(fileContents.toString());
@@ -63,6 +67,23 @@ module.exports = (socketId) => {
 				// if no sampleInput file was uploaded
 				if (sampleInputs === 0) {
 					observedOutput = fileContents.observedOutput;
+					// check for null observedOutput
+					/*
+					 * observedOutput may be null incase of a too long stdout ...
+					 * ... when executing submission.js file from inside ...
+					 * ... main-wrapper.js
+					*/
+					if (observedOutput === null) {
+						resolve({
+							sampleInputs: fileContents.sampleInputs,
+							expectedOutput: null,
+							observedOutput,
+							observedOutputTooLong: fileContents.observedOutputTooLong,
+							error
+						});
+						return;
+					}
+					// else: observedOutput is not null
 					const startIndex = observedOutput.search(SECRET_DIVIDER_TOKEN);
 
 					if (startIndex === -1) {
@@ -94,17 +115,40 @@ module.exports = (socketId) => {
 						}
 					}
 					resolve({
+						timedOut: fileContents.timedOut,
 						sampleInputs: fileContents.sampleInputs,
 						expectedOutput: null,
 						observedOutput,
+						observedOutputTooLong: fileContents.observedOutputTooLong,
 						error
 					});
+					return;
 				}
 				// else: at least one sample input file has been uploaded
 				for (let i = 0; i < sampleInputs; i++) {
 					// read observedOutput for each sampleInput
 					observedOutput = fileContents[`sampleInput${i}`].observedOutput;
 
+					// check for null observedOutput
+					/*
+					 * observedOutput may be null incase of a too long stdout ...
+					 * ... when executing submission.js file from inside ...
+					 * ... main-wrapper.js
+					*/
+					if (observedOutput === null) {
+						response[`sampleInput${i}`] = {
+							testStatus: fileContents[`sampleInput${i}`].testStatus,
+							timedOut: fileContents[`sampleInput${i}`].timedOut,
+							sampleInput: fileContents[`sampleInput${i}`].sampleInput,
+							expectedOutput: fileContents[`sampleInput${i}`].expectedOutput,
+							observedOutput,
+							observedOutputTooLong: fileContents[`sampleInput${i}`].observedOutputTooLong,
+							error,
+							execTimeForProcess: fileContents[`sampleInput${i}`].execTimeForProcess
+						}
+						continue;
+					}
+					// else: observedOutput is not null
 					const startIndex = observedOutput.search(SECRET_DIVIDER_TOKEN);
 					if (startIndex === -1) {
 						// no error was observed if SECRET_DIVIDER_TOKEN ...
@@ -136,9 +180,11 @@ module.exports = (socketId) => {
 					}
 					response[`sampleInput${i}`] = {
 						testStatus: fileContents[`sampleInput${i}`].testStatus,
+						timedOut: fileContents[`sampleInput${i}`].timedOut,
 						sampleInput: fileContents[`sampleInput${i}`].sampleInput,
 						expectedOutput: fileContents[`sampleInput${i}`].expectedOutput,
 						observedOutput,
+						observedOutputTooLong: fileContents[`sampleInput${i}`].observedOutputTooLong,
 						error,
 						execTimeForProcess: fileContents[`sampleInput${i}`].execTimeForProcess
 					}
