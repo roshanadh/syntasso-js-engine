@@ -14,8 +14,16 @@ const { performance } = require("perf_hooks");
 
 const { read } = require("./uploaded-files-reader.js");
 
+/*
+ * Constraints for executing submission.js:
+ * 1. Time constraint for time-outs
+ * 2. Length constraint for restricting outputs that are too long
+ * 
+*/
 // execution of each .js file times out after a certain period
-const EXECUTION_TIME_OUT_IN_MS = 5000;
+const EXECUTION_TIME_OUT_IN_MS = 2000;
+// max length of stdout for each nodeProcess
+const MAX_LENGTH_STDOUT = 2000;
 
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
@@ -66,18 +74,34 @@ try {
 					});
 
 					const io = nodeProcess.output;
-					const stdout = io[1];
+					const stdout = io[1].toString().length <= MAX_LENGTH_STDOUT
+						? io[1].toString()
+						: null;
 					const stderr = io[2].toString();
 
 					if (stderr === "") {
 						// no stderr was observed
+						// testStatus null because no test files have been uploaded
 						let testStatus = null;
+						
 						response = {
 							sampleInputs: 0,
 							testStatus,
+							// if nodeProcess timed out, its signal would be SIGTERM by default ...
+							// ... otherwise, its signal would be null
+							timedOut:
+								nodeProcess.signal === "SIGTERM"
+									? true
+									: false,
 							expectedOutput: null,
-							observedOutput: stdout.toString()
+							observedOutput: stdout,
+							// if length of stdout is larger than MAX length permitted, ...
+							// ... set stdout as null and specify reason in response object
+							observedOutputTooLong: stdout === null
+								? true
+								: false,
 						}
+					
 						// NOTE: Do not log to the console or write to stdout ...
 						// ... from inside main-wrapper.js except for the response ...
 						// ... object itself
@@ -110,13 +134,17 @@ const main = () => {
 			execTimeForProcess = performance.now() - execTimeForProcess;
 
 			const io = nodeProcess.output;
-			const stdout = io[1];
+			const stdout = io[1].toString().length <= MAX_LENGTH_STDOUT
+				? io[1].toString()
+				: null;
 			const stderr = io[2].toString();
 
 			if (stderr === "") {
 				// no stderr was observed
 				expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
+
 				let testStatus = true;
+				
 				if (expectedOutputFileContents !== stdout.toString())
 					testStatus = false;
 				/*
@@ -135,9 +163,18 @@ const main = () => {
 				 */
 				response[`sampleInput${i}`] = {
 					testStatus,
+					timedOut:
+						nodeProcess.signal === "SIGTERM"
+							? true
+							: false,
 					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
 					expectedOutput: expectedOutputFileContents.toString(),
 					observedOutput: stdout.toString(),
+					// if length of stdout is larger than MAX length permitted, ...
+					// ... set stdout as null and specify reason in response object
+					observedOutputTooLong: stdout === null
+						? true
+						: false,
 					execTimeForProcess,
 				}
 
@@ -146,6 +183,15 @@ const main = () => {
 					type: "test-status",
 					process: i,
 					testStatus,
+					timedOut:
+						nodeProcess.signal === "SIGTERM"
+							? true
+							: false,
+					// if length of stdout is larger than MAX length permitted, ...
+					// ... set stdout as null and specify reason in response object
+					observedOutputTooLong: stdout === null
+						? true
+						: false,
 				})));
 			} else {
 				throw new Error(`stderr during execution of submission.js: ${stderr}`)
