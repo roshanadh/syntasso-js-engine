@@ -14,11 +14,13 @@ const { performance } = require("perf_hooks");
 
 const { read } = require("./uploaded-files-reader.js");
 
+// execution of each .js file times out after a certain period
+const EXECUTION_TIME_OUT_IN_MS = 5000;
+
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
 
 let socketId = process.env.socketId.trim();
-let SECRET_DIVIDER_TOKEN = process.env.SECRET_DIVIDER_TOKEN.trim();
 // main-wrapper.js is in the location: home/client-files/main-wrapper.js inside the container
 // submission.js is in the location: home/client-files/${socketId}/submission.js inside the container
 const submissionFilePath = path.resolve(
@@ -59,7 +61,9 @@ try {
 			) {
 				// spawn one process and do not pass any sample input to it
 				try {
-					nodeProcess = spawnSync("node", [submissionFilePath]);
+					nodeProcess = spawnSync("node", [submissionFilePath], {
+						timeout: EXECUTION_TIME_OUT_IN_MS
+					});
 
 					const io = nodeProcess.output;
 					const stdout = io[1];
@@ -69,20 +73,20 @@ try {
 						// no stderr was observed
 						let testStatus = null;
 						response = {
-								sampleInputs: 0,
-								testStatus,
-								expectedOutput: null,
-								observedOutput: stdout.toString()
-							}
-							// NOTE: Do not log to the console or write to stdout ...
-							// ... from inside main-wrapper.js except for the response ...
-							// ... object itself
-							// Any console.log or process.stdout.write from inside main-wrapper.js ...
-							// ... writes to the output file and may cause error during JSON.parse ...
-							// ... of the contents obtained from the output file
+							sampleInputs: 0,
+							testStatus,
+							expectedOutput: null,
+							observedOutput: stdout.toString()
+						}
+						// NOTE: Do not log to the console or write to stdout ...
+						// ... from inside main-wrapper.js except for the response ...
+						// ... object itself
+						// Any console.log or process.stdout.write from inside main-wrapper.js ...
+						// ... writes to the output file and may cause error during JSON.parse ...
+						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
 					} else {
-						throw new Error(`stderr during execution of submission.js: ${stderr}`)
+						throw new Error(`stderr during execution of submission.js: ${stderr}`);
 					}
 				} catch (err) {
 					throw err;
@@ -101,6 +105,7 @@ const main = () => {
 			execTimeForProcess = performance.now();
 			nodeProcess = spawnSync("node", [submissionFilePath], {
 				input: writeToStdin(sampleInputs.files[i]),
+				timeout: EXECUTION_TIME_OUT_IN_MS
 			});
 			execTimeForProcess = performance.now() - execTimeForProcess;
 
