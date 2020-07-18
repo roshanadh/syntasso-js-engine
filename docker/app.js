@@ -463,8 +463,8 @@ class DockerApp {
 								}
 							});
 						} else {
-							console.error(`Error during JavaScript code execution: ${stderr}`);
-							reject(stderr);
+							console.error(`Error during JavaScript code execution: ${err.stack}`);
+							reject(err.stack);
 							return;
 						}
 					}
