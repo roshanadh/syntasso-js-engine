@@ -145,7 +145,7 @@ const main = () => {
 
 				let testStatus = true;
 				
-				if (expectedOutputFileContents !== stdout.toString())
+				if (expectedOutputFileContents !== stdout)
 					testStatus = false;
 				/*
 				 * response object looks like following:
@@ -169,7 +169,7 @@ const main = () => {
 							: false,
 					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
 					expectedOutput: expectedOutputFileContents.toString(),
-					observedOutput: stdout.toString(),
+					observedOutput: stdout,
 					// if length of stdout is larger than MAX length permitted, ...
 					// ... set stdout as null and specify reason in response object
 					observedOutputTooLong: stdout === null
