@@ -2,10 +2,9 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = (req) => {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 		const { socketId, testCases } = req.body;
-		let sampleInputs = [], expectedOutputs = [];
-
+		await require("./removeTestCases")(req.session.socketId);
 		const sampleInputsDirPath = path.resolve(
 			__dirname,
 			"..",
