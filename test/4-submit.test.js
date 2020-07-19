@@ -312,10 +312,16 @@ describe("4. POST requests at /submit", () => {
 				.post("/submit")
 				.send(payload)
 				.end((err, res) => {
+					console.dir({
+						body: res.body.error,
+						code: payload.code
+					})
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
+					res.body.sampleInput0.error.lineNumber.should.equal(1);
+					res.body.sampleInput0.error.columnNumber.should.equal(9);
 					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(fs.existsSync(path.resolve(
@@ -345,10 +351,17 @@ describe("4. POST requests at /submit", () => {
 				.post("/submit")
 				.send(payload)
 				.end((err, res) => {
+					console.dir({
+						body: res.body.error,
+						code: payload.code
+					})
+
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("SyntaxError");
+					res.body.sampleInput0.error.lineNumber.should.equal(1);
+					expect(res.body.sampleInput0.error.columnNumber).to.be.null;
 					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(fs.existsSync(path.resolve(
