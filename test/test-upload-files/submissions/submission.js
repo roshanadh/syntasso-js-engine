@@ -23,8 +23,9 @@ process.stdin.on("end", () => {
 });
 
 const main = () => {
-	if (jsonInputString === {})
-		process.stdout.write(Buffer.from(JSON.stringify("No sample input was passed")));
+	// check if jsonInputString is empty
+	if (JSON.stringify(jsonInputString) === "{}")
+		process.stdout.write(Buffer.from("No sample input was passed"));
 	else
 		process.stdout.write(Buffer.from("Hello World!\n"));
 }
