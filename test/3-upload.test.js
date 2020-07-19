@@ -6,7 +6,7 @@ describe("3. POST requests at /upload", () => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
 		socketId = socket.id;
-		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		testFilesPath = path.resolve(__dirname, "test-upload-files", "test-cases");
 		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
 	});
 
@@ -46,7 +46,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.end((err, res) => {
 					res.should.have.status(400);
 					res.body.should.be.a("object");
@@ -62,7 +62,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", "abcd")
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(401);
@@ -79,7 +79,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.ts"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.ts"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(503);
@@ -96,7 +96,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.a.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.a.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(503);
@@ -115,7 +115,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -141,7 +141,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "1")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -163,7 +163,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -183,7 +183,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission-incorrect.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission-incorrect.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -210,7 +210,7 @@ describe("3. POST requests at /upload", () => {
 				.field("socketId", socketId)
 				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md"))
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "2")
 				.field("code", "console.log('Hello World!')")
 				.end((err, res) => {
@@ -229,7 +229,7 @@ describe("3. POST requests at /upload", () => {
 				.field("socketId", socketId)
 				.attach("sampleInputs", path.resolve(testFilesPath, "sampleInput0.md.txt"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput0.md.txt"))
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.should.have.status(503);
@@ -251,7 +251,7 @@ describe("3. POST requests at /upload", () => {
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -308,7 +308,7 @@ describe("3. POST requests at /upload", () => {
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-1.txt"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-2.txt"))
 				.attach("expectedOutputs", path.resolve(testFilesPath, "expectedOutput-0.txt"))
-				.attach("submission", path.resolve("test", "test-upload-files", "for-upload-endpoint", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.should.have.status(503);
