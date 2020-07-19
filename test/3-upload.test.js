@@ -46,7 +46,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "hello-world-submission.js"))
 				.end((err, res) => {
 					res.should.have.status(400);
 					res.body.should.be.a("object");
@@ -62,7 +62,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", "abcd")
-				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "hello-world-submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.should.have.status(401);
@@ -115,7 +115,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "hello-world-submission.js"))
 				.field("dockerConfig", "0")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -141,7 +141,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "hello-world-submission.js"))
 				.field("dockerConfig", "1")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -163,7 +163,7 @@ describe("3. POST requests at /upload", () => {
 			chai.request(server)
 				.post("/upload")
 				.field("socketId", socketId)
-				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission.js"))
+				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "hello-world-submission.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
 					res.body.should.be.a("object");
@@ -186,6 +186,9 @@ describe("3. POST requests at /upload", () => {
 				.attach("submission", path.resolve("test", "test-upload-files", "submissions", "submission-incorrect.js"))
 				.field("dockerConfig", "2")
 				.end((err, res) => {
+					console.dir({
+						body: res.body
+					})
 					res.body.should.be.a("object");
 					res.body.should.have.property("observedOutput");
 					res.body.should.have.property("error");
