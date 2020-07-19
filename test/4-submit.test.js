@@ -190,39 +190,6 @@ describe("4. POST requests at /submit", () => {
 	});
 
 	describe("4h. POST with socketId, code, testCases, and dockerConfig = 2 at /submit", () => {
-		it("should POST with all parameters provided, one test case, and dockerConfig = 2", done => {
-			let payload = {
-				socketId,
-				code: "console.log('Hello World!')",
-				dockerConfig: "2",
-				testCases: [
-					{
-						sampleInput: "1\n2 3 4 5",
-						expectedOutput: "25",
-					}
-				]
-			}
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					res.body.should.be.a("object");
-					res.body.should.have.property("sampleInputs");
-					res.body.should.have.property("responseTime");
-					res.body.sampleInputs.should.equal(1);
-					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
-					expect(res.body.responseTime).to.not.be.null;
-					expect(fs.existsSync(path.resolve(
-						uploadedFilesPath,
-						"sampleInputs"
-					))).to.be.true;
-					expect(fs.existsSync(path.resolve(
-						uploadedFilesPath,
-						"expectedOutputs"
-					))).to.be.true;
-					done();
-				});
-		});
 		it("should POST with all parameters provided, ten test cases, and dockerConfig = 2", done => {
 			let payload = {
 				socketId,
@@ -292,6 +259,40 @@ describe("4. POST requests at /submit", () => {
 					done();
 				});
 		});
+
+		it("should POST with all parameters provided, one test case, and dockerConfig = 2", done => {
+			let payload = {
+				socketId,
+				code: "console.log('Hello World!')",
+				dockerConfig: "2",
+				testCases: [
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					}
+				]
+			}
+			chai.request(server)
+				.post("/submit")
+				.send(payload)
+				.end((err, res) => {
+					res.body.should.be.a("object");
+					res.body.should.have.property("sampleInputs");
+					res.body.should.have.property("responseTime");
+					res.body.sampleInputs.should.equal(1);
+					res.body.sampleInput0.observedOutput.should.equal("Hello World!\n");
+					expect(res.body.responseTime).to.not.be.null;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"sampleInputs"
+					))).to.be.true;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"expectedOutputs"
+					))).to.be.true;
+					done();
+				});
+		});
 	});
 
 	describe("4i. POST with errorful code and dockerConfig = 2 at /submit", () => {
@@ -317,6 +318,42 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
 					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"sampleInputs"
+					))).to.be.true;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"expectedOutputs"
+					))).to.be.true;
+					done();
+				});
+		});
+	});
+
+	describe("4j. POST with infinitely looping code, one test case, and dockerConfig = 2 at /submit", () => {
+		it("should respond with timedOut set to true", done => {
+			let payload = {
+				socketId,
+				code: `while(true) {}`,
+				dockerConfig: "2",
+				testCases: [
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					}
+				]
+			}
+			chai.request(server)
+				.post("/submit")
+				.send(payload)
+				.end((err, res) => {
+					res.body.sampleInputs.should.equal(1);
+					res.body.should.be.a("object");
+					res.body.should.have.property("sampleInputs");
+					expect(res.body.responseTime).to.not.be.null;
+					expect(res.body.sampleInput0.testStatus).to.be.false;
+					expect(res.body.sampleInput0.timedOut).to.be.true;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
