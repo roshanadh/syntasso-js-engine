@@ -3,7 +3,8 @@ const generateTestFiles = require("./generateTestFiles.js");
 const updateCodeInFile = require("./updateCodeInFile.js");
 const addDividerToken = require("./addDividerToken.js");
 const readOutput = require("./readOutput.js");
-const removeTempFiles = require("./removeTempFiles.js");
+const cleanUpTempFiles = require("./cleanUpTempFiles.js");
+const removeTestCases = require("./removeTestCases.js");
 
 module.exports = {
 	initDirectories,
@@ -11,5 +12,6 @@ module.exports = {
 	updateCodeInFile,
 	addDividerToken,
 	readOutput,
-	removeTempFiles,
+	cleanUpTempFiles,
+	removeTestCases,
 }
