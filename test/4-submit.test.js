@@ -389,6 +389,7 @@ describe("4. POST requests at /submit", () => {
 					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(res.body.sampleInput0.timedOut).to.be.true;
 					expect(res.body.sampleInput0.observedOutputTooLong).to.be.true;
+					expect(res.body.sampleInput0.observedOutput).to.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
