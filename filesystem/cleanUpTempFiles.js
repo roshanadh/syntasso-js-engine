@@ -19,7 +19,7 @@ module.exports = (socketId) => {
 
 	const NODE_ENV = process.env.NODE_ENV;
 	if (NODE_ENV === "test") {
-		// use synchronous function fs.unlinkSync() for testing
+		// use synchronous function rimraf.sync() for testing
 		try {
 			rimraf.sync(tempFilesPath);
 			console.log(`Temporary client files for socket ${socketId} removed because of disconnection.`);
@@ -37,7 +37,7 @@ module.exports = (socketId) => {
 				: console.error(`Error while removing output file '${socketId}.js': ${err}`);
 		}
 	} else {
-		// use asynchronous function fs.unlink() for dev and prod NODE_ENV
+		// use asynchronous function rimraf() for dev and prod NODE_ENV
 		rimraf(tempFilesPath, err => {
 			if (err) {
 				return err.message.includes("ENOENT")
