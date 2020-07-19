@@ -79,7 +79,7 @@ module.exports = (socketId) => {
 							expectedOutput: null,
 							observedOutput,
 							observedOutputTooLong: fileContents.observedOutputTooLong,
-							error
+							error: null
 						});
 						return;
 					}
@@ -143,7 +143,7 @@ module.exports = (socketId) => {
 							expectedOutput: fileContents[`sampleInput${i}`].expectedOutput,
 							observedOutput,
 							observedOutputTooLong: fileContents[`sampleInput${i}`].observedOutputTooLong,
-							error,
+							error: null,
 							execTimeForProcess: fileContents[`sampleInput${i}`].execTimeForProcess
 						}
 						continue;
