@@ -101,8 +101,20 @@ module.exports = (socketId) => {
 						let index = stack.search(`/home/client-files/${socketId}/submission.js:`);
 
 						let str = stack.substring(index + `/home/client-files/${socketId}/submission.js:`.length);
-						let lineNumber = str.split(':')[0];
-						let columnNumber = str.split(':')[1].split(')')[0];
+						let lineNumber = parseInt(str.split(':')[0]);
+						// when wrapping a custom try...catch block around user submitted code ..
+						// ...there is one extra line before user's code begins ...
+						// ... so to respond with the actual lineNumber, subtract 1
+						lineNumber -= 1;
+						// SyntaxError's stack may not have any column number, ...
+						// ... so check if str.split(':')[1] exists, if it does, ...
+						// ... that's the column number.
+						// If it doesn't exist, put column number as null
+						
+						let columnNumber =
+							str.split(':')[1]
+								? str.split(':')[1].split(')')[0]
+								: null;
 
 						// delete errorStack property from error object to reorder its occurrence ...
 						// ... below lineNumber and columnNumber
