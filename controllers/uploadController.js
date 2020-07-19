@@ -103,6 +103,16 @@ let fileUpload = upload.fields([
 
 module.exports = uploadController = (req, res) => {
 	console.log("POST request received at /upload");
+	// TODO:
+	/*
+ 	 * Remove any previously uploaded test cases as they may cause issues.
+ 	 * For example if the same socketId had previously uploaded 5 test cases ...
+ 	 * ... and now it uploads 3 test cases, 5 test cases will be executed this time as well.
+ 	 * So, find a way to remove test cases uploaded by a previous request.
+ 	 * NOTE: THIS ISSUE IS NOT PRESENT IS THE /submit ROUTE. IT IS ONLY ...
+ 	 * ... PRESENT IN /execute AND /upload ROUTES.
+ 	 *
+	*/
 	initDirectories().then(() => {
 		/*
 		* All possible req.body params =>
