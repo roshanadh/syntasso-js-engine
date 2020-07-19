@@ -28,7 +28,8 @@ const MAX_LENGTH_STDOUT = 2000;
 let sampleInputFileContents = "";
 let expectedOutputFileContents = "";
 
-let socketId = process.env.socketId.trim();
+const socketId = process.env.socketId.trim();
+const secret_divider_token = process.env.SECRET_DIVIDER_TOKEN.trim();
 // main-wrapper.js is in the location: home/client-files/main-wrapper.js inside the container
 // submission.js is in the location: home/client-files/${socketId}/submission.js inside the container
 const submissionFilePath = path.resolve(
@@ -101,7 +102,6 @@ try {
 								? true
 								: false,
 						}
-					
 						// NOTE: Do not log to the console or write to stdout ...
 						// ... from inside main-wrapper.js except for the response ...
 						// ... object itself
@@ -109,7 +109,54 @@ try {
 						// ... writes to the output file and may cause error during JSON.parse ...
 						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
-					} else {
+					} 
+					else if (stderr.includes("SyntaxError")) {
+						// unlike ReferenceError, which is stdout and can be caught ...
+						// ... using a standard try...catch, SyntaxError cannot be caught ...
+						// ... and is stderr
+						try {
+							let errorName = "SyntaxError";
+							let errorNameIndex = stderr.search(errorName);
+							let errorMessageIndex = errorNameIndex + errorName.length + 2;
+
+							let errorMessage = stderr.substring(errorMessageIndex).split("\n")[0].trim();
+							let stackIndex = stderr.search(`/home/client-files/${socketId}/submission.js:`);
+							let errorStack = stderr.substring(stackIndex).split("\n")[0];
+							let errorBody = JSON.stringify({
+								errorName,
+								errorMessage,
+								errorStack
+							});
+
+							response = {
+								sampleInputs: 0,
+								testStatus: false,
+								// if nodeProcess timed out, its signal would be SIGTERM by default ...
+								// ... otherwise, its signal would be null
+								timedOut:
+									nodeProcess.signal === "SIGTERM"
+										? true
+										: false,
+								expectedOutput: null,
+								observedOutput: `${secret_divider_token}\n${errorBody}`,
+								// if length of stdout is larger than MAX length permitted, ...
+								// ... set stdout as null and specify reason in response object
+								observedOutputTooLong: stdout === null
+									? true
+									: false,
+							}
+							// NOTE: Do not log to the console or write to stdout ...
+							// ... from inside main-wrapper.js except for the response ...
+							// ... object itself
+							// Any console.log or process.stdout.write from inside main-wrapper.js ...
+							// ... writes to the output file and may cause error during JSON.parse ...
+							// ... of the contents obtained from the output file
+							process.stdout.write(Buffer.from(JSON.stringify(response)));
+						} catch (err) {
+							throw new Error(`stderr during execution of submission.js: ${stderr}`);
+						}
+					} 
+					else {
 						throw new Error(`stderr during execution of submission.js: ${stderr}`);
 					}
 				} catch (err) {
