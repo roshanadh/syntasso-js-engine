@@ -1,7 +1,12 @@
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
-const { initDirectories, generateTestFiles, updateCodeInFile } = require("../filesystem/index.js");
+const {
+	initDirectories,
+	generateTestFiles,
+	updateCodeInFile,
+} = require("../filesystem/index.js");
+
 const {
 	handleConfigZero,
 	handleConfigOne,
