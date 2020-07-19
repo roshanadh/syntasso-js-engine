@@ -13,16 +13,13 @@ module.exports = (socketId, code) => {
 			"submission.js"
 		);
 		// wrap user-submitted code inside a try-catch block
+		
+		// NOTE: DO NOT MODIFY THIS BLOCK AS IT AFFECTS THE ...
+		// ... LINE NUMBER AND COLUMN NUMBER FOR ANY ERROR INSTANCE
 		let finalCode =
-			`
-		"use strict";
-		try {
-			${code}
-		} catch (err) {
-			console.log('${SECRET_DIVIDER_TOKEN}');
-			console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
-		}
-	`;
+		`"use strict";try{\n${code}\n}catch(err){console.log('${SECRET_DIVIDER_TOKEN}');
+		console.log(JSON.stringify({ errorName: err.name, errorMessage: err.message, errorStack: err.stack }));
+		}`;
 		/*
 		 * /client-files/${socketId} directory may not have been created if ...
 		 * ... no sampleInputs and expectedOutputs files have been uploaded ...
