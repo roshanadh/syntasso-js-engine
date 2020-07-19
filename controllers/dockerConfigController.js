@@ -3,39 +3,32 @@ const { readOutput } = require("../filesystem/index.js");
 
 const dockerApp = new DockerApp();
 handleConfigZero = async (req, res) => {
+	let stderr, totalTime;
 	let imageBuildTime, containerCreateTime, containerStartTime;
 	try {
-		let { stderr, totalTime } = await dockerApp.buildNodeImage(req.session);
+		// build a Node.js image
+		({ stderr, totalTime } = await dockerApp.buildNodeImage(req.session));
 		imageBuildTime = totalTime;
 
 		stderr
 			? console.error(`stderr in dockerApp.buildNodeImage(): ${image.stderr}`)
 			: console.log("Node.js image built.");
-	} catch (err) {
-		// handle promise rejection
-		return res
-			.status(503)
-			.json({ error: "Service currently unavailable due to server conditions" });
-	}
-	try {
-		let { stderr, totalTime } = await dockerApp.createNodeContainer(
+
+		// create a container from the Node.js image
+		({ stderr, totalTime } = await dockerApp.createNodeContainer(
 			req.session
-		);
+		));
 		containerCreateTime = totalTime;
 		stderr
 			? console.error(
 				`stderr in dockerApp.createNodeContainer(): ${container.stderr}`
 			)
 			: console.log("Node.js container created.");
-	} catch (err) {
-		return res
-			.status(503)
-			.json({ error: "Service currently unavailable due to server conditions" });
-	}
-	try {
-		let { stderr, totalTime } = await dockerApp.startNodeContainer(
+
+		// start the container
+		({ stderr, totalTime } = await dockerApp.startNodeContainer(
 			req.session
-		);
+		));
 		containerStartTime = totalTime;
 
 		stderr
@@ -43,13 +36,8 @@ handleConfigZero = async (req, res) => {
 				`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`
 			)
 			: console.log("Node.js container started.");
-	} catch (err) {
-		// handle promise rejection
-		return res
-			.status(503)
-			.json({ error: "Service currently unavailable due to server conditions" });
-	}
-	try {
+
+		// execute the submission inside the container
 		let { responseTime } = await dockerApp.execInNodeContainer(
 			req.session
 		);
@@ -66,8 +54,8 @@ handleConfigZero = async (req, res) => {
 			console.dir(response);
 			res.status(200).json(response);
 		}
-	} catch (error) {
-		if (error.errorType && error.errorType === "container-not-started-beforehand") {
+	} catch (err) {
+		if (err.errorType && err.errorType === "container-not-started-beforehand") {
 			return res.status(503).json({
 				error:
 					"The container is not currently running on the server. Request again with dockerConfig 0 or 1.",
@@ -93,21 +81,8 @@ handleConfigOne = async (req, res) => {
 				`stderr in dockerApp.startNodeContainer(): ${startStatus.stderr}`
 			)
 			: console.log("Node.js container started.");
-	} catch (err) {
-		// handle promise rejection of dockerApp.startNodeContainer()
-		if (err.errorType === "container-not-created-beforehand") {
-			return res.status(503).json({
-				error:
-					"The container has not been created on the server. Request again with dockerConfig 0.",
-			});
-		} else {
-			return res
-				.status(503)
-				.json({ error: "Service currently unavailable due to server conditions" });
-			}
-	}
 
-	try {
+		// execute the submission inside the container
 		let { responseTime } = await dockerApp.execInNodeContainer(
 			req.session
 		);
@@ -122,22 +97,24 @@ handleConfigOne = async (req, res) => {
 			console.dir(response);
 			res.status(200).json(response);
 		}
-	} catch (error) {
-		if (error.errorType && error.errorType === "container-not-started-beforehand") {
+	} catch (err) {
+		// handle promise rejection of dockerApp.startNodeContainer()
+		if (err.errorType === "container-not-created-beforehand") {
 			return res.status(503).json({
 				error:
-					"The container is not currently running on the server. Request again with dockerConfig 0 or 1.",
+					"The container has not been created on the server. Request again with dockerConfig 0.",
 			});
 		} else {
 			return res
 				.status(503)
 				.json({ error: "Service currently unavailable due to server conditions" });
-		}
+			}
 	}
 };
 
 handleConfigTwo = async (req, res) => {
 	try {
+		// execute the submission inside the container
 		let { responseTime } = await dockerApp.execInNodeContainer(
 			req.session
 		);
@@ -151,8 +128,8 @@ handleConfigTwo = async (req, res) => {
 			console.dir(response);
 			res.status(200).json(response);
 		}
-	} catch (error) {
-		if (error.errorType && error.errorType === "container-not-started-beforehand") {
+	} catch (err) {
+		if (err.errorType && err.errorType === "container-not-started-beforehand") {
 			return res.status(503).json({
 				error:
 					"The container is not currently running on the server. Request again with dockerConfig 0 or 1.",
