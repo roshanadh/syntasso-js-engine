@@ -109,8 +109,7 @@ try {
 						// ... writes to the output file and may cause error during JSON.parse ...
 						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
-					} 
-					else if (stderr.includes("SyntaxError")) {
+					} else if (stderr.includes("SyntaxError")) {
 						// unlike ReferenceError, which is stdout and can be caught ...
 						// ... using a standard try...catch, SyntaxError cannot be caught ...
 						// ... and is stderr
@@ -155,8 +154,7 @@ try {
 						} catch (err) {
 							throw new Error(`stderr during execution of submission.js: ${stderr}`);
 						}
-					} 
-					else {
+					} else {
 						throw new Error(`stderr during execution of submission.js: ${stderr}`);
 					}
 				} catch (err) {
@@ -240,6 +238,63 @@ const main = () => {
 						? true
 						: false,
 				})));
+			} else if (stderr.includes("SyntaxError")) {
+				// unlike ReferenceError, which is stdout and can be caught ...
+				// ... using a standard try...catch, SyntaxError cannot be caught ...
+				// ... and is stderr
+				try {
+					expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
+
+					let testStatus = false;
+
+					let errorName = "SyntaxError";
+					let errorNameIndex = stderr.search(errorName);
+					let errorMessageIndex = errorNameIndex + errorName.length + 2;
+
+					let errorMessage = stderr.substring(errorMessageIndex).split("\n")[0].trim();
+					let stackIndex = stderr.search(`/home/client-files/${socketId}/submission.js:`);
+					let errorStack = stderr.substring(stackIndex).split("\n")[0];
+					let errorBody = JSON.stringify({
+						errorName,
+						errorMessage,
+						errorStack
+					});
+
+					response[`sampleInput${i}`] = {
+						testStatus,
+						timedOut:
+							nodeProcess.signal === "SIGTERM"
+								? true
+								: false,
+						sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
+						expectedOutput: expectedOutputFileContents.toString(),
+						observedOutput: `${secret_divider_token}\n${errorBody}`,
+						// if length of stdout is larger than MAX length permitted, ...
+						// ... set stdout as null and specify reason in response object
+						observedOutputTooLong: stdout === null
+							? true
+							: false,
+						execTimeForProcess,
+					}
+
+					// write to stdout to indicate completion of test #i
+					process.stdout.write(Buffer.from(JSON.stringify({
+						type: "test-status",
+						process: i,
+						testStatus,
+						timedOut:
+							nodeProcess.signal === "SIGTERM"
+								? true
+								: false,
+						// if length of stdout is larger than MAX length permitted, ...
+						// ... set stdout as null and specify reason in response object
+						observedOutputTooLong: stdout === null
+							? true
+							: false,
+					})));
+				} catch (err) {
+					throw new Error(`stderr during execution of submission.js: ${stderr}`);
+				}
 			} else {
 				throw new Error(`stderr during execution of submission.js: ${stderr}`)
 			}
