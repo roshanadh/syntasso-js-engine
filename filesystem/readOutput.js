@@ -113,7 +113,7 @@ module.exports = (socketId) => {
 						
 						let columnNumber =
 							str.split(':')[1]
-								? str.split(':')[1].split(')')[0]
+								? parseInt(str.split(':')[1].split(')')[0])
 								: null;
 
 						// delete errorStack property from error object to reorder its occurrence ...
@@ -189,7 +189,7 @@ module.exports = (socketId) => {
 
 						let columnNumber =
 							str.split(':')[1]
-								? str.split(':')[1].split(')')[0]
+								? parseInt(str.split(':')[1].split(')')[0])
 								: null;
 
 						// delete errorStack property from error object to reorder its occurrence ...
