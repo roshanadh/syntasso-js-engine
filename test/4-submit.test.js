@@ -329,13 +329,10 @@ describe("4. POST requests at /submit", () => {
 					done();
 				});
 		});
-	});
-
-	describe("4j. POST with infinitely looping code, one test case, and dockerConfig = 2 at /submit", () => {
-		it("should respond with timedOut set to true", done => {
+		it("should respond with SyntaxError", done => {
 			let payload = {
 				socketId,
-				code: `while(true) {}`,
+				code: `console.log(1`,
 				dockerConfig: "2",
 				testCases: [
 					{
@@ -348,48 +345,12 @@ describe("4. POST requests at /submit", () => {
 				.post("/submit")
 				.send(payload)
 				.end((err, res) => {
-					res.body.sampleInputs.should.equal(1);
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
+					res.body.sampleInput0.error.should.be.a("object");
+					res.body.sampleInput0.error.errorName.should.equal("SyntaxError");
 					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
-					expect(res.body.sampleInput0.timedOut).to.be.true;
-					expect(fs.existsSync(path.resolve(
-						uploadedFilesPath,
-						"sampleInputs"
-					))).to.be.true;
-					expect(fs.existsSync(path.resolve(
-						uploadedFilesPath,
-						"expectedOutputs"
-					))).to.be.true;
-					done();
-				});
-		});
-
-		it("should respond with timedOut and observedOutputTooLong set to true", done => {
-			let payload = {
-				socketId,
-				code: `let i = 0; while(true) { console.log(i++) }`,
-				dockerConfig: "2",
-				testCases: [
-					{
-						sampleInput: "1\n2 3 4 5",
-						expectedOutput: "25",
-					}
-				]
-			}
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					res.body.sampleInputs.should.equal(1);
-					res.body.should.be.a("object");
-					res.body.should.have.property("sampleInputs");
-					expect(res.body.responseTime).to.not.be.null;
-					expect(res.body.sampleInput0.testStatus).to.be.false;
-					expect(res.body.sampleInput0.timedOut).to.be.true;
-					expect(res.body.sampleInput0.observedOutputTooLong).to.be.true;
-					expect(res.body.sampleInput0.observedOutput).to.be.null;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -402,4 +363,76 @@ describe("4. POST requests at /submit", () => {
 				});
 		});
 	});
+
+	// describe("4j. POST with infinitely looping code, one test case, and dockerConfig = 2 at /submit", () => {
+	// 	it("should respond with timedOut set to true", done => {
+	// 		let payload = {
+	// 			socketId,
+	// 			code: `while(true) {}`,
+	// 			dockerConfig: "2",
+	// 			testCases: [
+	// 				{
+	// 					sampleInput: "1\n2 3 4 5",
+	// 					expectedOutput: "25",
+	// 				}
+	// 			]
+	// 		}
+	// 		chai.request(server)
+	// 			.post("/submit")
+	// 			.send(payload)
+	// 			.end((err, res) => {
+	// 				res.body.sampleInputs.should.equal(1);
+	// 				res.body.should.be.a("object");
+	// 				res.body.should.have.property("sampleInputs");
+	// 				expect(res.body.responseTime).to.not.be.null;
+	// 				expect(res.body.sampleInput0.testStatus).to.be.false;
+	// 				expect(res.body.sampleInput0.timedOut).to.be.true;
+	// 				expect(fs.existsSync(path.resolve(
+	// 					uploadedFilesPath,
+	// 					"sampleInputs"
+	// 				))).to.be.true;
+	// 				expect(fs.existsSync(path.resolve(
+	// 					uploadedFilesPath,
+	// 					"expectedOutputs"
+	// 				))).to.be.true;
+	// 				done();
+	// 			});
+	// 	});
+
+	// 	it("should respond with timedOut and observedOutputTooLong set to true", done => {
+	// 		let payload = {
+	// 			socketId,
+	// 			code: `let i = 0; while(true) { console.log(i++) }`,
+	// 			dockerConfig: "2",
+	// 			testCases: [
+	// 				{
+	// 					sampleInput: "1\n2 3 4 5",
+	// 					expectedOutput: "25",
+	// 				}
+	// 			]
+	// 		}
+	// 		chai.request(server)
+	// 			.post("/submit")
+	// 			.send(payload)
+	// 			.end((err, res) => {
+	// 				res.body.sampleInputs.should.equal(1);
+	// 				res.body.should.be.a("object");
+	// 				res.body.should.have.property("sampleInputs");
+	// 				expect(res.body.responseTime).to.not.be.null;
+	// 				expect(res.body.sampleInput0.testStatus).to.be.false;
+	// 				expect(res.body.sampleInput0.timedOut).to.be.true;
+	// 				expect(res.body.sampleInput0.observedOutputTooLong).to.be.true;
+	// 				expect(res.body.sampleInput0.observedOutput).to.be.null;
+	// 				expect(fs.existsSync(path.resolve(
+	// 					uploadedFilesPath,
+	// 					"sampleInputs"
+	// 				))).to.be.true;
+	// 				expect(fs.existsSync(path.resolve(
+	// 					uploadedFilesPath,
+	// 					"expectedOutputs"
+	// 				))).to.be.true;
+	// 				done();
+	// 			});
+	// 	});
+	// });
 });
