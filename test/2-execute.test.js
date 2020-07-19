@@ -6,7 +6,7 @@ describe("2. POST requests at /execute", () => {
 		const { getConnection } = require("./test-config.js");
 		socket = getConnection();
 		socketId = socket.id;
-		testFilesPath = path.resolve(__dirname, "test-upload-files", "for-execute-endpoint");
+		testFilesPath = path.resolve(__dirname, "test-upload-files", "test-cases");
 		uploadedFilesPath = path.resolve(__dirname, "..", "client-files", socketId);
 	});
 	
