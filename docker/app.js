@@ -342,6 +342,19 @@ class DockerApp {
 		});
 	}
 
+	removeTestCasesFromContainer = (socketId) => {
+		let timeToRemoveTestCases = performance.now();
+		return new Promise((resolve, reject) => {
+			let containerId = socketId;
+			console.log(`Removing any previous test cases from INSIDE the container ${containerId}...`)
+			exec(`docker exec ${containerId} sh -c 'rm -rf /home/client-files/${socketId}/sampleInputs && rm -rf /home/client-files/${socketId}/expectedOutputs'`, (error, stdout, stderr) => {
+				if (error) return reject({ error });
+				if (stderr && stderr.trim() !== "") return reject({ error: stderr });
+				resolve({ timeToRemoveTestCases: performance.now() - timeToRemoveTestCases });
+			});
+		});
+	}
+
 	execInNodeContainer = (session) => {
 		// set all instance variables null so that it does not retain value from any previous ...
 		// ... method call
@@ -368,6 +381,7 @@ class DockerApp {
 
 			let stepTime = performance.now();
 			try {
+				let { timeToRemoveTestCases } = await this.removeTestCasesFromContainer(session.socketId);
 				let { copyTime } = await this.copyClientFilesToContainer(session);
 
 				// child_process.exec() returns output in plain string, no need to ...
@@ -399,14 +413,14 @@ class DockerApp {
 							});
 							const { writeToOutputTime } = await this.writeOutputToFile(outputFilePath, stdout, socketInstance);
 							
-							console.log("Total time taken for all execution steps (Copy, Write to output, and Exec): " + (copyTime + writeToOutputTime + responseTime) + "ms");
+							console.log("Total time taken for all execution steps (Remove test cases, Copy files, Write to output, and Exec): " + (timeToRemoveTestCases + copyTime + writeToOutputTime + responseTime) + "ms");
 
 							console.log("\nSTDOUT for 'docker exec' command: ");
 							console.dir({
 								stdout,
 							});
 
-							resolve({ responseTime: responseTime + copyTime + writeToOutputTime });
+							resolve({ responseTime: responseTime + timeToRemoveTestCases + copyTime + writeToOutputTime });
 							return;
 						}
 					} catch (err) {
