@@ -249,7 +249,7 @@ const main = () => {
 							: false,
 					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
 					expectedOutput: expectedOutputFileContents.toString(),
-					observedOutput: `${secret_divider_token}\n${errorBody}`,
+					observedOutput: `${outputPart}${secret_divider_token}\n${errorBody}`,
 					// if length of stdout is larger than MAX length permitted, ...
 					// ... set stdout as null and specify reason in response object
 					observedOutputTooLong: stdout === null
