@@ -314,6 +314,21 @@ describe("4. POST requests at /submit", () => {
 				.end((err, res) => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
+					res.body.should.have.property("responseTime");
+					res.body.sampleInput0.should.be.a("object");
+					res.body.sampleInput0.should.have.property("testStatus");
+					expect(res.body.sampleInput0.testStatus).to.be.false;
+					res.body.sampleInput0.should.have.property("timedOut");
+					expect(res.body.sampleInput0.timedOut).to.be.false;
+					res.body.sampleInput0.should.have.property("sampleInput");
+					expect(res.body.sampleInput0.sampleInput).to.equal(payload.testCases[0].sampleInput);
+					res.body.sampleInput0.should.have.property("expectedOutput");
+					expect(res.body.sampleInput0.expectedOutput).to.equal(payload.testCases[0].expectedOutput);
+					res.body.sampleInput0.should.have.property("observedOutput");
+					expect(res.body.sampleInput0.observedOutput).to.equal("");
+					res.body.sampleInput0.should.have.property("observedOutputTooLong");
+					expect(res.body.sampleInput0.observedOutputTooLong).to.be.false;
+					res.body.sampleInput0.should.have.property("execTimeForProcess");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
 					res.body.sampleInput0.error.lineNumber.should.equal(1);
@@ -349,12 +364,25 @@ describe("4. POST requests at /submit", () => {
 				.end((err, res) => {
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
+					res.body.should.have.property("responseTime");
+					res.body.sampleInput0.should.be.a("object");
+					res.body.sampleInput0.should.have.property("testStatus");
+					expect(res.body.sampleInput0.testStatus).to.be.false;
+					res.body.sampleInput0.should.have.property("timedOut");
+					expect(res.body.sampleInput0.timedOut).to.be.false;
+					res.body.sampleInput0.should.have.property("sampleInput");
+					expect(res.body.sampleInput0.sampleInput).to.equal(payload.testCases[0].sampleInput);
+					res.body.sampleInput0.should.have.property("expectedOutput");
+					expect(res.body.sampleInput0.expectedOutput).to.equal(payload.testCases[0].expectedOutput);
+					res.body.sampleInput0.should.have.property("observedOutput");
+					expect(res.body.sampleInput0.observedOutput).to.equal("");
+					res.body.sampleInput0.should.have.property("observedOutputTooLong");
+					expect(res.body.sampleInput0.observedOutputTooLong).to.be.false;
+					res.body.sampleInput0.should.have.property("execTimeForProcess");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("SyntaxError");
 					res.body.sampleInput0.error.lineNumber.should.equal(1);
 					expect(res.body.sampleInput0.error.columnNumber).to.be.null;
-					expect(res.body.responseTime).to.not.be.null;
-					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
