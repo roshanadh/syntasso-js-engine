@@ -49,10 +49,20 @@ let nodeProcess,
 	};
 
 /*
+ * @Response types:
  * If response.type = "full-response", it signifies to any process ...
- * running 'node main-wrapper.js' and listening for its stdout that ...
- * the response it's receiving is a full-body response and not individual ...
- * 'test is complete' events emitted by main-wrapper.js
+ * ... running 'node main-wrapper.js' and listening for its stdout that ...
+ * ... the response it's receiving is a full-body response and not individual ...
+ * ... 'test is complete' events emitted by main-wrapper.js
+ */
+
+/*
+ * @stdout and @stderr:
+ * Since the user-submitted code isn't wrapped in any try...catch block ...
+ * ... any errors during the execution of the user-submitted code will be ...
+ * ... obtained from stderr
+ * However, if the code runs without any error, the output of the code will be ...
+ * ... obtained from stdout
  */
 
 try {
@@ -109,21 +119,61 @@ try {
 						// ... writes to the output file and may cause error during JSON.parse ...
 						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
-					} else if (stderr.includes("SyntaxError")) {
-						// unlike ReferenceError, which is stdout and can be caught ...
-						// ... using a standard try...catch, SyntaxError cannot be caught ...
-						// ... and is stderr
+					} else {
+						let errorString = stderr;
 						try {
-							let errorName = "SyntaxError";
-							let errorNameIndex = stderr.search(errorName);
-							let errorMessageIndex = errorNameIndex + errorName.length + 2;
+							let outputPart,
+								errorPart,
+								errorStack,
+								errorName,
+								errorMessage,
+								lineNumber,
+								columnNumber = null
+							;
 
-							let errorMessage = stderr.substring(errorMessageIndex).split("\n")[0].trim();
-							let stackIndex = stderr.search(`/home/client-files/${socketId}/submission.js:`);
-							let errorStack = stderr.substring(stackIndex).split("\n")[0];
+							const errors = ["ReferenceError", "SyntaxError"];
+							const filePath = `/home/client-files/${socketId}/submission.js:`;
+
+							// errorPart is any thing other than the output part and path of the ... 
+							// ... file that are logged to console
+							errorPart = errorString.substring(errorString.indexOf(filePath) + filePath.length);
+
+							// check if it's a ReferenceError or SyntaxError
+							errors.forEach(error => {
+								if (errorPart.includes(error)) errorName = error;
+							});
+
+							// if the error part doesn't include any of ReferenceError or ...
+							// ... SyntaxError, throw an error
+							if (!errorName) throw new Error(`Error name received during code execution (stderr: ${stderr}) did not match any of [ReferenceError, SyntaxError]`);
+
+							// if it is a ReferenceError, there may have been some output as well ...
+							// ... before the error was logged
+							// in case of a SyntaxError, there's no output part
+							if (errorName === "ReferenceError") outputPart = stdout;
+							else outputPart = "";
+
+							lineNumber = errorPart.split("\n")[0];
+							errorStack = errorPart.substring(errorPart.indexOf(errorName));
+							errorMessage = errorStack
+								.split(`${errorName}: `)[1]
+								.split("\n")[0]
+							;
+
+							// a SyntaxError instance doesn't log any column number, so eval column ...
+							// ... number only if it's not a SyntaxError
+							if (errorName !== "SyntaxError")
+								columnNumber =
+									errorStack
+										.substring(errorStack.indexOf(`${filePath}${lineNumber}:`) + `${filePath}${lineNumber}:`.length)
+										.split(")")[0]
+							;
+
 							let errorBody = JSON.stringify({
 								errorName,
 								errorMessage,
+								lineNumber,
+								columnNumber,
 								errorStack
 							});
 
@@ -137,7 +187,10 @@ try {
 										? true
 										: false,
 								expectedOutput: null,
-								observedOutput: `${secret_divider_token}\n${errorBody}`,
+								// the presence of a SECRET_DIVIDER_TOKEN in observedOutput indicates ...
+								// ... to the readOutput function that an error was observed during ...
+								//...execution
+								observedOutput: `${outputPart}${secret_divider_token}\n${errorBody}`,
 								// if length of stdout is larger than MAX length permitted, ...
 								// ... set stdout as null and specify reason in response object
 								observedOutputTooLong: stdout === null
@@ -152,10 +205,8 @@ try {
 							// ... of the contents obtained from the output file
 							process.stdout.write(Buffer.from(JSON.stringify(response)));
 						} catch (err) {
-							throw new Error(`stderr during execution of submission.js: ${stderr}`);
+							throw new Error(`Error during execution of submission.js: ${err}`);
 						}
-					} else {
-						throw new Error(`stderr during execution of submission.js: ${stderr}`);
 					}
 				} catch (err) {
 					throw err;
