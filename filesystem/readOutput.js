@@ -141,37 +141,7 @@ module.exports = (socketId) => {
 						// length of SECRET_DIVIDER_TOKEN is 10
 						error = observedOutput.substring(startIndex + 10).trim();
 						observedOutput = observedOutput.substring(0, startIndex);
-
 						error = JSON.parse(error);
-						// parse error line number and column number from errorStack
-						let stack = error.errorStack;
-						let index = stack.search(`/home/client-files/${socketId}/submission.js:`);
-
-						let str = stack.substring(index + `/home/client-files/${socketId}/submission.js:`.length);
-						let lineNumber = parseInt(str.split(':')[0]);
-						// when wrapping a custom try...catch block around user submitted code ..
-						// ...there is one extra line before user's code begins ...
-						// ... so to respond with the actual lineNumber, subtract 1
-						lineNumber -= 1;
-						// SyntaxError's stack may not have any column number, ...
-						// ... so check if str.split(':')[1] exists, if it does, ...
-						// ... that's the column number.
-						// If it doesn't exist, put column number as null
-
-						let columnNumber =
-							str.split(':')[1]
-								? parseInt(str.split(':')[1].split(')')[0])
-								: null;
-
-						// delete errorStack property from error object to reorder its occurrence ...
-						// ... below lineNumber and columnNumber
-						delete error.errorStack;
-						error = {
-							...error,
-							lineNumber,
-							columnNumber,
-							errorStack: stack,
-						}
 					}
 					response[`sampleInput${i}`] = {
 						testStatus: fileContents[`sampleInput${i}`].testStatus,
