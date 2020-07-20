@@ -333,8 +333,8 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
 					res.body.sampleInput0.error.lineNumber.should.equal(1);
 					res.body.sampleInput0.error.columnNumber.should.equal(9);
+					expect(res.body.sampleInput0.error.errorStack).to.not.equal(null);
 					expect(res.body.responseTime).to.not.be.null;
-					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -383,6 +383,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInput0.error.errorName.should.equal("SyntaxError");
 					res.body.sampleInput0.error.lineNumber.should.equal(1);
 					expect(res.body.sampleInput0.error.columnNumber).to.be.null;
+					expect(res.body.sampleInput0.error.errorStack).to.not.equal(null);
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
@@ -450,11 +451,16 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInputs.should.equal(1);
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
+					expect(res.body.sampleInputs).to.equal(1);
 					expect(res.body.responseTime).to.not.be.null;
 					expect(res.body.sampleInput0.testStatus).to.be.false;
 					expect(res.body.sampleInput0.timedOut).to.be.true;
-					expect(res.body.sampleInput0.observedOutputTooLong).to.be.true;
+					expect(res.body.sampleInput0.sampleInput).to.equal(payload.testCases[0].sampleInput);
+					expect(res.body.sampleInput0.expectedOutput).to.equal(payload.testCases[0].expectedOutput);
 					expect(res.body.sampleInput0.observedOutput).to.be.null;
+					expect(res.body.sampleInput0.observedOutputTooLong).to.be.true;
+					expect(res.body.sampleInput0.error).to.be.null;
+					expect(res.body.sampleInput0.execTimeForProcess).to.not.equal(null);
 					expect(fs.existsSync(path.resolve(
 						uploadedFilesPath,
 						"sampleInputs"
