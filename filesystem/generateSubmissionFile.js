@@ -1,8 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const { SECRET_DIVIDER_TOKEN } = require("../config.js");
-
 module.exports = (socketId, code) => {
 	return new Promise((resolve, reject) => {
 		let filePath = path.resolve(
