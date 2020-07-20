@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require("path");
 const fs = require("fs");
 
-const { initDirectories, addDividerToken } = require("../filesystem/index.js");
+const { initDirectories } = require("../filesystem/index.js");
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
@@ -155,32 +155,30 @@ module.exports = uploadController = (req, res) => {
 						res.status(400).json({ error: "Bad Request: No Docker Configuration Instruction Provided!" });
 						return console.error("Bad Request Error at /upload POST. No Docker Configuration Instruction Provided!");
 					}
-					// add secret divider token to the user-submitted file
-					addDividerToken(req.session.socketId).then(() => {
-						if (isNaN(req.body.dockerConfig))
+					
+					if (isNaN(req.body.dockerConfig))
+						throw new ErrorWithStatus(
+							400,
+							"Bad Request: dockerConfig Value Is Not A Number!"
+						);
+					let dockerConfig = parseInt(req.body.dockerConfig);
+
+					switch (dockerConfig) {
+						case 0:
+							handleConfigZero(req, res);
+							break;
+						case 1:
+							handleConfigOne(req, res);
+							break;
+						case 2:
+							handleConfigTwo(req, res);
+							break;
+						default:
 							throw new ErrorWithStatus(
 								400,
-								"Bad Request: dockerConfig Value Is Not A Number!"
+								"Bad Request: dockerConfig Value Is Not A Valid Number!"
 							);
-						let dockerConfig = parseInt(req.body.dockerConfig);
-
-						switch (dockerConfig) {
-							case 0:
-								handleConfigZero(req, res);
-								break;
-							case 1:
-								handleConfigOne(req, res);
-								break;
-							case 2:
-								handleConfigTwo(req, res);
-								break;
-							default:
-								throw new ErrorWithStatus(
-									400,
-									"Bad Request: dockerConfig Value Is Not A Valid Number!"
-								);
-						}
-					});
+					}
 				}
 			} catch (err) {
 				// if the error object 'err' contains a status code, ...
