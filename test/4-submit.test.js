@@ -299,7 +299,7 @@ describe("4. POST requests at /submit", () => {
 		it("should respond with ReferenceError", done => {
 			let payload = {
 				socketId,
-				code: `while(i <= 10) {\nconsole.log(k);\ni++;\n}`,
+				code: `console.log("Hello World!");\nwhile(i <= 10) {\nconsole.log(k);\ni++;\n}`,
 				dockerConfig: "2",
 				testCases: [
 					{
@@ -312,6 +312,10 @@ describe("4. POST requests at /submit", () => {
 				.post("/submit")
 				.send(payload)
 				.end((err, res) => {
+					console.dir({
+						code: payload.code,
+						res: res.body
+					})
 					res.body.should.be.a("object");
 					res.body.should.have.property("sampleInputs");
 					res.body.should.have.property("responseTime");
@@ -325,14 +329,14 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInput0.should.have.property("expectedOutput");
 					expect(res.body.sampleInput0.expectedOutput).to.equal(payload.testCases[0].expectedOutput);
 					res.body.sampleInput0.should.have.property("observedOutput");
-					expect(res.body.sampleInput0.observedOutput).to.equal("");
+					expect(res.body.sampleInput0.observedOutput).to.equal("Hello World!\n");
 					res.body.sampleInput0.should.have.property("observedOutputTooLong");
 					expect(res.body.sampleInput0.observedOutputTooLong).to.be.false;
 					res.body.sampleInput0.should.have.property("execTimeForProcess");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("ReferenceError");
-					res.body.sampleInput0.error.lineNumber.should.equal(1);
-					res.body.sampleInput0.error.columnNumber.should.equal(9);
+					expect(res.body.sampleInput0.error.lineNumber).to.equal(2);
+					expect(res.body.sampleInput0.error.columnNumber).to.equal(9);
 					expect(res.body.sampleInput0.error.errorStack).to.not.equal(null);
 					expect(res.body.responseTime).to.not.be.null;
 					expect(fs.existsSync(path.resolve(
@@ -381,7 +385,7 @@ describe("4. POST requests at /submit", () => {
 					res.body.sampleInput0.should.have.property("execTimeForProcess");
 					res.body.sampleInput0.error.should.be.a("object");
 					res.body.sampleInput0.error.errorName.should.equal("SyntaxError");
-					res.body.sampleInput0.error.lineNumber.should.equal(1);
+					expect(res.body.sampleInput0.error.lineNumber).to.equal(1);
 					expect(res.body.sampleInput0.error.columnNumber).to.be.null;
 					expect(res.body.sampleInput0.error.errorStack).to.not.equal(null);
 					expect(fs.existsSync(path.resolve(
