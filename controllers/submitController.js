@@ -4,7 +4,7 @@ const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 const {
 	initDirectories,
 	generateTestFiles,
-	updateCodeInFile,
+	generateSubmissionFile,
 } = require("../filesystem/index.js");
 
 const {
@@ -58,7 +58,7 @@ const submitController = (req, res) => {
 
 			generateTestFiles(req).then(() => {
 				// write the user-submitted code into a file
-				updateCodeInFile(req.session.socketId, req.body.code).then(() => {
+				generateSubmissionFile(req.session.socketId, req.body.code).then(() => {
 					if (isNaN(req.body.dockerConfig))
 						throw new ErrorWithStatus(
 							400,

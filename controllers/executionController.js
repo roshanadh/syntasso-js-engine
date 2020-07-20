@@ -5,7 +5,7 @@ const fs = require("fs");
 const socketValidator = require('../middlewares/socketValidator.js');
 const ErrorWithStatus = require("../utils/ErrorWithStatus.js");
 
-const { initDirectories, updateCodeInFile } = require("../filesystem/index.js");
+const { initDirectories, generateSubmissionFile } = require("../filesystem/index.js");
 const {
 	handleConfigZero,
 	handleConfigOne,
@@ -143,7 +143,7 @@ const executionController = (req, res) => {
 						});
 					}
 					// write the user-submitted code into a file
-					updateCodeInFile(req.session.socketId, req.body.code).then(() => {
+					generateSubmissionFile(req.session.socketId, req.body.code).then(() => {
 						if (isNaN(req.body.dockerConfig))
 							throw new ErrorWithStatus(
 								400,
