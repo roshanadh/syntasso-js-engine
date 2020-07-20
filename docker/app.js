@@ -350,6 +350,7 @@ class DockerApp {
 			exec(`docker exec ${containerId} sh -c 'rm -rf /home/client-files/${socketId}/sampleInputs && rm -rf /home/client-files/${socketId}/expectedOutputs'`, (error, stdout, stderr) => {
 				if (error) return reject({ error });
 				if (stderr && stderr.trim() !== "") return reject({ error: stderr });
+				console.log(`Test cases removed from INSIDE the container ${containerId}.`)
 				resolve({ timeToRemoveTestCases: performance.now() - timeToRemoveTestCases });
 			});
 		});
