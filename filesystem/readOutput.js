@@ -75,6 +75,7 @@ module.exports = (socketId) => {
 					*/
 					if (observedOutput === null) {
 						resolve({
+							timedOut: fileContents.timedOut,
 							sampleInputs: fileContents.sampleInputs,
 							expectedOutput: null,
 							observedOutput,
