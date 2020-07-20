@@ -48,13 +48,18 @@ module.exports.parseError = (stderr, stdout,socketId) => {
 					.split(")")[0])
 		;
 
-		return JSON.stringify({
+		const errorBody = JSON.stringify({
 			errorName,
 			errorMessage,
 			lineNumber,
 			columnNumber,
 			errorStack
 		});
+
+		return {
+			outputPart,
+			errorBody
+		}
 	} catch (err) {
 		throw new Error(`Error during execution of submission.js: ${err}`);
 	}
