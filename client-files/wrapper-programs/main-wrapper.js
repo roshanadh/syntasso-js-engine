@@ -13,6 +13,7 @@ const { spawnSync } = require("child_process");
 const { performance } = require("perf_hooks");
 
 const { read } = require("./uploaded-files-reader.js");
+const { parseError } = require("./error-parser.js");
 
 /*
  * Constraints for executing submission.js:
@@ -120,101 +121,44 @@ try {
 						// ... of the contents obtained from the output file
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
 					} else {
-						let errorString = stderr;
-						try {
-							let outputPart,
-								errorPart,
-								errorStack,
-								errorName,
-								errorMessage,
-								lineNumber,
-								columnNumber = null
-							;
-
-							const errors = ["ReferenceError", "SyntaxError"];
-							const filePath = `/home/client-files/${socketId}/submission.js:`;
-
-							// errorPart is any thing other than the output part and path of the ... 
-							// ... file that are logged to console
-							errorPart = errorString.substring(errorString.indexOf(filePath) + filePath.length);
-
-							// check if it's a ReferenceError or SyntaxError
-							errors.forEach(error => {
-								if (errorPart.includes(error)) errorName = error;
-							});
-
-							// if the error part doesn't include any of ReferenceError or ...
-							// ... SyntaxError, throw an error
-							if (!errorName) throw new Error(`Error name received during code execution (stderr: ${stderr}) did not match any of [ReferenceError, SyntaxError]`);
-
-							// if it is a ReferenceError, there may have been some output as well ...
-							// ... before the error was logged
-							// in case of a SyntaxError, there's no output part
-							if (errorName === "ReferenceError") outputPart = stdout;
-							else outputPart = "";
-
-							lineNumber = errorPart.split("\n")[0];
-							errorStack = errorPart.substring(errorPart.indexOf(errorName));
-							errorMessage = errorStack
-								.split(`${errorName}: `)[1]
-								.split("\n")[0]
-							;
-
-							// a SyntaxError instance doesn't log any column number, so eval column ...
-							// ... number only if it's not a SyntaxError
-							if (errorName !== "SyntaxError")
-								columnNumber =
-									errorStack
-										.substring(errorStack.indexOf(`${filePath}${lineNumber}:`) + `${filePath}${lineNumber}:`.length)
-										.split(")")[0]
-							;
-
-							let errorBody = JSON.stringify({
-								errorName,
-								errorMessage,
-								lineNumber,
-								columnNumber,
-								errorStack
-							});
-
-							response = {
-								sampleInputs: 0,
-								testStatus: false,
-								// if nodeProcess timed out, its signal would be SIGTERM by default ...
-								// ... otherwise, its signal would be null
-								timedOut:
-									nodeProcess.signal === "SIGTERM"
-										? true
-										: false,
-								expectedOutput: null,
-								// the presence of a SECRET_DIVIDER_TOKEN in observedOutput indicates ...
-								// ... to the readOutput function that an error was observed during ...
-								//...execution
-								observedOutput: `${outputPart}${secret_divider_token}\n${errorBody}`,
-								// if length of stdout is larger than MAX length permitted, ...
-								// ... set stdout as null and specify reason in response object
-								observedOutputTooLong: stdout === null
+						// parse error from stderr
+						const errorBody = parseError(stderr, stdout, socketId);
+						
+						response = {
+							sampleInputs: 0,
+							testStatus: false,
+							// if nodeProcess timed out, its signal would be SIGTERM by default ...
+							// ... otherwise, its signal would be null
+							timedOut:
+								nodeProcess.signal === "SIGTERM"
 									? true
 									: false,
-							}
-							// NOTE: Do not log to the console or write to stdout ...
-							// ... from inside main-wrapper.js except for the response ...
-							// ... object itself
-							// Any console.log or process.stdout.write from inside main-wrapper.js ...
-							// ... writes to the output file and may cause error during JSON.parse ...
-							// ... of the contents obtained from the output file
-							process.stdout.write(Buffer.from(JSON.stringify(response)));
-						} catch (err) {
-							throw new Error(`Error during execution of submission.js: ${err}`);
+							expectedOutput: null,
+							// the presence of a SECRET_DIVIDER_TOKEN in observedOutput indicates ...
+							// ... to the readOutput function that an error was observed during ...
+							//...execution
+							observedOutput: `${outputPart}${secret_divider_token}\n${errorBody}`,
+							// if length of stdout is larger than MAX length permitted, ...
+							// ... set stdout as null and specify reason in response object
+							observedOutputTooLong: stdout === null
+								? true
+								: false,
 						}
+						// NOTE: Do not log to the console or write to stdout ...
+						// ... from inside main-wrapper.js except for the response ...
+						// ... object itself
+						// Any console.log or process.stdout.write from inside main-wrapper.js ...
+						// ... writes to the output file and may cause error during JSON.parse ...
+						// ... of the contents obtained from the output file
+						process.stdout.write(Buffer.from(JSON.stringify(response)));
 					}
 				} catch (err) {
-					throw err;
+					throw new Error(err);
 				}
-			} else throw err;
+			} else throw new Error(err);
 		});
 } catch (err) {
-	throw err;
+	throw new Error(err);
 }
 
 const main = () => {
@@ -289,68 +233,49 @@ const main = () => {
 						? true
 						: false,
 				})));
-			} else if (stderr.includes("SyntaxError")) {
-				// unlike ReferenceError, which is stdout and can be caught ...
-				// ... using a standard try...catch, SyntaxError cannot be caught ...
-				// ... and is stderr
-				try {
-					expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
-
-					let testStatus = false;
-
-					let errorName = "SyntaxError";
-					let errorNameIndex = stderr.search(errorName);
-					let errorMessageIndex = errorNameIndex + errorName.length + 2;
-
-					let errorMessage = stderr.substring(errorMessageIndex).split("\n")[0].trim();
-					let stackIndex = stderr.search(`/home/client-files/${socketId}/submission.js:`);
-					let errorStack = stderr.substring(stackIndex).split("\n")[0];
-					let errorBody = JSON.stringify({
-						errorName,
-						errorMessage,
-						errorStack
-					});
-
-					response[`sampleInput${i}`] = {
-						testStatus,
-						timedOut:
-							nodeProcess.signal === "SIGTERM"
-								? true
-								: false,
-						sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
-						expectedOutput: expectedOutputFileContents.toString(),
-						observedOutput: `${secret_divider_token}\n${errorBody}`,
-						// if length of stdout is larger than MAX length permitted, ...
-						// ... set stdout as null and specify reason in response object
-						observedOutputTooLong: stdout === null
-							? true
-							: false,
-						execTimeForProcess,
-					}
-
-					// write to stdout to indicate completion of test #i
-					process.stdout.write(Buffer.from(JSON.stringify({
-						type: "test-status",
-						process: i,
-						testStatus,
-						timedOut:
-							nodeProcess.signal === "SIGTERM"
-								? true
-								: false,
-						// if length of stdout is larger than MAX length permitted, ...
-						// ... set stdout as null and specify reason in response object
-						observedOutputTooLong: stdout === null
-							? true
-							: false,
-					})));
-				} catch (err) {
-					throw new Error(`stderr during execution of submission.js: ${stderr}`);
-				}
 			} else {
-				throw new Error(`stderr during execution of submission.js: ${stderr}`)
+				// parse error from stderr
+				const errorBody = parseError(stderr, stdout, socketId);
+				
+				expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
+
+				let testStatus = false;
+
+				response[`sampleInput${i}`] = {
+					testStatus,
+					timedOut:
+						nodeProcess.signal === "SIGTERM"
+							? true
+							: false,
+					sampleInput: sampleInputs.fileContents[sampleInputs.files[i]].toString(),
+					expectedOutput: expectedOutputFileContents.toString(),
+					observedOutput: `${secret_divider_token}\n${errorBody}`,
+					// if length of stdout is larger than MAX length permitted, ...
+					// ... set stdout as null and specify reason in response object
+					observedOutputTooLong: stdout === null
+						? true
+						: false,
+					execTimeForProcess,
+				}
+
+				// write to stdout to indicate completion of test #i
+				process.stdout.write(Buffer.from(JSON.stringify({
+					type: "test-status",
+					process: i,
+					testStatus,
+					timedOut:
+						nodeProcess.signal === "SIGTERM"
+							? true
+							: false,
+					// if length of stdout is larger than MAX length permitted, ...
+					// ... set stdout as null and specify reason in response object
+					observedOutputTooLong: stdout === null
+						? true
+						: false,
+				})));
 			}
 		} catch (err) {
-			throw err;
+			throw new Error(err);
 		}
 	}
 	// NOTE: Do not log to the console or write to stdout ...
