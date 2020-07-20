@@ -122,7 +122,7 @@ try {
 						process.stdout.write(Buffer.from(JSON.stringify(response)));
 					} else {
 						// parse error from stderr
-						const errorBody = parseError(stderr, stdout, socketId);
+						const { outputPart, errorBody } = parseError(stderr, stdout, socketId);
 						
 						response = {
 							sampleInputs: 0,
@@ -235,7 +235,7 @@ const main = () => {
 				})));
 			} else {
 				// parse error from stderr
-				const errorBody = parseError(stderr, stdout, socketId);
+				const { outputPart, errorBody } = parseError(stderr, stdout, socketId);
 				
 				expectedOutputFileContents = expectedOutputs.fileContents[expectedOutputs.files[i]].toString();
 
