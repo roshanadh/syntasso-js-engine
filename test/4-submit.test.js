@@ -399,6 +399,61 @@ describe("4. POST requests at /submit", () => {
 					done();
 				});
 		});
+		
+		it("should respond with RangeError", done => {
+			let payload = {
+				socketId,
+				code: `console.log("Hello World!");\nthrow new RangeError("A range error");\n`,
+				dockerConfig: "2",
+				testCases: [
+					{
+						sampleInput: "1\n2 3 4 5",
+						expectedOutput: "25",
+					}
+				]
+			}
+			chai.request(server)
+				.post("/submit")
+				.send(payload)
+				.end((err, res) => {
+					console.dir({
+						code: payload.code,
+						res: res.body
+					})
+					res.body.should.be.a("object");
+					res.body.should.have.property("sampleInputs");
+					res.body.should.have.property("responseTime");
+					res.body.sampleInput0.should.be.a("object");
+					res.body.sampleInput0.should.have.property("testStatus");
+					expect(res.body.sampleInput0.testStatus).to.be.false;
+					res.body.sampleInput0.should.have.property("timedOut");
+					expect(res.body.sampleInput0.timedOut).to.be.false;
+					res.body.sampleInput0.should.have.property("sampleInput");
+					expect(res.body.sampleInput0.sampleInput).to.equal(payload.testCases[0].sampleInput);
+					res.body.sampleInput0.should.have.property("expectedOutput");
+					expect(res.body.sampleInput0.expectedOutput).to.equal(payload.testCases[0].expectedOutput);
+					res.body.sampleInput0.should.have.property("observedOutput");
+					expect(res.body.sampleInput0.observedOutput).to.equal("Hello World!\n");
+					res.body.sampleInput0.should.have.property("observedOutputTooLong");
+					expect(res.body.sampleInput0.observedOutputTooLong).to.be.false;
+					res.body.sampleInput0.should.have.property("execTimeForProcess");
+					res.body.sampleInput0.error.should.be.a("object");
+					res.body.sampleInput0.error.errorName.should.equal("RangeError");
+					expect(res.body.sampleInput0.error.lineNumber).to.equal(2);
+					expect(res.body.sampleInput0.error.columnNumber).to.equal(7);
+					expect(res.body.sampleInput0.error.errorStack).to.not.equal(null);
+					expect(res.body.responseTime).to.not.be.null;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"sampleInputs"
+					))).to.be.true;
+					expect(fs.existsSync(path.resolve(
+						uploadedFilesPath,
+						"expectedOutputs"
+					))).to.be.true;
+					done();
+				});
+		});
 	});
 
 	describe("4j. POST with infinitely looping code, one test case, and dockerConfig = 2 at /submit", () => {
