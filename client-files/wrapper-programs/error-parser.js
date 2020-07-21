@@ -10,7 +10,7 @@ module.exports.parseError = (stderr, stdout,socketId) => {
 			columnNumber = null
 		;
 
-		const errors = ["ReferenceError", "SyntaxError"];
+		const errors = ["ReferenceError", "SyntaxError", "RangeError"];
 		const filePath = `/home/client-files/${socketId}/submission.js:`;
 
 		// errorPart is any thing other than the output part and path of the ... 
@@ -24,13 +24,14 @@ module.exports.parseError = (stderr, stdout,socketId) => {
 
 		// if the error part doesn't include any of ReferenceError or ...
 		// ... SyntaxError, throw an error
-		if (!errorName) throw new Error(`Error name received during code execution (stderr: ${stderr}) did not match any of [ReferenceError, SyntaxError]`);
+		if (!errorName) throw new Error(`Error name received during code execution (stderr: ${stderr}) did not match any of ${errors}`);
 
-		// if it is a ReferenceError, there may have been some output as well ...
-		// ... before the error was logged
-		// in case of a SyntaxError, there's no output part
-		if (errorName === "ReferenceError") outputPart = stdout;
-		else outputPart = "";
+		// in case of a SyntaxError, there's no output part ...
+		// ... as it is similar to a Compile Time Error, i.e, ...
+		// ... a SyntaxError is thrown by Node.js before any execution ...
+		// ... starts
+		if (errorName === "SyntaxError") outputPart = "";
+		else outputPart = stdout;
 
 		lineNumber = parseInt(errorPart.split("\n")[0]);
 		errorStack = errorPart.substring(errorPart.indexOf(errorName));
