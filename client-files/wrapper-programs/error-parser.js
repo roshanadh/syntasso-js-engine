@@ -34,7 +34,9 @@ module.exports.parseError = (stderr, stdout,socketId) => {
 		else outputPart = stdout;
 
 		lineNumber = parseInt(errorPart.split("\n")[0]);
-		errorStack = errorPart.substring(errorPart.indexOf(errorName));
+		// look for string "ErrorName: " to begin substring, ...
+		// ... example: "RangeError: "
+		errorStack = errorPart.substring(errorPart.indexOf(`${errorName}: `));
 		errorMessage = errorStack
 			.split(`${errorName}: `)[1]
 			.split("\n")[0]
