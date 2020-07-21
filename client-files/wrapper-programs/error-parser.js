@@ -10,7 +10,7 @@ module.exports.parseError = (stderr, stdout,socketId) => {
 			columnNumber = null
 		;
 
-		const errors = ["ReferenceError", "SyntaxError", "RangeError"];
+		const errors = ["ReferenceError", "SyntaxError", "RangeError", "TypeError"];
 		const filePath = `/home/client-files/${socketId}/submission.js:`;
 
 		// errorPart is any thing other than the output part and path of the ... 
