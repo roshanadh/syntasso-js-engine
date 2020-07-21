@@ -1,5 +1,4 @@
 node_modules/
-client-files/submissions/*.js
-client-files/outputs/*.txt
+client-files/
 .env
 .vscode/launch.json

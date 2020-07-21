@@ -2,7 +2,7 @@ const socket = require("socket.io");
 const cryptoRandomString = require("crypto-random-string");
 
 const DockerApp = require("../docker/app.js");
-const { removeTempFiles } = require("../filesystem/index.js");
+const { cleanUpTempFiles } = require("../filesystem/index.js");
 
 const dockerApp = new DockerApp();
 
@@ -12,7 +12,7 @@ class Socket {
 
 		// assign custom socket IDs
 		this.instance.engine.generateId = (req) => {
-			return `s-${cryptoRandomString({length: 18, type: 'hex'})}`;
+			return `s-${cryptoRandomString({ length: 18, type: 'hex' })}`;
 		}
 
 		this.instance.on("connection", socket => {
@@ -30,7 +30,7 @@ class Socket {
 				*	iii. The output file (.txt file) generated after execution of the user's code
 				*/
 				dockerApp.removeNodeContainer(socket.id);
-				removeTempFiles(socket.id);
+				cleanUpTempFiles(socket.id);
 			});
 		});
 	}

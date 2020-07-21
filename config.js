@@ -7,4 +7,5 @@ module.exports = {
 	LIVE_SERVER_PORT: process.env.LIVE_SERVER_PORT,
 	SECRET_DIVIDER_TOKEN: process.env.SECRET_DIVIDER_TOKEN,
 	SECRET_SESSION_KEY: process.env.SECRET_SESSION_KEY,
+	REDIS_PORT: process.env.REDIS_PORT,
 };

@@ -32,7 +32,7 @@ Environment variables for the project include:
 * SECRET_SESSION_KEY: For encrypting the session.
 
 ## Endpoints
-The API exposes three endpoints and the following actions:
+The API exposes four endpoints and the following actions:
 
 1. Simple 'Hello World!' route
     ```
@@ -43,27 +43,151 @@ The API exposes three endpoints and the following actions:
     ```
     POST /execute
     ```
-    The request body must include three parameters:
+    The request body ***must*** include three parameters (via JSON or x-www-form-urlencoded):
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
     ii. *code* [String]: The code snippet to be executed by the engine. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
+
+    The request body ***may*** also include the following fields (if these are included, send the request via form-data, including the three parameters mentioned above):
+    
+    i. *sampleInputs* [.txt file] [maxCount: 8]: For supplying the client-submitted code with input data.
+
+    ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
     
 3. Route to POST a JavaScript file
     ```
     POST /upload
     ```
-    The request body must include three parameters:
+    The request body ***must*** include three parameters:
     
     i. *socketId* [String]: For verifying socket connection with the client.
 
-    ii. *submission* [A .js file]: The JavaScript file to be executed. 
+    ii. *submission* [.js file] [maxCount: 1]: The JavaScript file to be executed. 
 
     iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
        
+    The request body ***may*** also include the following fields (if these are included, send the request via form-data, including the three parameters mentioned above):
+    
+    i. *sampleInputs* [.txt file] [maxCount: 8]: For supplying the client-submitted program with input data.
 
+    ii. *expectedOutputs* [.txt file] [maxCount: 8]: For assertion testing against the outputs observed after passing sample inputs.
+    
+4. Route to POST a code snippet and test cases
+    ```
+    POST /submit
+    ```
+    The request body ***must*** include four parameters:
+    
+    i. *socketId* [String]: For verifying socket connection with the client.
 
+    ii. *code* [String]: The code snippet to be executed by the engine. 
+
+    iii. *dockerConfig* [Integer { 0 | 1 | 2 }, but passed as a String]: Indicates whether a Node.js docker container needs to be created from scratch, or can be just started before execution, or that a pre-existing container can be used.
+        
+    iv. *testCases* [Array]: An array of JSON objects. The engine will parse each element (each element being a JSON object) and generate files needed to run main-wrapper.js.
+    	Structure of testCases:
+	[
+		{
+			sampleInput: "",
+			expectedOutput: "",
+		}, {}, {}, ...
+	]
+
+## dockerConfig
+There are three possible values to dockerConfig: 0, 1, and 2.
+* 0:
+    * Using the Dockerfile at the root of the project, the engine will build an image tagged img_node.
+    * After the image is built, the engine will create a container using *img_node*.
+    * The engine will start the container.
+    * The engine will start a bash environment inside the container using '*docker exec*' so as to execute the submitted code/file.
+  
+* 1:
+    * The engine assumes that a container has already been created using *img_node* and so the engine attempts to start the container, i.e., if the container exists, otherwise the engine responds with an error.
+    * The engine will start a bash environment inside the container using '*docker exec*' so as to execute the submitted code/file.
+
+* 2:
+    * The engine assumes that a container has already been created using *img_node* and that the container has already been started.
+    * The engine attempts to start a bash environment inside the container using '*docker exec*', i.e., if the container exists and has already been started, otherwise the engine responds with an error.
+
+## Events
+1. docker-app-stdout:
+    
+    - Emitted by the engine to log steps performed for each request.
+    - Logs stdout for image build, and other logs for container creation, container start, copy, and exec operations.
+    - Structure:
+    ```json
+        docker-app-stdout = {
+            stdout: [string],
+        }
+    ```
+2. test-status:
+   
+   - Emitted by the engine to notify the client of each test case performed for the submitted code/file.
+   - n test-status events are emitted for n sample input files uploaded by the client.
+   - Structure:
+    ```json
+        test-status = {
+        	type: "test-status",
+		process: [Integer],
+		testStatus: [Boolean],
+        }
+    ```
+## Sample Responses
+### Response for /execute
+   1. **With no test cases**:
+   
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   0                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            imageBuildTime: 828,
+            containerCreateTime: 3192,
+            containerStartTime: 4413,
+            responseTime: 512.7250329996459
+        }
+        ```
+        <br />
+
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   1                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            containerStartTime: 33,
+            responseTime: 505.02770400000736
+        }
+        ```
+        <br />
+
+        Request structure:
+        | code         	| console.log("Hello World!") 	|
+        |--------------	|----------------------------	|
+        | dockerConfig 	|   2                          	|
+        
+        ```json
+        {
+            sampleInputs: 0,
+            expectedOutput: null,
+            observedOutput: 'Hello World!\n',
+            error: null,
+            responseTime: 602.801325999666
+        }
+        ```
 
 
