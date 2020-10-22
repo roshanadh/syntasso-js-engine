@@ -58,10 +58,6 @@ const execSubmission = (req, socketInstance) => {
 						});
 					}
 				} catch (error) {
-					console.dir({
-						msg: "inside execInNodeContainer",
-						stdoutBuffer,
-					});
 					if (error.message.includes("Unexpected token { in JSON")) {
 						// this error happens because mainWrapper.stdout ...
 						// ... outputs a stream of JSON objects like:
@@ -134,9 +130,6 @@ const execSubmission = (req, socketInstance) => {
 				}
 			});
 			mainWrapper.stderr.on("data", stderrBuffer => {
-				console.dir({
-					stderr: stderrBuffer.toString(),
-				});
 				try {
 					const stderr = JSON.parse(stderrBuffer.toString());
 					console.error(
