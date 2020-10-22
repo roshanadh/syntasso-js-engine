@@ -9,7 +9,9 @@ const { paramValidator, errorHandler } = require("../middlewares/index.js");
 
 router.get("/", (req, res) => {
 	console.log("GET request received at /");
-	res.send("Hello World!");
+	res.json({
+		message: "Hello World!",
+	});
 });
 
 // POST with code snippet and optional ...
