@@ -1,7 +1,7 @@
 const socket = require("socket.io");
 const cryptoRandomString = require("crypto-random-string");
 
-const { removeCContainer } = require("../docker/index.js");
+const { removeNodeContainer } = require("../docker/index.js");
 const { cleanUpClientFiles } = require("../filesystem/index.js");
 
 class Socket {
@@ -24,7 +24,7 @@ class Socket {
 					`\nDISCONNECT: Socket disconnected with id ${socket.id}`
 				);
 				console.log(`REASON: ${reason}\n`);
-				removeCContainer(socket.id).catch(error =>
+				removeNodeContainer(socket.id).catch(error =>
 					console.error(
 						`Error during container cleanup after socket ${socket.id} disconnection:`,
 						error
