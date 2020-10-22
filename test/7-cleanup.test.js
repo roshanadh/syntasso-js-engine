@@ -1,4 +1,12 @@
-const { mocha, chai, should, expect, path, fs, execSync } = require("./test-config.js");
+const {
+	mocha,
+	chai,
+	should,
+	expect,
+	path,
+	fs,
+	execSync,
+} = require("./test-config.js");
 
 describe("5. Clean up files after socket disconnect", () => {
 	let socket, socketId, tempFilesPath, outputFilePath;
@@ -8,7 +16,11 @@ describe("5. Clean up files after socket disconnect", () => {
 		socket = removedConnection.socket;
 		socketId = removedConnection.socketId;
 		tempFilesPath = path.resolve("client-files", socketId);
-		outputFilePath = path.resolve("client-files", "outputs", `${socketId}.txt`);
+		outputFilePath = path.resolve(
+			"client-files",
+			"outputs",
+			`${socketId}.txt`
+		);
 	});
 
 	it("should disconnect from socket", done => {
@@ -18,7 +30,7 @@ describe("5. Clean up files after socket disconnect", () => {
 	it("should remove the docker container if it was created", done => {
 		let filter = `\"name=${socketId}\"`;
 		const searchContainerOutput = execSync(`docker ps -aqf ${filter}`, {
-			stdio: ["pipe", "pipe", "pipe"]
+			stdio: ["pipe", "pipe", "pipe"],
 		});
 		expect(searchContainerOutput.toString().trim()).to.be.empty;
 		done();
