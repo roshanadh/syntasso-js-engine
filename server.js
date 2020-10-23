@@ -3,10 +3,15 @@ const express = require("express");
 const redis = require("redis");
 const sticky = require("sticky-session");
 const cluster = require("cluster");
-const blocked = require('blocked-at');
+const blocked = require("blocked-at");
 
 const Socket = require("./socket/socket.js");
-const { PORT, LIVE_SERVER_PORT, SECRET_SESSION_KEY, REDIS_PORT } = require("./config.js");
+const {
+	PORT,
+	CLIENT_PORT,
+	SECRET_SESSION_KEY,
+	REDIS_PORT,
+} = require("./config.js");
 
 const client = redis.createClient();
 const app = express();
@@ -19,7 +24,6 @@ if (NODE_ENV === "dev")
 	blocked((time, stack) => {
 		console.log(`Blocked for ${time}ms, operation started here:`, stack);
 	});
-
 
 if (cluster.isMaster && !module.parent) {
 	// if current process is the master process and the ...
@@ -61,7 +65,10 @@ if (cluster.isMaster && !module.parent) {
 
 	// change origin to Syntasso Client's protocol://address:port when NODE_ENV = prod
 	app.use(
-		cors({ credentials: true, origin: `http://127.0.0.1:${LIVE_SERVER_PORT}` })
+		cors({
+			credentials: true,
+			origin: `http://127.0.0.1:${CLIENT_PORT}`,
+		})
 	);
 
 	app.set("json spaces", 2);
@@ -77,10 +84,7 @@ if (!module.parent) {
 	// ... create a cluster
 	sticky.listen(server, PORT, {
 		// if NODE_ENV === "prod", fork 8 processes, otherwise, use 1 worker process
-		workers:
-			NODE_ENV === "prod"
-				? require("os").cpus().length
-				: 1
+		workers: NODE_ENV === "prod" ? require("os").cpus().length : 1,
 	});
 } else {
 	// if the application was started by another script, ...

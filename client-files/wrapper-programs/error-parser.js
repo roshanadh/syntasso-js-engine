@@ -1,69 +1,84 @@
-module.exports.parseError = (stderr, stdout,socketId) => {
+module.exports.parseError = (stderr, socketId) => {
 	let errorString = stderr;
 	try {
-		let outputPart,
-			errorPart,
+		let errorPart,
 			errorStack,
 			errorName,
 			errorMessage,
-			lineNumber,
-			columnNumber = null
-		;
+			lineNumber = null,
+			columnNumber = null;
+		const errors = [
+			"ReferenceError",
+			"SyntaxError",
+			"RangeError",
+			"TypeError",
+			"AssertionError",
+			// when an instance of Error is thrown
+			"Error",
+		];
+		const filePath = `/usr/src/sandbox/${socketId}.js:`;
 
-		const errors = ["ReferenceError", "SyntaxError", "RangeError", "TypeError"];
-		const filePath = `/home/client-files/${socketId}/submission.js:`;
-
-		// errorPart is any thing other than the output part and path of the ... 
+		// errorPart is any thing other than the output part and path of the ...
 		// ... file that are logged to console
-		errorPart = errorString.substring(errorString.indexOf(filePath) + filePath.length);
+		errorPart = errorString.substring(
+			errorString.indexOf(filePath) + filePath.length
+		);
 
 		// check if it's a ReferenceError or SyntaxError
 		errors.forEach(error => {
-			if (errorPart.includes(error)) errorName = error;
+			if (errorPart.includes(`\n${error}:`)) errorName = error;
 		});
+		try {
+			lineNumber = parseInt(errorPart.split("\n")[0]);
+		} catch (error) {
+			lineNumber = null;
+		}
 
-		// if the error part doesn't include any of ReferenceError or ...
-		// ... SyntaxError, throw an error
-		if (!errorName) throw new Error(`Error name received during code execution (stderr: ${stderr}) did not match any of ${errors}`);
+		// return the full error stack if an error name cannot be resolved ...
+		// ...this may be the case when some exception is thrown
+		if (!errorName)
+			return {
+				errorBody: {
+					lineNumber,
+					fullError: stderr,
+				},
+			};
 
-		// in case of a SyntaxError, there's no output part ...
-		// ... as it is similar to a Compile Time Error, i.e, ...
-		// ... a SyntaxError is thrown by Node.js before any execution ...
-		// ... starts
-		if (errorName === "SyntaxError") outputPart = "";
-		else outputPart = stdout;
-
-		lineNumber = parseInt(errorPart.split("\n")[0]);
 		// look for string "ErrorName: " to begin substring, ...
 		// ... example: "RangeError: "
 		errorStack = errorPart.substring(errorPart.indexOf(`${errorName}: `));
-		errorMessage = errorStack
-			.split(`${errorName}: `)[1]
-			.split("\n")[0]
-		;
+		errorMessage = errorStack.split(`${errorName}: `)[1].split("\n")[0];
 
 		// a SyntaxError instance doesn't log any column number, so eval column ...
 		// ... number only if it's not a SyntaxError
 		if (errorName !== "SyntaxError")
-			columnNumber =
-				parseInt(errorStack
-					.substring(errorStack.indexOf(`${filePath}${lineNumber}:`) + `${filePath}${lineNumber}:`.length)
-					.split(")")[0])
-		;
-
-		const errorBody = JSON.stringify({
-			errorName,
-			errorMessage,
-			lineNumber,
-			columnNumber,
-			errorStack
-		});
+			columnNumber = parseInt(
+				errorStack
+					.substring(
+						errorStack.indexOf(`${filePath}${lineNumber}:`) +
+							`${filePath}${lineNumber}:`.length
+					)
+					.split(")")[0]
+			);
 
 		return {
-			outputPart,
-			errorBody
-		}
+			errorBody: {
+				errorName,
+				errorMessage,
+				lineNumber,
+				columnNumber,
+				errorStack,
+				fullError: stderr,
+			},
+		};
 	} catch (err) {
-		throw new Error(`Error during execution of submission.js: ${err}`);
+		// throw new Error(err);
+		return {
+			errorInParser: err,
+		};
 	}
-}
+};
+
+// module.exports.parseError = (stderr, socketId) => {
+
+// }

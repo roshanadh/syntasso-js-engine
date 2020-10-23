@@ -13,18 +13,4 @@ describe("Tests: ", () => {
 			done();
 		});
 	});
-	
-	describe("1b. GET request at /", () => {
-		it("should return 'Hello World!' response", done => {
-			chai.request(server)
-				.get("/")
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.should.have.status(200);
-					res.text.should.be.a("string");
-					res.text.should.equal("Hello World!");
-					done();
-				});
-		});
-	});
 });

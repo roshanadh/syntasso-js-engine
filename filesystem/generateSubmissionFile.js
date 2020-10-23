@@ -1,43 +1,29 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = (socketId, code) => {
+module.exports = req => {
+	const { socketId } = req.body;
+	const fileName = `${socketId}.js`;
+	const filePath = path.resolve(
+		__dirname,
+		"..",
+		"client-files",
+		socketId,
+		fileName
+	);
+
+	const { code } = req.body;
 	return new Promise((resolve, reject) => {
-		let filePath = path.resolve(
-			__dirname,
-			"..",
-			"client-files",
-			socketId,
-			"submission.js"
-		);
-
-		/*
-		 * /client-files/${socketId} directory may not have been created if ...
-		 * ... no sampleInputs and expectedOutputs files have been uploaded ...
-		 * since they're created (fs.mkdir) inside the 'destination' function ...
-		 * ... of multer.diskStorage.
-		 * So, create the required directories if they do not exist yet.
-		*/
-
-		let basePath = path.resolve(__dirname, "..", "client-files", socketId);
-		
-		// check if ${basePath} dir exits before creating it
-		fs.mkdir(basePath, { recursive:true }, (err) => {
-			if (err) {
-				console.error(`Error while creating client-files/${socketId}/ directory: ${err.stack}`);
-				reject(false);
-				throw err;
+		console.log(`Generating submission file named ${fileName}`);
+		fs.writeFile(filePath, code, error => {
+			if (error) {
+				console.error(
+					`error while generating submission file: ${error}`
+				);
+				return reject(error);
 			}
-			fs.writeFile(filePath, code, (err) => {
-				if (err) {
-					console.error(`Error during writing code to file: ${err.stack}`);
-					reject(false);
-					throw err;
-				}
-				console.log(`Submitted code written to file: ${filePath}`);
-				resolve(true);
-				return;
-			});
+			console.log(`Submission file ${fileName} generated.`);
+			return resolve(fileName);
 		});
 	});
 };
