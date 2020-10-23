@@ -94,6 +94,6 @@ if (!module.parent) {
 	});
 }
 
-socketInstance = new Socket(server);
+socketInstance = new Socket(server).instance;
 
 module.exports = { server, socketInstance, client };
