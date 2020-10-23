@@ -8,7 +8,7 @@ const { Worker, isMainThread, threadId } = require("worker_threads");
 
 chai.use(chaiHttp);
 
-const sendRequest = () => {
+const sendRequest = threadCreationTime => {
 	let socket,
 		requestSent,
 		responseReceived,
@@ -47,6 +47,7 @@ const sendRequest = () => {
 					responseReceived = performance.now();
 					timeBetweenRequestAndResponse = responseReceived - requestSent;
 					console.dir({
+						threadCreationTime,
 						requestSent,
 						responseReceived,
 						timeBetweenRequestAndResponse,
@@ -87,9 +88,10 @@ if (isMainThread) {
 	for (let i = 0; i < numOfWorkers; i++)
 		workers[i] = new Worker("./test/concurrency-test.js");
 } else {
+	let threadCreationTime = performance.now();
 	console.dir({
 		message: "Thread " + threadId + " created",
-		threadCreationTime: performance.now()
+		threadCreationTime,
 	});
-	sendRequest();
+	sendRequest(threadCreationTime);
 }

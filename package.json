@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "NODE_ENV=test mocha $(find test -name '*.test.js') --sort --timeout 100000 --exit",
-    "start": "NODE_ENV=dev node server.js"
+    "start:dev": "NODE_ENV=dev node server.js"
   },
   "repository": {
     "type": "git",
