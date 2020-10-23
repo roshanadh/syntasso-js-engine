@@ -1,6 +1,6 @@
 const socketIdValidator = req => {
 	const { socketInstance } = require("../server.js");
-	const listOfClients = Object.keys(socketInstance.instance.sockets.sockets);
+	const listOfClients = Object.keys(socketInstance.sockets.sockets);
 
 	if (!req.body.socketId) return "no-socket";
 	if (!listOfClients.includes(req.body.socketId)) return "unknown-socket";

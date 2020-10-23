@@ -69,7 +69,7 @@ describe("4. Test submission programs at /submit", () => {
 					expect(res.body.processes[0].observedOutputTooLong).to.be
 						.false;
 					res.body.processes[0].should.have.property(
-						"execTimeForProcess"
+						"executionTimeForProcess"
 					);
 					res.body.processes[0].error.should.be.a("object");
 					res.body.processes[0].error.errorName.should.equal(
@@ -141,7 +141,7 @@ describe("4. Test submission programs at /submit", () => {
 					expect(res.body.processes[0].observedOutputTooLong).to.be
 						.false;
 					res.body.processes[0].should.have.property(
-						"execTimeForProcess"
+						"executionTimeForProcess"
 					);
 					res.body.processes[0].error.should.be.a("object");
 					res.body.processes[0].error.errorName.should.equal(
@@ -212,7 +212,7 @@ describe("4. Test submission programs at /submit", () => {
 					expect(res.body.processes[0].observedOutputTooLong).to.be
 						.false;
 					res.body.processes[0].should.have.property(
-						"execTimeForProcess"
+						"executionTimeForProcess"
 					);
 					res.body.processes[0].error.should.be.a("object");
 					res.body.processes[0].error.errorName.should.equal(
@@ -286,7 +286,7 @@ describe("4. Test submission programs at /submit", () => {
 					expect(res.body.processes[0].observedOutputTooLong).to.be
 						.false;
 					res.body.processes[0].should.have.property(
-						"execTimeForProcess"
+						"executionTimeForProcess"
 					);
 					res.body.processes[0].error.should.be.a("object");
 					res.body.processes[0].error.errorName.should.equal(
@@ -360,7 +360,7 @@ describe("4. Test submission programs at /submit", () => {
 					expect(res.body.processes[0].observedOutputTooLong).to.be
 						.false;
 					res.body.processes[0].should.have.property(
-						"execTimeForProcess"
+						"executionTimeForProcess"
 					);
 					res.body.processes[0].error.should.be.a("object");
 					res.body.processes[0].error.errorName.should.equal("Error");
@@ -458,7 +458,7 @@ describe("4. Test submission programs at /submit", () => {
 						.true;
 					expect(res.body.processes[0].error).to.be.null;
 					expect(
-						res.body.processes[0].execTimeForProcess
+						res.body.processes[0].executionTimeForProcess
 					).to.not.equal(null);
 					expect(
 						fs.existsSync(

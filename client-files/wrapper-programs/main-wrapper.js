@@ -92,10 +92,12 @@ try {
 			) {
 				// spawn one process and do not pass any sample input to it
 				try {
+					let executionTimeForProcess = performance.now();
 					let nodeProcess = spawnSync("node", [submissionFileName], {
 						timeout: EXECUTION_TIME_OUT_IN_MS,
 					});
-
+					executionTimeForProcess =
+						performance.now() - executionTimeForProcess;
 					const io = nodeProcess.output;
 					const stdout =
 						io[1].toString().length <= MAX_LENGTH_STDOUT
@@ -128,12 +130,15 @@ try {
 						// ... otherwise, its signal would be null
 						timedOut:
 							nodeProcess.signal === "SIGTERM" ? true : false,
+						timeOutLength: EXECUTION_TIME_OUT_IN_MS,
 						expectedOutput: null,
 						observedOutput,
 						error,
 						// if length of stdout is larger than MAX length permitted, ...
 						// ... set stdout as null and specify reason in response object
 						observedOutputTooLong: stdout === null ? true : false,
+						observedOutputMaxLength: MAX_LENGTH_STDOUT,
+						executionTimeForProcess,
 					};
 					// NOTE: Do not log to the console or write to stdout ...
 					// ... from inside main-wrapper.js except for the response ...
@@ -156,7 +161,7 @@ const main = () => {
 	response["sampleInputs"] = sampleInputsData.length;
 	for (let i = 0; i < sampleInputsData.length; i++) {
 		try {
-			let execTimeForProcess = performance.now();
+			let executionTimeForProcess = performance.now();
 			let nodeProcess = spawnSync(
 				"node",
 				[
@@ -167,7 +172,8 @@ const main = () => {
 					timeout: EXECUTION_TIME_OUT_IN_MS,
 				}
 			);
-			execTimeForProcess = performance.now() - execTimeForProcess;
+			executionTimeForProcess =
+				performance.now() - executionTimeForProcess;
 			const io = nodeProcess.output;
 			const stdout =
 				io[1].toString().length <= MAX_LENGTH_STDOUT
@@ -206,7 +212,7 @@ const main = () => {
 				// if length of stdout is larger than MAX length permitted, ...
 				// ... set stdout as null and specify reason in response object
 				observedOutputTooLong: stdout === null ? true : false,
-				execTimeForProcess,
+				executionTimeForProcess,
 			};
 			// write to stdout to indicate completion of test #i
 			process.stdout.write(

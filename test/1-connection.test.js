@@ -10,7 +10,10 @@ describe("Tests: ", () => {
 	describe("1a. Socket connection at http://localhost:8080", () => {
 		it("should be connected to a socket", done => {
 			expect(socket.connected).to.be.true;
-			done();
+			socket.on("container-ready-status", logs => {
+				expect(logs.status).to.equal("ready");
+				done();
+			});
 		});
 	});
 });

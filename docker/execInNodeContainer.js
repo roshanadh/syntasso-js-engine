@@ -20,7 +20,7 @@ const execSubmission = (req, socketInstance) => {
 				executionTime = 0;
 			const { socketId } = req.body;
 			console.log("Executing submission inside container...");
-			socketInstance.instance.to(socketId).emit("docker-app-stdout", {
+			socketInstance.to(socketId).emit("docker-app-stdout", {
 				stdout: "Executing submission inside container...",
 			});
 			const mainWrapper = exec(
@@ -36,21 +36,17 @@ const execSubmission = (req, socketInstance) => {
 					);
 					if (jsonOutput.type === "test-status") {
 						// stdout is the test status for an individual test case
-						socketInstance.instance
-							.to(socketId)
-							.emit("test-status", {
-								...jsonOutput,
-							});
+						socketInstance.to(socketId).emit("test-status", {
+							...jsonOutput,
+						});
 					} else if (jsonOutput.type === "full-response") {
 						// stdout is the final response for user's submission
 
 						// remove "type" property from jsonOutput object before resolving
 						delete jsonOutput.type;
-						socketInstance.instance
-							.to(socketId)
-							.emit("docker-app-stdout", {
-								stdout: `User's submission executed`,
-							});
+						socketInstance.to(socketId).emit("docker-app-stdout", {
+							stdout: `User's submission executed`,
+						});
 						console.log(`Submission from ${socketId} executed.`);
 						return resolve({
 							...jsonOutput,
@@ -84,7 +80,7 @@ const execSubmission = (req, socketInstance) => {
 									stream[index].type &&
 									stream[index].type === "test-status"
 								) {
-									socketInstance.instance
+									socketInstance
 										.to(socketId)
 										.emit("test-status", {
 											...stream[index],
@@ -95,7 +91,7 @@ const execSubmission = (req, socketInstance) => {
 
 									// remove "type" property from stream[index] object before resolving
 									delete stream[index].type;
-									socketInstance.instance
+									socketInstance
 										.to(socketId)
 										.emit("docker-app-stdout", {
 											stdout: `User's submission executed`,

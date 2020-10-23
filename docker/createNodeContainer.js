@@ -2,18 +2,15 @@ const { exec } = require("child_process");
 
 const removeNodeContainer = require("./removeNodeContainer.js");
 const { convertTimeToMs } = require("../util/index.js");
-module.exports = (req, socketInstance) => {
+module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		try {
-			const { socketId } = req.body;
 			removeNodeContainer(socketId)
 				.then(removalLogs => {
 					console.log("Creating a Node.js container...");
-					socketInstance.instance
-						.to(socketId)
-						.emit("docker-app-stdout", {
-							stdout: "Creating a Node.js container...",
-						});
+					socketInstance.to(socketId).emit("docker-app-stdout", {
+						stdout: "Creating a Node.js container...",
+					});
 					let containerCreateTime;
 					exec(
 						`time docker create -it --name ${socketId} img_node`,
@@ -54,12 +51,12 @@ module.exports = (req, socketInstance) => {
 										`stdout during Node.js container creation: ${stdout}`
 									);
 									console.log("Node.js container created.");
-									socketInstance.instance
+									socketInstance
 										.to(socketId)
 										.emit("docker-app-stdout", {
 											stdout: `stdout during Node.js container creation: ${stdout}`,
 										});
-									socketInstance.instance
+									socketInstance
 										.to(socketId)
 										.emit("docker-app-stdout", {
 											stdout:
@@ -77,7 +74,7 @@ module.exports = (req, socketInstance) => {
 										"stderr while creating Node.js container:",
 										stderr
 									);
-									socketInstance.instance
+									socketInstance
 										.to(socketId)
 										.emit("docker-app-stdout", {
 											stdout: `stderr while creating Node.js container: ${stderr}`,

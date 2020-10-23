@@ -7,9 +7,9 @@ const chaiHttp = require("chai-http");
 // client API for socket.io
 const io = require("socket.io-client");
 
-const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
+const path = require("path");
+const fs = require("fs");
+const { execSync } = require("child_process");
 
 const { server } = require("../server.js");
 
@@ -21,16 +21,12 @@ let log = console.log,
 	logObj = console.dir,
 	logError = console.error;
 
-console.log = msg => { }
-console.error = msg => { }
-console.dir = msg => { }
-
 let socket;
 
 createConnection = async () => {
 	socket = await io.connect("http://localhost:8080");
 	return socket;
-}
+};
 
 removeConnection = async () => {
 	let socketId = socket.id;
@@ -41,7 +37,7 @@ removeConnection = async () => {
 		log("Socket connection doesn't exist.");
 		return null;
 	}
-}
+};
 
 getConnection = () => socket;
 
@@ -57,4 +53,4 @@ module.exports = {
 	createConnection,
 	removeConnection,
 	getConnection,
-}
+};
