@@ -20,7 +20,16 @@ class Socket {
 				`\nCONNECTION: New socket connection with id ${socket.id}\n`
 			);
 			// initialize container for each connection
-			initContainer(socket.id, this.instance);
+			initContainer(socket.id, this.instance).catch(error => {
+				if (
+					error.message.includes(
+						`The container name "/${socket.id}" is already in use by container`
+					)
+				) {
+					// do nothing as this error was caused by trying to ...
+					// ... to create a container that already exists
+				} else throw new Error(error);
+			});
 			// perform cleanup operations after socket disconnect
 			socket.on("disconnect", reason => {
 				console.log(
