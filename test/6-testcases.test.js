@@ -80,7 +80,6 @@ describe("Test output of test cases at /submit:", () => {
 			.post("/submit")
 			.send(payload)
 			.end((err, res) => {
-				console.dir(payload);
 				expect(err).to.be.null;
 				res.body.should.be.a("object");
 				res.body.sampleInputs.should.equal(1);
