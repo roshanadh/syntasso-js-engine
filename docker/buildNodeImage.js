@@ -1,12 +1,11 @@
 const { exec } = require("child_process");
 
 const { convertTimeToMs } = require("../util/index.js");
-module.exports = (req, socketInstance) => {
+module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		try {
-			const { socketId } = req.body;
 			console.log("Building a Node.js image...");
-			socketInstance.instance.to(socketId).emit("docker-app-stdout", {
+			socketInstance.to(socketId).emit("docker-app-stdout", {
 				stdout: `Building a Node.js image...`,
 			});
 			let imageBuildTime;
@@ -44,7 +43,7 @@ module.exports = (req, socketInstance) => {
 							// get build time in terms of 0m.000s
 							imageBuildTime = times[1].split("\t")[1];
 							console.log("Node.js image built.");
-							socketInstance.instance
+							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
 									stdout: "Node.js image built.",
@@ -59,7 +58,7 @@ module.exports = (req, socketInstance) => {
 								"stderr while building Node.js image:",
 								stderr
 							);
-							socketInstance.instance
+							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
 									stdout: `stderr while building Node.js image: ${stderr}`,
@@ -74,7 +73,7 @@ module.exports = (req, socketInstance) => {
 			);
 			buildProcess.stdout.on("data", stdout => {
 				console.log(stdout);
-				socketInstance.instance.to(socketId).emit("docker-app-stdout", {
+				socketInstance.to(socketId).emit("docker-app-stdout", {
 					stdout,
 				});
 			});

@@ -1,12 +1,11 @@
 const { exec } = require("child_process");
 
 const { convertTimeToMs } = require("../util/index.js");
-module.exports = (req, socketInstance) => {
+module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		try {
-			const { socketId } = req.body;
 			console.log("Starting Node.js container...");
-			socketInstance.instance.to(socketId).emit("docker-app-stdout", {
+			socketInstance.to(socketId).emit("docker-app-stdout", {
 				stdout: "Starting Node.js container...",
 			});
 			let containerStartTime;
@@ -47,12 +46,12 @@ module.exports = (req, socketInstance) => {
 								`stdout during Node.js container start: ${stdout}`
 							);
 							console.log("Node.js container started.");
-							socketInstance.instance
+							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
 									stdout: `stdout during Node.js container start: ${stdout}`,
 								});
-							socketInstance.instance
+							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
 									stdout: "Node.js container started.",
@@ -69,7 +68,7 @@ module.exports = (req, socketInstance) => {
 								"stderr while starting Node.js container:",
 								stderr
 							);
-							socketInstance.instance
+							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
 									stdout: `stderr while starting Node.js container: ${stderr}`,
