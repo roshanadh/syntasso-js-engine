@@ -7,9 +7,6 @@ const {
 module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		let times = {};
-		// console.dir({
-		// 	socketInstance,
-		// });
 		socketInstance.to(socketId).emit("container-init-status", {
 			status: "building",
 			message: "Building a Node.js image...",
