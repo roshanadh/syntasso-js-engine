@@ -22,6 +22,7 @@ class Socket {
 			// initialize container for each connection
 			initContainer(socket.id, this.instance).catch(error => {
 				if (
+					error.message &&
 					error.message.includes(
 						`The container name "/${socket.id}" is already in use by container`
 					)
