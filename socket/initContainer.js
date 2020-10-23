@@ -41,16 +41,34 @@ module.exports = (socketId, socketInstance) => {
 					message: "Container is ready.",
 					error: null,
 				});
+				// "container-ready-status" event is strictly for testing
+				// clients may only listen for the "container-init-status" events
+				socketInstance.to(socketId).emit("container-ready-status", {
+					status: "ready",
+					message: "Container is ready.",
+					error: null,
+				});
 				return resolve(socketId);
 			})
 			.catch(error => {
-				console.error("Error in initContainer:", error);
-				socketInstance.to(socketId).emit("container-init-status", {
-					status: "error",
-					message: "Please re-try creating a socket connection",
-					error,
-				});
-				reject(error);
+				if (
+					error.error &&
+					error.error.message &&
+					error.error.message.includes(
+						`The container name "/${socket.id}" is already in use by container`
+					)
+				) {
+					// do nothing as this error was caused by trying to ...
+					// ... to create a container that already exists
+				} else {
+					console.error("Error in initContainer:", error);
+					socketInstance.to(socketId).emit("container-init-status", {
+						status: "error",
+						message: "Please re-try creating a socket connection",
+						error,
+					});
+					reject(error);
+				}
 			});
 	});
 };
