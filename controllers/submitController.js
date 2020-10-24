@@ -1,7 +1,5 @@
 const {
-	handleConfigZero,
-	handleConfigOne,
-	handleConfigTwo,
+	handleContainerTasks,
 	handle403Response,
 } = require("../handlers/index.js");
 const {
@@ -19,24 +17,7 @@ module.exports = (req, res, next) => {
 			.then(() => generateTestFiles(req))
 			.then(() => {
 				{
-					const dockerConfig = parseInt(req.body.dockerConfig);
-					switch (dockerConfig) {
-						case 0:
-							// pass empty object as "times" argument, since no times ...
-							// ... have been recorded as of yet
-							handleConfigZero(req, res, next, {});
-							break;
-						case 1:
-							// pass empty object as "times" argument, since no times ...
-							// ... have been recorded as of yet
-							handleConfigOne(req, res, next, {});
-							break;
-						case 2:
-							// pass empty object as "times" argument, since no times ...
-							// ... have been recorded as of yet
-							handleConfigTwo(req, res, next, {});
-							break;
-					}
+					handleContainerTasks(req, res, next);
 				}
 			})
 			.catch(error => {
