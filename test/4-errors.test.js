@@ -22,12 +22,11 @@ describe("4. Test submission programs at /submit", () => {
 		);
 	});
 
-	describe("POST with errorful code and dockerConfig = 2 at /submit", () => {
+	describe("POST with errorful code at /submit", () => {
 		it("should respond with ReferenceError", done => {
 			let payload = {
 				socketId,
 				code: `console.log("Hello World!");\nwhile(i <= 10) {\nconsole.log(k);\ni++;\n}`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -101,7 +100,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `console.log(1`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -170,7 +168,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `console.log("Hello World!");\nthrow new RangeError("A range error");\n`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -244,7 +241,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `console.log("Hello World!");\nthrow new TypeError("A type error");\n`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -318,7 +314,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `console.log("Hello World!");\nthrow new Error("A custom error");\n`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -392,7 +387,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `while(true) {}`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
@@ -428,7 +422,6 @@ describe("4. Test submission programs at /submit", () => {
 			let payload = {
 				socketId,
 				code: `let i = 0; while(true) { console.log(i++) }`,
-				dockerConfig: "2",
 				testCases: [
 					{
 						sampleInput: "1\n2 3 4 5",
