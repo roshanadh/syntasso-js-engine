@@ -11,7 +11,6 @@ describe("Test POST /submit:", () => {
 		it("should not POST without socketId", done => {
 			const payload = {
 				code: "process.stdout.write('Hello World!')",
-				dockerConfig: 0,
 				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 			};
 			chai.request(server)
@@ -29,7 +28,6 @@ describe("Test POST /submit:", () => {
 			const payload = {
 				socketId: "abcd1234",
 				code: "process.stdout.write('Hello World!')",
-				dockerConfig: 0,
 				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 			};
 			chai.request(server)
@@ -46,7 +44,6 @@ describe("Test POST /submit:", () => {
 		it("should not POST without code", done => {
 			const payload = {
 				socketId,
-				dockerConfig: 0,
 				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 			};
 			chai.request(server)
@@ -60,68 +57,10 @@ describe("Test POST /submit:", () => {
 				});
 		});
 
-		it("should not POST without dockerConfig", done => {
-			const payload = {
-				socketId,
-				code: "process.stdout.write('Hello World!')",
-				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
-			};
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.body.should.be.a("object");
-					res.body.error.should.equal("No dockerConfig provided");
-					done();
-				});
-		});
-
-		it("should not POST with NaN dockerConfig", done => {
-			const payload = {
-				socketId,
-				code: "process.stdout.write('Hello World!')",
-				dockerConfig: "abcd",
-				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
-			};
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.body.should.be.a("object");
-					res.body.error.should.equal(
-						"dockerConfig should be a number; got NaN"
-					);
-					done();
-				});
-		});
-
-		it("should not POST with dockerConfig not in [0, 1, 2]", done => {
-			const payload = {
-				socketId,
-				code: "process.stdout.write('Hello World!')",
-				dockerConfig: 3,
-				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
-			};
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.body.should.be.a("object");
-					res.body.error.should.equal(
-						"dockerConfig should be one of [0, 1, 2]"
-					);
-					done();
-				});
-		});
-
 		it("should not POST without testCases", done => {
 			const payload = {
 				socketId,
 				code: "process.stdout.write('Hello World!')",
-				dockerConfig: 2,
 			};
 			chai.request(server)
 				.post("/submit")
@@ -138,7 +77,6 @@ describe("Test POST /submit:", () => {
 			const payload = {
 				socketId,
 				code: "process.stdout.write('Hello World!')",
-				dockerConfig: 2,
 				testCases: [],
 			};
 			chai.request(server)
@@ -154,51 +92,10 @@ describe("Test POST /submit:", () => {
 	});
 
 	describe("Correct params tests:", () => {
-		it("should POST with code, testCases, and dockerConfig = 0", done => {
+		it("should POST with socketId, code, and testCases", done => {
 			const payload = {
 				socketId,
 				code: "process.stdout.write('Hello World!')",
-				dockerConfig: "0",
-				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
-			};
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.body.should.be.a("object");
-					res.body.processes[0].observedOutput.should.equal(
-						"Hello World!"
-					);
-					done();
-				});
-		});
-
-		it("should POST with code, testCases, and dockerConfig = 1", done => {
-			const payload = {
-				socketId,
-				code: "process.stdout.write('Hello World!')",
-				dockerConfig: "1",
-				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
-			};
-			chai.request(server)
-				.post("/submit")
-				.send(payload)
-				.end((err, res) => {
-					expect(err).to.be.null;
-					res.body.should.be.a("object");
-					res.body.processes[0].observedOutput.should.equal(
-						"Hello World!"
-					);
-					done();
-				});
-		});
-
-		it("should POST with code, testCases, and dockerConfig = 2", done => {
-			const payload = {
-				socketId,
-				code: "process.stdout.write('Hello World!')",
-				dockerConfig: "2",
 				testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 			};
 			chai.request(server)

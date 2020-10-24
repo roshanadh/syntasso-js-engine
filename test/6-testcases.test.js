@@ -12,7 +12,6 @@ describe("Test output of test cases at /submit:", () => {
 			socketId,
 			// stub with code to calculate area of a rectangle
 			code: `"use strict"; let rawSampleInput, parsedInput = [], currentLine = 0; function calcArea(length, breadth) { return length * breadth; } const readLine = () => parsedInput[currentLine++]; const main = () => { if (process.argv.length == 3) { rawSampleInput = process.argv[2]; parsedInput = rawSampleInput.split("\\n"); try { let length = parseInt(readLine()); let breadth = parseInt(readLine()); let output = calcArea(length, breadth); process.stdout.write(output.toString()); } catch (error) { process.stderr.write(error); } } else if (process.argv.length > 3) { throw new Error("Too many inputs provided"); } else { throw new Error("No input provided"); } }; main(); `,
-			dockerConfig: "2",
 			testCases: [{ sampleInput: "5\n2", expectedOutput: "10" }],
 		};
 		chai.request(server)
@@ -31,7 +30,6 @@ describe("Test output of test cases at /submit:", () => {
 			socketId,
 			// stub with code to calculate area of a rectangle
 			code: `"use strict"; let rawSampleInput, parsedInput = [], currentLine = 0; function calcArea(length, breadth) { return length * breadth; } const readLine = () => parsedInput[currentLine++]; const main = () => { if (process.argv.length == 3) { rawSampleInput = process.argv[2]; parsedInput = rawSampleInput.split("\\n"); try { let length = parseInt(readLine()); let breadth = parseInt(readLine()); let output = calcArea(length, breadth); process.stdout.write(output.toString()); } catch (error) { process.stderr.write(error); } } else if (process.argv.length > 3) { throw new Error("Too many inputs provided"); } else { throw new Error("No input provided"); } }; main(); `,
-			dockerConfig: "2",
 			testCases: [{ sampleInput: "5\n20", expectedOutput: "10" }],
 		};
 		chai.request(server)
@@ -50,7 +48,6 @@ describe("Test output of test cases at /submit:", () => {
 			socketId,
 			// print i after an infinite loop
 			code: `for (let i = 0; i < 1; i--) {} console.log(i);`,
-			dockerConfig: "2",
 			testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 		};
 		chai.request(server)
@@ -73,7 +70,6 @@ describe("Test output of test cases at /submit:", () => {
 			socketId,
 			// print i inside an infinite loop
 			code: `for (let i = 0; i < 1; i--) {console.log(i);}`,
-			dockerConfig: "2",
 			testCases: [{ sampleInput: 0, expectedOutput: 0 }],
 		};
 		chai.request(server)
