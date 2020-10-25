@@ -8,7 +8,7 @@ const {
 	path,
 } = require("./test-config.js");
 
-describe("4. Test submission programs at /submit", () => {
+describe("Test submission programs at /submit", () => {
 	let socket, socketId, uploadedFilesPath;
 	before(() => {
 		const { getConnection } = require("./test-config.js");
