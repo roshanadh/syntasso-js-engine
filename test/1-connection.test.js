@@ -7,7 +7,7 @@ describe("Tests: ", () => {
 		socket = await createConnection();
 	});
 
-	describe("1a. Socket connection at http://localhost:8080", () => {
+	describe("Socket connection at http://localhost:8080", () => {
 		it("should be connected to a socket", done => {
 			expect(socket.connected).to.be.true;
 			socket.on("container-ready-status", logs => {

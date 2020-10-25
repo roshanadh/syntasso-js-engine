@@ -201,6 +201,7 @@ const main = () => {
 			let testStatus = observedOutput === expectedOutput;
 
 			processes[i] = {
+				id: i,
 				testStatus,
 				timedOut: nodeProcess.signal === "SIGTERM" ? true : false,
 				sampleInput: sampleInputsData.fileContents[
