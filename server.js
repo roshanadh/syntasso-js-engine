@@ -12,6 +12,7 @@ const {
 	SECRET_SESSION_KEY,
 	REDIS_PORT,
 } = require("./config.js");
+const log4js = require("./util/logger.js");
 
 const client = redis.createClient();
 const app = express();
@@ -19,11 +20,15 @@ let server = http.createServer(app);
 
 const { NODE_ENV } = process.env;
 
-if (NODE_ENV === "dev")
+let logger = log4js.getLogger();
+
+if (NODE_ENV === "dev") {
+	logger = log4js.getLogger("dev");
 	// inspect event-loop blocks
 	blocked((time, stack) => {
-		console.log(`Blocked for ${time}ms, operation started here:`, stack);
+		logger.warn(`Blocked for ${time}ms, operation started here:`, stack);
 	});
+}
 
 if (cluster.isMaster && !module.parent) {
 	// if current process is the master process and the ...
@@ -31,7 +36,7 @@ if (cluster.isMaster && !module.parent) {
 	// ... application has not been launched from another ...
 	// ... script (e.g. a test script like /test/test-config.js)
 	server.once("listening", () => {
-		console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
+		logger.info(`Syntasso JS Engine server listening on port ${PORT}...`);
 	});
 } else {
 	// if the current process is a worker process or if the application ...
@@ -41,7 +46,7 @@ if (cluster.isMaster && !module.parent) {
 	// log the worker process' ID only if module.parent doesn't exist i.e. if ...
 	// ... the application hasn't been launched from another script
 	!module.parent
-		? console.log(`Worker process ${cluster.worker.id} forked`)
+		? logger.info(`Worker process ${cluster.worker.id} forked`)
 		: null;
 	const cors = require("cors");
 	const session = require("express-session");
@@ -90,7 +95,7 @@ if (!module.parent) {
 	// if the application was started by another script, ...
 	// ... for instance the test script (/test/test-config.js)
 	server = app.listen(PORT, () => {
-		console.log(`Syntasso JS Engine server listening on port ${PORT}...`);
+		logger.info(`Syntasso JS Engine server listening on port ${PORT}...`);
 	});
 }
 
