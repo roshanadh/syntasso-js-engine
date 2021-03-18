@@ -8,7 +8,7 @@ log4js.configure({
 		// rolling file appender
 		file: {
 			type: "file",
-			filename: "../logs/application.logs",
+			filename: "./logs/application.logs",
 			maxLogSize: 5000,
 			backups: 5,
 		},
