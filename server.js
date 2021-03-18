@@ -12,7 +12,7 @@ const {
 	SECRET_SESSION_KEY,
 	REDIS_PORT,
 } = require("./config.js");
-const log4js = require("./util/logger.js");
+const logger = require("./util/logger.js");
 
 const client = redis.createClient();
 const app = express();
@@ -20,15 +20,11 @@ let server = http.createServer(app);
 
 const { NODE_ENV } = process.env;
 
-let logger = log4js.getLogger();
-
-if (NODE_ENV === "dev") {
-	logger = log4js.getLogger("dev");
+if (NODE_ENV === "dev")
 	// inspect event-loop blocks
 	blocked((time, stack) => {
 		logger.warn(`Blocked for ${time}ms, operation started here:`, stack);
 	});
-}
 
 if (cluster.isMaster && !module.parent) {
 	// if current process is the master process and the ...
