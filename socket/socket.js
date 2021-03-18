@@ -4,6 +4,7 @@ const cryptoRandomString = require("crypto-random-string");
 const { removeNodeContainer } = require("../docker/index.js");
 const { cleanUpClientFiles } = require("../filesystem/index.js");
 const initContainer = require("./initContainer.js");
+const logger = require("../util/logger.js");
 
 class Socket {
 	constructor(server) {
@@ -16,7 +17,7 @@ class Socket {
 		};
 
 		this.instance.on("connection", async socket => {
-			console.log(
+			logger.info(
 				`\nCONNECTION: New socket connection with id ${socket.id}\n`
 			);
 			// initialize container for each connection
@@ -25,18 +26,17 @@ class Socket {
 			});
 			// perform cleanup operations after socket disconnect
 			socket.on("disconnect", reason => {
-				console.log(
-					`\nDISCONNECT: Socket disconnected with id ${socket.id}`
+				logger.info(
+					`\nDISCONNECT: Socket disconnected with ID ${socket.id}, REASON: ${reason}`
 				);
-				console.log(`REASON: ${reason}\n`);
 				removeNodeContainer(socket.id).catch(error =>
-					console.error(
+					logger.error(
 						`Error during container cleanup after socket ${socket.id} disconnection:`,
 						error
 					)
 				);
 				cleanUpClientFiles(socket.id).catch(error =>
-					console.error(
+					logger.error(
 						`Error during client-files/ cleanup after socket ${socket.id} disconnection:`,
 						error
 					)
