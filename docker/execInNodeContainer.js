@@ -4,6 +4,7 @@ const { performance } = require("perf_hooks");
 const { EXECUTION_TIME_OUT_IN_MS, MAX_LENGTH_STDOUT } = require("../config.js");
 const removeClientFilesFromNodeContainer = require("./removeClientFilesFromNodeContainer.js");
 const copyClientFilesToNodeContainer = require("./copyClientFilesToNodeContainer.js");
+const logger = require("../util/logger.js");
 
 const execSubmission = (req, socketInstance) => {
 	return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ const execSubmission = (req, socketInstance) => {
 			let startTime = performance.now(),
 				executionTime = 0;
 			const { socketId } = req.body;
-			console.log("Executing submission inside container...");
+			logger.info("Executing submission inside container...");
 			socketInstance.to(socketId).emit("docker-app-stdout", {
 				stdout: "Executing submission inside container...",
 			});
@@ -31,7 +32,7 @@ const execSubmission = (req, socketInstance) => {
 					executionTime = performance.now() - startTime;
 					let stringOutput = stdoutBuffer.toString();
 					let jsonOutput = JSON.parse(stringOutput);
-					console.log(
+					logger.info(
 						`stdout while executing submission inside container ${socketId}: ${stringOutput}`
 					);
 					if (jsonOutput.type === "test-status") {
@@ -47,7 +48,7 @@ const execSubmission = (req, socketInstance) => {
 						socketInstance.to(socketId).emit("docker-app-stdout", {
 							stdout: `User's submission executed`,
 						});
-						console.log(`Submission from ${socketId} executed.`);
+						logger.info(`Submission from ${socketId} executed.`);
 						return resolve({
 							...jsonOutput,
 							executionTime,
@@ -61,7 +62,7 @@ const execSubmission = (req, socketInstance) => {
 						// we need to create an array of JSON objects: ...
 						// ... [{}, {}, {}, ...] in such a case
 						try {
-							console.log(
+							logger.info(
 								`Parsing stdout with adjoining JSON objects encountered for socketId ${socketId}`
 							);
 							let stream = stdoutBuffer.toString().trim();
@@ -96,7 +97,7 @@ const execSubmission = (req, socketInstance) => {
 										.emit("docker-app-stdout", {
 											stdout: `User's submission executed`,
 										});
-									console.log(
+									logger.info(
 										`Submission from ${socketId} executed.`
 									);
 									return resolve({
@@ -106,7 +107,7 @@ const execSubmission = (req, socketInstance) => {
 								}
 							});
 						} catch (err) {
-							console.error(
+							logger.error(
 								`Error while parsing stdout with adjoining JSON objects in execInNodeContainer for socketId ${socketId}:`,
 								err
 							);
@@ -115,7 +116,7 @@ const execSubmission = (req, socketInstance) => {
 							});
 						}
 					} else {
-						console.error(
+						logger.error(
 							`Error in execInNodeContainer for socketId ${socketId}:`,
 							error
 						);
@@ -128,7 +129,7 @@ const execSubmission = (req, socketInstance) => {
 			mainWrapper.stderr.on("data", stderrBuffer => {
 				try {
 					const stderr = JSON.parse(stderrBuffer.toString());
-					console.error(
+					logger.error(
 						`Some error while executing main-wrapper inside ${socketId}:`,
 						stderr
 					);
@@ -140,7 +141,7 @@ const execSubmission = (req, socketInstance) => {
 				}
 			});
 		} catch (error) {
-			console.error("Error in execInNodeContainer:", error);
+			logger.error("Error in execInNodeContainer:", error);
 			return reject({ error });
 		}
 	});

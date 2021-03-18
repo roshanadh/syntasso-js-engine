@@ -1,16 +1,18 @@
 const { exec } = require("child_process");
 
+const logger = require("../util/logger.js");
+
 module.exports = socketId => {
 	return new Promise((resolve, reject) => {
 		try {
-			console.log(
+			logger.info(
 				"Removing any existing client-files/ contents from container..."
 			);
 			exec(
 				`docker exec -i ${socketId} sh -c "rm -rf sampleInputs; rm -rf expectedOutputs"`,
 				(error, stdout, stderr) => {
 					if (error) {
-						console.error(
+						logger.error(
 							`Error while removing client-files/ contents from container ${socketId}:`,
 							error
 						);
@@ -20,7 +22,7 @@ module.exports = socketId => {
 						return reject({ error });
 					}
 					if (stderr) {
-						console.error(
+						logger.error(
 							`stderr while removing client-files/ contents from container ${socketId}:`,
 							stderr
 						);
@@ -29,17 +31,14 @@ module.exports = socketId => {
 						// ... or an stderr was generated during the removal process
 						return reject({ stderr });
 					}
-					console.log(
+					logger.info(
 						`client-files/ contents removed from container ${socketId}`
 					);
 					return resolve(stdout);
 				}
 			);
 		} catch (error) {
-			console.error(
-				"Error in removeClientFilesFromNodeContainer:",
-				error
-			);
+			logger.error("Error in removeClientFilesFromNodeContainer:", error);
 			return reject({ error });
 		}
 	});

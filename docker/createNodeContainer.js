@@ -2,12 +2,14 @@ const { exec } = require("child_process");
 
 const removeNodeContainer = require("./removeNodeContainer.js");
 const { convertTimeToMs } = require("../util/index.js");
+const logger = require("../util/logger.js");
+
 module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		try {
 			removeNodeContainer(socketId)
 				.then(removalLogs => {
-					console.log("Creating a Node.js container...");
+					logger.info("Creating a Node.js container...");
 					socketInstance.to(socketId).emit("docker-app-stdout", {
 						stdout: "Creating a Node.js container...",
 					});
@@ -17,7 +19,7 @@ module.exports = (socketId, socketInstance) => {
 						{ shell: "/bin/bash" },
 						(error, stdout, stderr) => {
 							if (error) {
-								console.error(
+								logger.error(
 									"Error while creating Node.js container:",
 									error
 								);
@@ -47,10 +49,10 @@ module.exports = (socketId, socketInstance) => {
 									containerCreateTime = times[1].split(
 										"\t"
 									)[1];
-									console.log(
+									logger.info(
 										`stdout during Node.js container creation: ${stdout}`
 									);
-									console.log("Node.js container created.");
+									logger.info("Node.js container created.");
 									socketInstance
 										.to(socketId)
 										.emit("docker-app-stdout", {
@@ -70,7 +72,7 @@ module.exports = (socketId, socketInstance) => {
 									});
 								} catch (err) {
 									// stderr contains an actual error and not execution times
-									console.error(
+									logger.error(
 										"stderr while creating Node.js container:",
 										stderr
 									);
@@ -92,7 +94,7 @@ module.exports = (socketId, socketInstance) => {
 					return reject(error);
 				});
 		} catch (error) {
-			console.error("Error in createNodeContainer:", error);
+			logger.error("Error in createNodeContainer:", error);
 			return reject({ error });
 		}
 	});

@@ -1,9 +1,11 @@
 const { exec, spawnSync } = require("child_process");
 
+const logger = require("../util/logger.js");
+
 module.exports = socketId => {
 	return new Promise((resolve, reject) => {
 		try {
-			console.log(
+			logger.info(
 				`Removing any existing Node.js containers named ${socketId}...`
 			);
 			// if the engine is run on an testing environment, use the sync function ...
@@ -25,7 +27,7 @@ module.exports = socketId => {
 						!stderr.includes(`No such container: ${socketId}`) &&
 						!stderr.trim().includes(socketId)
 					) {
-						console.error(
+						logger.error(
 							"stderr while removing Node.js container:",
 							stderr
 						);
@@ -34,10 +36,10 @@ module.exports = socketId => {
 						// ... or an stderr was generated during the removal process
 						return reject({ stderr });
 					}
-					console.log(
+					logger.info(
 						`stdout while removing container ${socketId}: ${stdout}`
 					);
-					console.log(`Node.js container named ${socketId} removed.`);
+					logger.info(`Node.js container named ${socketId} removed.`);
 					return resolve(stdout);
 				} catch (error) {
 					if (
@@ -46,7 +48,7 @@ module.exports = socketId => {
 							`No such container: ${socketId}`
 						)
 					) {
-						console.error(
+						logger.error(
 							"Error while removing Node.js container:",
 							error
 						);
@@ -55,10 +57,10 @@ module.exports = socketId => {
 						// ... or an stderr was generated during the removal process
 						return reject({ error });
 					}
-					console.log(
+					logger.info(
 						`stdout during Node.js container removal: ${stdout}`
 					);
-					console.log("Node.js container removed.");
+					logger.info("Node.js container removed.");
 					return resolve(stdout);
 				}
 			}
@@ -75,7 +77,7 @@ module.exports = socketId => {
 							`No such container: ${socketId}`
 						)
 					) {
-						console.error(
+						logger.error(
 							"Error while removing Node.js container:",
 							error
 						);
@@ -89,7 +91,7 @@ module.exports = socketId => {
 						!stderr.includes(`No such container: ${socketId}`) &&
 						!stderr.trim().includes(socketId)
 					) {
-						console.error(
+						logger.error(
 							"stderr while removing Node.js container:",
 							stderr
 						);
@@ -98,15 +100,15 @@ module.exports = socketId => {
 						// ... or an stderr was generated during the removal process
 						return reject({ stderr });
 					}
-					console.log(
+					logger.info(
 						`stdout during Node.js container removal: ${stdout}`
 					);
-					console.log("Node.js container removed.");
+					logger.info("Node.js container removed.");
 					return resolve(stdout);
 				}
 			);
 		} catch (error) {
-			console.error("Error in removeNodeContainer:", error);
+			logger.error("Error in removeNodeContainer:", error);
 			return reject({ error });
 		}
 	});
