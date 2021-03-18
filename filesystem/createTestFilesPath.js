@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const logger = require("../util/logger.js");
+
 module.exports = socketId => {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -19,7 +21,7 @@ module.exports = socketId => {
 				socketId,
 				"expectedOutputs"
 			);
-			console.log(
+			logger.info(
 				`Creating test case files path for socket ID: ${socketId}...`
 			);
 
@@ -39,14 +41,14 @@ module.exports = socketId => {
 							return reject(err);
 						}
 					}
-					console.log(
+					logger.info(
 						`Test case files path created for socket ID: ${socketId}.`
 					);
 					return resolve(true);
 				});
 			});
 		} catch (error) {
-			console.error(`Error inside createTestFilesPath:`, error);
+			logger.error(`Error inside createTestFilesPath:`, error);
 			return reject(error);
 		}
 	});

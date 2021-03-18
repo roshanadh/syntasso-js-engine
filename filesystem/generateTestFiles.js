@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const logger = require("../util/logger.js");
+
 module.exports = req => {
 	return new Promise(async (resolve, reject) => {
 		const { socketId, testCases } = req.body;
@@ -21,7 +23,7 @@ module.exports = req => {
 				"expectedOutputs"
 			);
 
-			console.log(
+			logger.info(
 				`Generating test case files for socket ID ${socketId}...`
 			);
 			fs.mkdir(sampleInputsDirPath, { recursive: true }, err => {
@@ -61,18 +63,18 @@ module.exports = req => {
 									sampleInputFilePath,
 									element.sampleInput.toString()
 								);
-								console.log(
+								logger.info(
 									`${socketId}-sampleInput-${index}.txt generated.`
 								);
 								fs.writeFileSync(
 									expectedOutputFilePath,
 									element.expectedOutput.toString()
 								);
-								console.log(
+								logger.info(
 									`${socketId}-expectedOutput-${index}.txt generated.`
 								);
 							} catch (err) {
-								console.error(
+								logger.error(
 									`Error while writing to test case files for socketId ${socketId}:`,
 									err
 								);
@@ -80,20 +82,20 @@ module.exports = req => {
 							}
 						});
 					} catch (err) {
-						console.error(
+						logger.error(
 							`Error while writing to test case files for socketId ${socketId}:`,
 							err
 						);
 						return reject(err);
 					}
-					console.log(
+					logger.info(
 						`Test case files generated for socket ID ${socketId}.`
 					);
 					return resolve(true);
 				});
 			});
 		} catch (error) {
-			console.error(
+			logger.error(
 				`Error while writing to test case files for socketId ${socketId}:`,
 				error
 			);

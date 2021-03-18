@@ -1,10 +1,12 @@
 const { exec } = require("child_process");
 
 const { convertTimeToMs } = require("../util/index.js");
+const logger = require("../util/logger.js");
+
 module.exports = (socketId, socketInstance) => {
 	return new Promise((resolve, reject) => {
 		try {
-			console.log("Building a Node.js image...");
+			logger.info("Building a Node.js image...");
 			socketInstance.to(socketId).emit("docker-app-stdout", {
 				stdout: `Building a Node.js image...`,
 			});
@@ -14,7 +16,7 @@ module.exports = (socketId, socketInstance) => {
 				{ shell: "/bin/bash" },
 				(error, stdout, stderr) => {
 					if (error) {
-						console.error(
+						logger.error(
 							"Error while building Node.js image:",
 							error
 						);
@@ -42,7 +44,7 @@ module.exports = (socketId, socketInstance) => {
 							times = stderr.split("\n");
 							// get build time in terms of 0m.000s
 							imageBuildTime = times[1].split("\t")[1];
-							console.log("Node.js image built.");
+							logger.info("Node.js image built.");
 							socketInstance
 								.to(socketId)
 								.emit("docker-app-stdout", {
@@ -54,7 +56,7 @@ module.exports = (socketId, socketInstance) => {
 							});
 						} catch (err) {
 							// stderr contains an actual error and not execution times
-							console.error(
+							logger.error(
 								"stderr while building Node.js image:",
 								stderr
 							);
@@ -72,13 +74,13 @@ module.exports = (socketId, socketInstance) => {
 				}
 			);
 			buildProcess.stdout.on("data", stdout => {
-				console.log(stdout);
+				logger.info(stdout);
 				socketInstance.to(socketId).emit("docker-app-stdout", {
 					stdout,
 				});
 			});
 		} catch (error) {
-			console.error("Error in buildNodeContainer:", error);
+			logger.error("Error in buildNodeContainer:", error);
 			return reject({ error });
 		}
 	});
