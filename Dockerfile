@@ -1,6 +1,4 @@
-FROM alpine:3.7
-
-RUN apk add --update build-base && apk add nodejs
+FROM node:14.16.0-alpine3.13
 
 COPY client-files/wrapper-programs/. /usr/src/sandbox
 
