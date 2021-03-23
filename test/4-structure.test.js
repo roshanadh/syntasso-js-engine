@@ -185,7 +185,7 @@ describe("Test response structures for POST /submit", () => {
 						expect(process.expectedOutput).to.equal("Hello World!");
 						expect(process.observedOutput).to.equal("");
 						expect(process.error.lineNumber).to.equal(1);
-						expect(process.error.columnNumber).to.equal(84);
+						expect(process.error.columnNumber).to.equal(22);
 						expect(process.error.errorMessage).to.equal(
 							"i is not defined"
 						);
