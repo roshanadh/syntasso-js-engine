@@ -15,7 +15,7 @@ module.exports = (socketId, socketInstance) => {
 					});
 					let containerCreateTime;
 					exec(
-						`time docker create -it --name ${socketId} img_node`,
+						`time docker create -it --memory 100m --memory-swap 200m --name ${socketId} img_node`,
 						{ shell: "/bin/bash" },
 						(error, stdout, stderr) => {
 							if (error) {
