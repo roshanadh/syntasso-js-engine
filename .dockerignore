@@ -1,4 +1,1 @@
-# Exclude every file and directory
-*
-# Except the client-files/ directory, which is sent to the Docker daemon
-!client-files/
+node_modules/
