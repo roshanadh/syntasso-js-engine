@@ -18,39 +18,39 @@ const should = chai.should();
 const expect = chai.expect;
 
 let log = console.log,
-	logObj = console.dir,
-	logError = console.error;
+  logObj = console.dir,
+  logError = console.error;
 
 let socket;
 
 createConnection = async () => {
-	socket = await io.connect("http://localhost:8080");
-	return socket;
+  socket = await io.connect("http://127.0.0.1:8080");
+  return socket;
 };
 
 removeConnection = async () => {
-	let socketId = socket.id;
-	if (socket.connected) {
-		socket.disconnect();
-		return { socket, socketId };
-	} else {
-		log("Socket connection doesn't exist.");
-		return null;
-	}
+  let socketId = socket.id;
+  if (socket.connected) {
+    socket.disconnect();
+    return { socket, socketId };
+  } else {
+    log("Socket connection doesn't exist.");
+    return null;
+  }
 };
 
 getConnection = () => socket;
 
 module.exports = {
-	mocha,
-	chai,
-	should,
-	expect,
-	path,
-	fs,
-	execSync,
-	server,
-	createConnection,
-	removeConnection,
-	getConnection,
+  mocha,
+  chai,
+  should,
+  expect,
+  path,
+  fs,
+  execSync,
+  server,
+  createConnection,
+  removeConnection,
+  getConnection,
 };
