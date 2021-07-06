@@ -9,32 +9,24 @@ const {
 	generateSubmissionFile,
 } = require("../filesystem/index.js");
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
 	try {
-		createSubmissionFilePath(req.body.socketId)
-			.then(() => generateSubmissionFile(req))
-			.then(() => createTestFilesPath(req.body.socketId))
-			.then(() => generateTestFiles(req))
-			.then(() => {
-				{
-					handleContainerTasks(req, res, next);
-				}
-			})
-			.catch(error => {
-				/*
-				 * error.errorInGenerateTestFiles exists if some error occurred mid-generation of ...
-				 * ... test files
-				 */
-				if (error.errorInGenerateTestFiles) {
-					return handle403Response(
-						res,
-						"Re-request with both sampleInput and expectedOutput in each dictionary of testCases array"
-					);
-				}
-				error.status = 503;
-				next(error);
-			});
+		await createSubmissionFilePath(req.body.socketId);
+		await generateSubmissionFile(req);
+		await createTestFilesPath(req.body.socketId);
+		await generateTestFiles(req);
+		await handleContainerTasks(req, res, next);
 	} catch (error) {
+		/*
+		 * error.errorInGenerateTestFiles exists if some error occurred mid-generation of ...
+		 * ... test files
+		 */
+		if (error.errorInGenerateTestFiles) {
+			return handle403Response(
+				res,
+				"Re-request with both sampleInput and expectedOutput in each dictionary of testCases array"
+			);
+		}
 		error.status = 503;
 		next(error);
 	}
