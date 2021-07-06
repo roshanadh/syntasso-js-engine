@@ -95,6 +95,7 @@ try {
 					let executionTimeForProcess = performance.now();
 					let nodeProcess = spawnSync("node", [submissionFileName], {
 						timeout: EXECUTION_TIME_OUT_IN_MS,
+						killSignal: "SIGTERM",
 					});
 					executionTimeForProcess =
 						performance.now() - executionTimeForProcess;
@@ -170,6 +171,7 @@ const main = () => {
 				],
 				{
 					timeout: EXECUTION_TIME_OUT_IN_MS,
+					killSignal: "SIGTERM",
 				}
 			);
 			executionTimeForProcess =
@@ -182,9 +184,10 @@ const main = () => {
 			const stderr =
 				io[2].toString().trim() !== "" ? io[2].toString().trim() : null;
 
-			expectedOutputFileContents = expectedOutputsData.fileContents[
-				expectedOutputsData.files[i]
-			].toString();
+			expectedOutputFileContents =
+				expectedOutputsData.fileContents[
+					expectedOutputsData.files[i]
+				].toString();
 
 			let expectedOutput = expectedOutputFileContents.toString(),
 				observedOutput = stdout,
@@ -204,9 +207,10 @@ const main = () => {
 				id: i,
 				testStatus,
 				timedOut: nodeProcess.signal === "SIGTERM" ? true : false,
-				sampleInput: sampleInputsData.fileContents[
-					sampleInputsData.files[i]
-				].toString(),
+				sampleInput:
+					sampleInputsData.fileContents[
+						sampleInputsData.files[i]
+					].toString(),
 				expectedOutput,
 				observedOutput,
 				error,
@@ -249,8 +253,7 @@ const main = () => {
 
 const passSampleInputsAsArg = sampleInputFile => {
 	// pass sample inputs as command-line arguments
-	let sampleInputFileContent = sampleInputsData.fileContents[
-		sampleInputFile
-	].toString();
+	let sampleInputFileContent =
+		sampleInputsData.fileContents[sampleInputFile].toString();
 	return sampleInputFileContent;
 };
