@@ -24,7 +24,7 @@ let log = console.log,
 let socket;
 
 createConnection = async () => {
-	socket = await io.connect("http://localhost:8080");
+	socket = await io.connect("http://127.0.0.1:8080");
 	return socket;
 };
 
