@@ -76,6 +76,17 @@ describe("Test output of test cases at /submit:", () => {
 			.post("/submit")
 			.send(payload)
 			.end((err, res) => {
+				console.dir({
+					msg: "Inside testcases check",
+					body: res.body,
+					processes: res.body.processes,
+					timedOut: res.body.processes[0].timedOut,
+					observedOutputTooLong:
+						res.body.processes[0].observedOutputTooLong,
+					timeOutLength: res.body.timeOutLength,
+					observedOutputMaxLength: res.body.observedOutputMaxLength,
+					code: payload.code,
+				});
 				expect(err).to.be.null;
 				res.body.should.be.a("object");
 				res.body.sampleInputs.should.equal(1);
