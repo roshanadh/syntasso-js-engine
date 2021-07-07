@@ -1,5 +1,5 @@
 # Syntasso
-## JavaScript Execution Engine ![](https://travis-ci.com/roshanadh/syntasso-js-engine.svg?token=jtwD19xWMoUy4u3AdP9Q&branch=master)
+## JavaScript Execution Engine ![](https://github.com/roshanadh/syntasso-js-engine/actions/workflows/node.js.yml/badge.svg?branch=master)
 
 ## Usage
 * Clone the repo and change your working directory
