@@ -22,7 +22,8 @@ class Socket {
 			);
 			// initialize container for each connection
 			initContainer(socket.id, this.instance).catch(error => {
-				throw new Error(error);
+				logger.fatal("Error in Socket.constructor:", error);
+				throw new Error(JSON.stringify(error));
 			});
 			// perform cleanup operations after socket disconnect
 			socket.on("disconnect", reason => {
